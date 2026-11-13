@@ -1,8 +1,18 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <!-- Implémentation interne du module Stock : Application / Infrastructure / Endpoints -->
+  <PropertyGroup>
+    <NeutralLanguage>fr</NeutralLanguage>
+  </PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../GestionStock.Stock.Contracts/GestionStock.Stock.Contracts.csproj" />
     <ProjectReference Include="../GestionStock.Stock.Domain/GestionStock.Stock.Domain.csproj" />
     <ProjectReference Include="../../../BuildingBlocks/GestionStock.Infrastructure/GestionStock.Infrastructure.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="GestionStock.Stock.IntegrationTests" />
+    <InternalsVisibleTo Include="GestionStock.ArchitectureTests" />
   </ItemGroup>
 </Project>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Stock.Inconnu" xml:space="preserve"><value>Erreur du module Stock.</value></data>
+  <data name="Stock.QuantiteNonPositive" xml:space="preserve"><value>La quantité doit être supérieure à zéro.</value></data>
+  <data name="Stock.PrecisionQuantite" xml:space="preserve"><value>Trop de décimales : 4 au maximum.</value></data>
+  <data name="Stock.CoutNegatif" xml:space="preserve"><value>Le coût unitaire ne peut pas être négatif.</value></data>
+  <data name="Stock.SensIncompatible" xml:space="preserve"><value>Les emplacements indiqués ne correspondent pas à ce type de mouvement.</value></data>
+  <data name="Stock.SourceEgaleDestination" xml:space="preserve"><value>L'emplacement de départ et l'emplacement d'arrivée doivent être différents.</value></data>
+  <data name="Stock.TypeNonPrisEnCharge" xml:space="preserve"><value>Ce type de mouvement n'est pas encore disponible.</value></data>
+  <data name="Stock.DocumentObligatoire" xml:space="preserve"><value>Le document d'origine est obligatoire.</value></data>
+  <data name="Stock.UtilisateurObligatoire" xml:space="preserve"><value>L'utilisateur est obligatoire.</value></data>
+  <data name="Stock.IdempotenceObligatoire" xml:space="preserve"><value>L'identifiant de l'opération est obligatoire.</value></data>
+  <data name="Stock.IdentifiantObligatoire" xml:space="preserve"><value>L'article, le site ou l'emplacement est manquant.</value></data>
+  <data name="Stock.DateNonUtc" xml:space="preserve"><value>La date de l'opération est invalide.</value></data>
+  <data name="Stock.MouvementNonConcerne" xml:space="preserve"><value>Ce mouvement ne concerne pas ce stock.</value></data>
+  <data name="Stock.StockInsuffisant" xml:space="preserve"><value>Stock insuffisant sur cet emplacement.</value></data>
+</root>

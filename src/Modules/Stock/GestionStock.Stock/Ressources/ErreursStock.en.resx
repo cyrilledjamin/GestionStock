@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Stock.Inconnu" xml:space="preserve"><value>Stock module error.</value></data>
+  <data name="Stock.QuantiteNonPositive" xml:space="preserve"><value>Quantity must be greater than zero.</value></data>
+  <data name="Stock.PrecisionQuantite" xml:space="preserve"><value>Too many decimal places: 4 at most.</value></data>
+  <data name="Stock.CoutNegatif" xml:space="preserve"><value>Unit cost cannot be negative.</value></data>
+  <data name="Stock.SensIncompatible" xml:space="preserve"><value>The locations given do not match this type of movement.</value></data>
+  <data name="Stock.SourceEgaleDestination" xml:space="preserve"><value>The source and destination locations must be different.</value></data>
+  <data name="Stock.TypeNonPrisEnCharge" xml:space="preserve"><value>This type of movement is not available yet.</value></data>
+  <data name="Stock.DocumentObligatoire" xml:space="preserve"><value>The source document is required.</value></data>
+  <data name="Stock.UtilisateurObligatoire" xml:space="preserve"><value>The user is required.</value></data>
+  <data name="Stock.IdempotenceObligatoire" xml:space="preserve"><value>The operation identifier is required.</value></data>
+  <data name="Stock.IdentifiantObligatoire" xml:space="preserve"><value>The item, site or location is missing.</value></data>
+  <data name="Stock.DateNonUtc" xml:space="preserve"><value>The operation date is invalid.</value></data>
+  <data name="Stock.MouvementNonConcerne" xml:space="preserve"><value>This movement does not concern this stock.</value></data>
+  <data name="Stock.StockInsuffisant" xml:space="preserve"><value>Insufficient stock at this location.</value></data>
+</root>

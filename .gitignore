@@ -33,3 +33,6 @@ appsettings.*.local.json
 # Système
 Thumbs.db
 .DS_Store
+
+# Fichiers stockés en local par l'API (reçus, imports)
+donnees/
