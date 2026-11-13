@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Persistance commune, transactions partagées entre modules, stockage de fichiers -->
+  <ItemGroup>
+    <ProjectReference Include="../GestionStock.SharedKernel/GestionStock.SharedKernel.csproj" />
+  </ItemGroup>
+</Project>

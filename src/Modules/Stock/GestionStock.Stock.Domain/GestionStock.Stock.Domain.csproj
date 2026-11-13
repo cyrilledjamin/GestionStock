@@ -1,0 +1,3 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Domaine du stock en C# pur : aucune dépendance (RG01 à RG04) -->
+</Project>

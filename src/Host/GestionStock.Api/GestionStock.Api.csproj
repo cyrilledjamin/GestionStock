@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <!-- Hôte : assemble les modules, aucune logique métier -->
+  <ItemGroup>
+    <ProjectReference Include="../../BuildingBlocks/GestionStock.Infrastructure/GestionStock.Infrastructure.csproj" />
+    <ProjectReference Include="../../Modules/Stock/GestionStock.Stock/GestionStock.Stock.csproj" />
+  </ItemGroup>
+</Project>

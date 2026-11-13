@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Implémentation interne du module Stock : Application / Infrastructure / Endpoints -->
+  <ItemGroup>
+    <ProjectReference Include="../GestionStock.Stock.Contracts/GestionStock.Stock.Contracts.csproj" />
+    <ProjectReference Include="../GestionStock.Stock.Domain/GestionStock.Stock.Domain.csproj" />
+    <ProjectReference Include="../../../BuildingBlocks/GestionStock.Infrastructure/GestionStock.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,3 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Contrat public du module Stock : seul projet référençable par les autres modules -->
+</Project>

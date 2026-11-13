@@ -1,0 +1,3 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Noyau partagé en C# pur : aucune dépendance -->
+</Project>
