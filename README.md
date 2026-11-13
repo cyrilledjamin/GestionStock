@@ -153,13 +153,12 @@ sur une machine Linux de GitHub qui dispose de Docker :
 | 2 | BuildingBlocks : horloge, transaction partagée, stockage de fichiers | Fait |
 | 3 | Domaine Stock : mouvements immuables, soldes, CUMP, RG03 / RG22 | Fait |
 | 4 | Contrat et implémentation Stock (EF Core), hôte Api | Fait |
-| 5 | docker-compose PostgreSQL et migration `Initial` | Fait (compose non testé : Docker absent du poste de développement) |
+| 5 | docker-compose PostgreSQL et migration `Initial` | Fait (vérifié en CI) |
 | 6 | Tests d'architecture | Fait |
-| 7 | Tests d'intégration (Testcontainers) | Écrits, jamais exécutés : Docker absent du poste de développement |
+| 7 | Tests d'intégration (Testcontainers) | Fait (exécutés en CI) |
 
 ## Points ouverts
 
 - Effet des mouvements `Blocage`, `Deblocage` et `Revalorisation` : refusés tant qu'il n'est pas défini.
 - Motif de démarque (RG23) : absent du modèle UML, à ajouter au mouvement.
 - CUMP après un stock négatif ou nul : le coût de l'entrée devient le CUMP (choix technique à confirmer).
-- Tests d'intégration et docker-compose à exécuter une première fois sur un poste avec Docker ou en intégration continue.

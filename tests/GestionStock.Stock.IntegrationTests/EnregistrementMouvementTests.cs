@@ -113,8 +113,12 @@ public sealed class EnregistrementMouvementTests(BasePostgres basePostgres)
 
         var journal = await basePostgres.JournalAsync(scenario);
         var site = StockSite.Recalculer(scenario.Article, scenario.Site, journal);
-        var stockage = StockEmplacement.Recalculer(scenario.Article, scenario.Stockage.EmplacementId, null, journal);
-        var vente = StockEmplacement.Recalculer(scenario.Article, scenario.Vente.EmplacementId, null, journal);
+        var stockage = StockEmplacement.Recalculer(scenario.Article, scenario.Stockage.EmplacementId, null, JournalDe(scenario.Stockage));
+        var vente = StockEmplacement.Recalculer(scenario.Article, scenario.Vente.EmplacementId, null, JournalDe(scenario.Vente));
+
+        // Un solde emplacement se rejoue sur les seuls mouvements dont l'emplacement est source ou destination.
+        IEnumerable<MouvementStock> JournalDe(EmplacementMouvement emplacement) => journal.Where(m =>
+            m.EmplacementSourceId == emplacement.EmplacementId || m.EmplacementDestinationId == emplacement.EmplacementId);
 
         var solde = await basePostgres.SoldeSiteAsync(scenario);
         Assert.Equal(site.QuantitePhysique, solde!.QuantitePhysique);
