@@ -29,6 +29,10 @@ tests/
   GestionStock.Infrastructure.Tests  briques transverses
   GestionStock.Stock.Domain.Tests    règles du domaine Stock
   GestionStock.Stock.IntegrationTests  PostgreSQL réelle (Testcontainers)
+deploy/
+  docker-compose.yml                 PostgreSQL 17 (db) et API (api)
+  Dockerfile                         image Linux de l'API
+  .env.example                       variables à copier dans deploy/.env
 docs/                                dossier d'analyse
 ```
 
@@ -45,11 +49,37 @@ Règles de dépendance :
 
 ## Commandes
 
+Première installation :
+
 ```bash
 dotnet tool restore
+cp deploy/.env.example deploy/.env
+```
+
+Base locale, puis API (en Development, les migrations s'appliquent au démarrage) :
+
+```bash
+docker compose -f deploy/docker-compose.yml up -d db
+dotnet run --project src/Host/GestionStock.Api
+```
+
+Build et tests :
+
+```bash
 dotnet build
 dotnet test
-dotnet run --project src/Host/GestionStock.Api
+```
+
+Base et API en conteneurs, comme en boutique :
+
+```bash
+docker compose -f deploy/docker-compose.yml up -d --build
+```
+
+Nouvelle migration d'un module (le code généré va dans `Infrastructure/Migrations`) :
+
+```bash
+dotnet ef migrations add <Nom> -p src/Modules/<Module>/GestionStock.<Module> -s src/Host/GestionStock.Api -o Infrastructure/Migrations
 ```
 
 ## Configuration
@@ -60,6 +90,14 @@ Uniquement par variables d'environnement ou `appsettings` ; aucun chemin ni adre
 | --- | --- | --- |
 | `ConnectionStrings:GestionStock` | `ConnectionStrings__GestionStock` | Chaîne de connexion PostgreSQL (obligatoire) |
 | `Stockage:RepertoireRacine` | `Stockage__RepertoireRacine` | Répertoire des fichiers (reçus, imports) ; `donnees/fichiers` par défaut |
+| `BaseDeDonnees:AppliquerMigrationsAuDemarrage` | `BaseDeDonnees__AppliquerMigrationsAuDemarrage` | Applique les migrations de chaque module au démarrage ; `false` par défaut, `true` en Development et dans docker-compose |
+
+En Development, [appsettings.Development.json](src/Host/GestionStock.Api/appsettings.Development.json) pointe vers
+la base de docker-compose avec le mot de passe de développement de [deploy/.env.example](deploy/.env.example).
+En boutique, le mot de passe est défini uniquement dans `deploy/.env`, qui n'est jamais versionné.
+
+Chaque module a son schéma PostgreSQL et sa propre table d'historique des migrations
+(`stock.__ef_migrations_history`). La base n'écoute que sur `127.0.0.1` ; l'API écoute sur le port 8080.
 
 ## Endpoints techniques
 
@@ -81,7 +119,7 @@ Le schéma d'authentification est provisoire jusqu'au module Identite.
 | 2 | BuildingBlocks : horloge, transaction partagée, stockage de fichiers | Fait |
 | 3 | Domaine Stock : mouvements immuables, soldes, CUMP, RG03 / RG22 | Fait |
 | 4 | Contrat et implémentation Stock (EF Core), hôte Api | Fait |
-| 5 | docker-compose PostgreSQL et migration `Initial` | À faire |
+| 5 | docker-compose PostgreSQL et migration `Initial` | Fait (compose non testé : Docker absent du poste de développement) |
 | 6 | Tests d'architecture | À faire |
 | 7 | Tests d'intégration (Testcontainers) | À faire |
 
