@@ -1,6 +1,16 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <!-- Persistance commune, transactions partagées entre modules, stockage de fichiers -->
   <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+    <PackageReference Include="EFCore.NamingConventions" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="../GestionStock.SharedKernel/GestionStock.SharedKernel.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="GestionStock.Infrastructure.Tests" />
   </ItemGroup>
 </Project>
