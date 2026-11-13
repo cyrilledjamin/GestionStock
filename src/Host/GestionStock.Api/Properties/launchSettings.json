@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "GestionStock.Api": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:17689;http://localhost:17690"
+    }
+  }
+}
