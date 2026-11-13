@@ -1,0 +1,35 @@
+# Compilation .NET
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+*.user
+*.suo
+*.userprefs
+
+# IDE
+.vs/
+.vscode/
+.idea/
+*.DotSettings.user
+
+# Résultats de tests et couverture
+TestResults/
+coverage/
+*.trx
+*.coverage
+*.coveragexml
+
+# Publication
+publish/
+artifacts/
+
+# Secrets et configuration locale (ne jamais versionner)
+.env
+deploy/.env
+appsettings.*.local.json
+*.pfx
+
+# Système
+Thumbs.db
+.DS_Store
