@@ -4,9 +4,4 @@
   <ItemGroup>
     <Using Include="Xunit" />
   </ItemGroup>
-  <!-- TEMPORAIRE (étape 1) : projets de tests encore vides, le code 8 « aucun test » est toléré.
-       À retirer dès que chaque projet contient ses premiers tests. -->
-  <PropertyGroup>
-    <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --ignore-exit-code 8</TestingPlatformCommandLineArguments>
-  </PropertyGroup>
 </Project>
