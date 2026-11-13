@@ -36,10 +36,18 @@ deploy/
 docs/                                dossier d'analyse
 ```
 
-Règles de dépendance :
+Règles de dépendance, vérifiées par `tests/GestionStock.ArchitectureTests` :
 - un module n'en référence un autre que par son projet `.Contracts` ;
-- `GestionStock.Stock.Domain` n'a aucune dépendance ;
+- `GestionStock.SharedKernel` et les projets `.Domain` sont en C# pur, sans aucune dépendance ;
+- un projet `.Contracts` ne dépend que de la bibliothèque de base et du SharedKernel ;
+- `GestionStock.Infrastructure` ne dépend d'aucun module ;
+- l'hôte n'accède ni aux domaines des modules ni à EF Core ;
+- dans un module, seul `Module<Nom>` est public (hors migrations générées) ; `Endpoints` ne touche pas
+  à la persistance, et `Application` / `Infrastructure` ne dépendent pas d'`Endpoints` ;
 - seul le module Stock écrit les mouvements et les soldes (RG01).
+
+Les assemblages sont découverts à partir de l'hôte et classés selon leur nom : un nouveau module
+branché sur l'hôte est couvert sans modifier les tests.
 
 ## Prérequis
 
@@ -120,7 +128,7 @@ Le schéma d'authentification est provisoire jusqu'au module Identite.
 | 3 | Domaine Stock : mouvements immuables, soldes, CUMP, RG03 / RG22 | Fait |
 | 4 | Contrat et implémentation Stock (EF Core), hôte Api | Fait |
 | 5 | docker-compose PostgreSQL et migration `Initial` | Fait (compose non testé : Docker absent du poste de développement) |
-| 6 | Tests d'architecture | À faire |
+| 6 | Tests d'architecture | Fait |
 | 7 | Tests d'intégration (Testcontainers) | À faire |
 
 ## Points ouverts
