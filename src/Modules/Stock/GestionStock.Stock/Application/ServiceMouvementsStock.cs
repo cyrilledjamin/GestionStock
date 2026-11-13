@@ -86,7 +86,8 @@ internal sealed class ServiceMouvementsStock(StockDbContext contexte, IUniteDeTr
             annulation);
 
         return await contexte.StocksSites
-            .FromSql($"SELECT * FROM stock.stock_site WHERE article_id = {mouvement.ArticleId} AND site_id = {mouvement.SiteId} FOR UPDATE")
+            // xmin (jeton de version) est une colonne système : « * » ne la renvoie pas.
+            .FromSql($"SELECT *, xmin FROM stock.stock_site WHERE article_id = {mouvement.ArticleId} AND site_id = {mouvement.SiteId} FOR UPDATE")
             .SingleAsync(annulation);
     }
 
