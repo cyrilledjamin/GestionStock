@@ -118,6 +118,20 @@ Chaque module a son schéma PostgreSQL et sa propre table d'historique des migra
 Tout autre endpoint est refusé par défaut (401) : chaque endpoint métier devra déclarer sa permission.
 Le schéma d'authentification est provisoire jusqu'au module Identite.
 
+## Tests
+
+| Projet | Contenu | Docker |
+| --- | --- | --- |
+| `GestionStock.Stock.Domain.Tests` | Règles du domaine : mouvements, soldes, CUMP, RG03 / RG22 | Non |
+| `GestionStock.Infrastructure.Tests` | Horloge, stockage de fichiers | Non |
+| `GestionStock.ArchitectureTests` | Dépendances entre projets, visibilité, couches, traductions | Non |
+| `GestionStock.Stock.IntegrationTests` | PostgreSQL 17 réelle : migration, transaction partagée, idempotence, journal immuable, mouvements simultanés | Oui |
+
+Les tests d'intégration démarrent un conteneur `postgres:17-alpine` (Testcontainers), appliquent les
+migrations comme au démarrage de l'API, puis passent par le contrat public du module. Sans Docker, ils sont
+**ignorés** sur un poste de développement (la raison est affichée) et **échouent** en intégration continue
+(variable `CI=true`, définie par GitHub Actions).
+
 ## Avancement du squelette
 
 | Étape | Contenu | État |
@@ -129,10 +143,11 @@ Le schéma d'authentification est provisoire jusqu'au module Identite.
 | 4 | Contrat et implémentation Stock (EF Core), hôte Api | Fait |
 | 5 | docker-compose PostgreSQL et migration `Initial` | Fait (compose non testé : Docker absent du poste de développement) |
 | 6 | Tests d'architecture | Fait |
-| 7 | Tests d'intégration (Testcontainers) | À faire |
+| 7 | Tests d'intégration (Testcontainers) | Écrits, jamais exécutés : Docker absent du poste de développement |
 
 ## Points ouverts
 
 - Effet des mouvements `Blocage`, `Deblocage` et `Revalorisation` : refusés tant qu'il n'est pas défini.
 - Motif de démarque (RG23) : absent du modèle UML, à ajouter au mouvement.
 - CUMP après un stock négatif ou nul : le coût de l'entrée devient le CUMP (choix technique à confirmer).
+- Tests d'intégration et docker-compose à exécuter une première fois sur un poste avec Docker ou en intégration continue.
