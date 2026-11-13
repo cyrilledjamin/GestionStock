@@ -1,5 +1,6 @@
 using GestionStock.Api.Securite;
 using GestionStock.Infrastructure;
+using GestionStock.Infrastructure.Persistance;
 using GestionStock.Stock;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
@@ -25,6 +26,12 @@ builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddStockModule(builder.Configuration);
 
 var app = builder.Build();
+
+// Migrations au démarrage, seulement si le paramètre l'active (Development, docker-compose).
+if (app.Configuration.GetValue<bool>(ExtensionsMigrations.CleAppliquerAuDemarrage))
+{
+    await app.Services.AppliquerMigrationsAsync();
+}
 
 app.UseExceptionHandler();
 app.UseStatusCodePages();
