@@ -1,5 +1,7 @@
 # GestionStock
 
+[![CI](https://github.com/cyrilledjamin/GestionStock/actions/workflows/ci.yml/badge.svg)](https://github.com/cyrilledjamin/GestionStock/actions/workflows/ci.yml)
+
 Logiciel de gestion de stock avec caisse intégrée pour une petite entreprise de négoce au Cameroun
 (boutique mono-site en V1). Le dossier d'analyse complet — règles RG01 à RG47, modèle UML, décisions —
 est dans [docs/dossier-analyse.md](docs/dossier-analyse.md).
@@ -131,6 +133,16 @@ Les tests d'intégration démarrent un conteneur `postgres:17-alpine` (Testconta
 migrations comme au démarrage de l'API, puis passent par le contrat public du module. Sans Docker, ils sont
 **ignorés** sur un poste de développement (la raison est affichée) et **échouent** en intégration continue
 (variable `CI=true`, définie par GitHub Actions).
+
+## Intégration continue
+
+[.github/workflows/ci.yml](.github/workflows/ci.yml) s'exécute à chaque push sur `master` et à chaque pull request,
+sur une machine Linux de GitHub qui dispose de Docker :
+
+- **Build et tests** : build en Release sans avertissement, puis tous les tests, y compris ceux sur PostgreSQL réelle ;
+- **Image et docker-compose** : construit l'image de l'API, démarre `deploy/docker-compose.yml` avec les valeurs de
+  `deploy/.env.example`, puis vérifie que `/health/pret` répond, que la migration `Initial` est appliquée et que
+  `/api/stock` répond 401.
 
 ## Avancement du squelette
 
