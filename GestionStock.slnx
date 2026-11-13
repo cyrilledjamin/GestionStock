@@ -1,0 +1,21 @@
+<Solution>
+  <Folder Name="/src/" />
+  <Folder Name="/src/BuildingBlocks/">
+    <Project Path="src/BuildingBlocks/GestionStock.SharedKernel/GestionStock.SharedKernel.csproj" />
+    <Project Path="src/BuildingBlocks/GestionStock.Infrastructure/GestionStock.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Host/">
+    <Project Path="src/Host/GestionStock.Api/GestionStock.Api.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/" />
+  <Folder Name="/src/Modules/Stock/">
+    <Project Path="src/Modules/Stock/GestionStock.Stock.Contracts/GestionStock.Stock.Contracts.csproj" />
+    <Project Path="src/Modules/Stock/GestionStock.Stock.Domain/GestionStock.Stock.Domain.csproj" />
+    <Project Path="src/Modules/Stock/GestionStock.Stock/GestionStock.Stock.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/GestionStock.ArchitectureTests/GestionStock.ArchitectureTests.csproj" />
+    <Project Path="tests/GestionStock.Stock.Domain.Tests/GestionStock.Stock.Domain.Tests.csproj" />
+    <Project Path="tests/GestionStock.Stock.IntegrationTests/GestionStock.Stock.IntegrationTests.csproj" />
+  </Folder>
+</Solution>
