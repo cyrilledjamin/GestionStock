@@ -15,6 +15,9 @@ public static class ExtensionsInfrastructure
     /// <summary>Nom de la chaîne de connexion (variable d'environnement <c>ConnectionStrings__GestionStock</c>).</summary>
     public const string NomChaineConnexion = "GestionStock";
 
+    /// <summary>Étiquette des vérifications de disponibilité (dépendances externes : base de données).</summary>
+    public const string EtiquettePret = "pret";
+
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         ArgumentNullException.ThrowIfNull(configuration);
@@ -37,6 +40,7 @@ public static class ExtensionsInfrastructure
         });
         services.TryAddScoped<ConnexionPartagee>();
         services.TryAddScoped<IUniteDeTravail, UniteDeTravail>();
+        services.AddHealthChecks().AddCheck<VerificationBaseDeDonnees>(VerificationBaseDeDonnees.Nom, tags: [EtiquettePret]);
 
         // Stockage de fichiers
         services.AddOptions<OptionsStockage>()
