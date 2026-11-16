@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using GestionStock.Infrastructure.Persistance;
 using GestionStock.Infrastructure.Stockage;
 using GestionStock.Infrastructure.Temps;
@@ -21,6 +22,9 @@ public static class ExtensionsInfrastructure
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         ArgumentNullException.ThrowIfNull(configuration);
+
+        // API : énumérations échangées par leur nom (« Validee », « EntreeReception »), lisible par le client.
+        services.ConfigureHttpJsonOptions(options => options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
         // Temps
         services.TryAddSingleton(TimeProvider.System);

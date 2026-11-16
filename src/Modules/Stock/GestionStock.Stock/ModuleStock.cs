@@ -20,6 +20,7 @@ public static class ModuleStock
         services.AjouterContexteModule<StockDbContext>(StockDbContext.Schema);
         services.AddScoped<IServiceMouvementsStock, ServiceMouvementsStock>();
         services.AddScoped<IConsultationStock, ConsultationStock>();
+        services.AddScoped<LecturesStock>();
         return services;
     }
 
