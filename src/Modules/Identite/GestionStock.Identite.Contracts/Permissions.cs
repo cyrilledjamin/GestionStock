@@ -33,6 +33,11 @@ public static class Permissions
     /// <summary>Fixer les prix de vente (UC25).</summary>
     public const string PrixGerer = "Prix.Gerer";
 
+    /// <summary>
+    /// Valider au poste du caissier une remise ou un dépassement de plafond de crédit (RG40, décision 31).
+    /// </summary>
+    public const string DepassementsValider = "Caisse.Depassements.Valider";
+
     /// <summary>Consulter les disponibilités et les mouvements (UC14).</summary>
     public const string StockConsulter = "Stock.Consulter";
 }

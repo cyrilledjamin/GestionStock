@@ -57,6 +57,16 @@ public sealed class ApiDeTest : IAsyncLifetime
         _ = _fabrique.Server;
     }
 
+    /// <summary>Services de l'hôte, pour appeler un contrat de module hors HTTP.</summary>
+    public IServiceProvider Services
+    {
+        get
+        {
+            ExigerDocker();
+            return _fabrique!.Services;
+        }
+    }
+
     /// <summary>Ignore le test si Docker est absent du poste de développement.</summary>
     public void ExigerDocker()
     {

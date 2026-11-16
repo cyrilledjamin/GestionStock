@@ -22,6 +22,10 @@ internal static class MatricePermissions
             // 8.3 : le Gérant gère les prix ; le Comptable ne modifie pas les prix.
             [Permissions.PrixGerer] = [Roles.Gerant],
 
+            // 8.3 : le Gérant valide les remises hors plafond ; RG40 : dépassement de crédit validé par un utilisateur
+            // autorisé (provisoire : le Gérant).
+            [Permissions.DepassementsValider] = [Roles.Gerant],
+
             // Provisoire : la gestion des articles n'est attribuée à aucun rôle par la section 8.3.
             [Permissions.ArticlesGerer] = [Roles.Gerant, Roles.Administrateur],
 

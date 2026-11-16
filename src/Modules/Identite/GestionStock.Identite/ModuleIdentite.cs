@@ -1,4 +1,5 @@
 using GestionStock.Identite.Application;
+using GestionStock.Identite.Contracts;
 using GestionStock.Identite.Endpoints;
 using GestionStock.Identite.Infrastructure;
 using GestionStock.Infrastructure.Persistance;
@@ -44,6 +45,7 @@ public static class ModuleIdentite
         services.AddScoped<IUtilisateurCourant, UtilisateurCourant>();
         services.AddScoped<ServiceConnexion>();
         services.AddScoped<ServiceUtilisateurs>();
+        services.AddScoped<IValidationResponsable, ServiceValidationResponsable>();
 
         services.AddOptions<OptionsAdministrateurInitial>().Bind(configuration.GetSection(OptionsAdministrateurInitial.Section));
         services.AddHostedService<InitialisationAdministrateur>();

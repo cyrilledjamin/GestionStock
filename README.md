@@ -29,7 +29,7 @@ src/
     GestionStock.Achats.Contracts    contrat public : types de documents (journal des mouvements)
     GestionStock.Achats              fournisseurs, réception simple (brouillon → validation → entrée en stock)
   Modules/Identite/
-    GestionStock.Identite.Contracts  contrat public : Roles, Permissions
+    GestionStock.Identite.Contracts  contrat public : Roles, Permissions, IValidationResponsable
     GestionStock.Identite            comptes locaux (ASP.NET Core Identity), jetons porteurs, matrice des permissions
   Modules/Prix/
     GestionStock.Prix.Contracts      contrat public : IConsultationPrix (prix applicable), RegimeTva (HT / TVA)
@@ -252,6 +252,10 @@ Comptes locaux nominatifs (ENF06), stockés dans le schéma `identite`. Mot de p
 avec majuscule, minuscule, chiffre et caractère spécial ; compte verrouillé 5 minutes après 5 échecs.
 Au premier démarrage, l'Administrateur initial est créé depuis la configuration ; il crée ensuite les autres comptes.
 
+**Validation par un responsable** (`IValidationResponsable`) : une remise ou un dépassement de plafond de crédit
+(RG40, décision 31) est validé par un responsable présent, qui saisit ses propres identifiants sur le poste du
+caissier. Ses échecs comptent pour le verrouillage de son compte ; son identifiant est tracé avec l'opération.
+
 Les cinq rôles de la section 8.3 du dossier : Administrateur, Gerant, Comptable, Caissier, Magasinier.
 Chaque permission est attribuée à des rôles dans
 [MatricePermissions.cs](src/Modules/Identite/GestionStock.Identite/Application/MatricePermissions.cs) :
@@ -261,6 +265,7 @@ Chaque permission est attribuée à des rôles dans
 | `Identite.Utilisateurs.Gerer` | Administrateur |
 | `Referentiel.Consulter`, `Stock.Consulter`, `Prix.Consulter` | tous |
 | `Prix.Gerer` | Gerant |
+| `Caisse.Depassements.Valider` | Gerant *(provisoire pour le crédit)* |
 | `Referentiel.Articles.Gerer` | Gerant, Administrateur *(provisoire)* |
 | `Achats.Consulter` | Gerant, Comptable, Magasinier |
 | `Achats.Fournisseurs.Gerer` | Gerant, Magasinier *(provisoire)* |
@@ -311,7 +316,7 @@ sur une machine Linux de GitHub qui dispose de Docker :
 | 12 | Tests d'architecture du client, clés de protection conservées, démonstration de bout en bout | Fait |
 | 13 | Referentiel : conditionnements, codes-barres, scan | Fait |
 | 14 | Module Prix et paramètre TVA | Fait |
-| 15 | Identite : validation par un responsable | À faire |
+| 15 | Identite : validation par un responsable | Fait |
 | 16 | Module Credit : clients, plafond, remboursements | À faire |
 | 17 | Module Caisse : sessions, tickets, avoirs, remises, reçu PDF | À faire |
 | 18 | Client : écran de caisse et écrans de gestion | À faire |
@@ -333,6 +338,8 @@ Scénario vérifié dans le navigateur sur http://localhost:8080, base vierge :
 
 ## Points ouverts
 
+- Validation par un responsable au poste du caissier (ses identifiants), et attribution au Gérant de la validation
+  d'un dépassement de crédit (RG40 cite « un utilisateur autorisé ») : choix provisoires.
 - Format des codes internes (`INT` + 6 chiffres) : non fixé par le dossier, choix provisoire.
 - Coût unitaire saisi sur la ligne de réception : absent de `LigneReception` dans le modèle UML (il y vient de la
   commande fournisseur) ; ajouté faute de commande en V1, à reporter dans le dossier. Statuts de réception retenus :
