@@ -28,6 +28,9 @@ src/
   Modules/Achats/
     GestionStock.Achats.Contracts    contrat public : types de documents (journal des mouvements)
     GestionStock.Achats              fournisseurs, réception simple (brouillon → validation → entrée en stock)
+  Modules/Credit/
+    GestionStock.Credit.Contracts    contrat public : IServiceCredit (vente à crédit, remboursement, annulation)
+    GestionStock.Credit              clients, plafonds, journal des opérations, imputations, impayés
   Modules/Identite/
     GestionStock.Identite.Contracts  contrat public : Roles, Permissions, IValidationResponsable
     GestionStock.Identite            comptes locaux (ASP.NET Core Identity), jetons porteurs, matrice des permissions
@@ -178,6 +181,11 @@ Si le port 5432 est déjà pris (PostgreSQL installé sur le poste), choisir un 
 | `GET /api/achats/receptions`, `GET /api/achats/receptions/{id}` | `Achats.Consulter` | Réceptions (la plus récente d'abord) ; détail avec lignes et articles |
 | `POST /api/achats/receptions`, `PUT /api/achats/receptions/{id}` | `Achats.Receptions.Saisir` | `{ fournisseurId, numeroBonLivraison?, lignes: [{ articleId, quantite, coutUnitaire }] }` : brouillon |
 | `POST /api/achats/receptions/{id}/validation` | `Achats.Receptions.Valider` | Valide et fait entrer la marchandise en stock (409 si déjà validée) |
+| `GET /api/credit/clients?recherche=` | `Credit.Consulter` | Clients (nom ou téléphone) avec solde dû et montant en retard |
+| `GET /api/credit/clients/{id}` | `Credit.Consulter` | Fiche : client, ventes non soldées (reste dû, échéance), journal des opérations |
+| `GET /api/credit/impayes` | `Credit.Consulter` | Clients ayant une dette échue (RG43) |
+| `POST /api/credit/clients`, `PUT /api/credit/clients/{id}` | `Credit.Clients.Gerer` | `{ nom, telephone, delaiPaiementJours?, actif }` |
+| `PUT /api/credit/clients/{id}/plafond` | `Credit.Plafonds.Gerer` | `{ plafondCredit }` |
 | `GET /api/stock/soldes` | `Stock.Consulter` | Soldes article × site de la boutique : physique, réservé, bloqué, disponible, CUMP |
 | `GET /api/stock/articles/{id}/mouvements` | `Stock.Consulter` | Journal d'un article, du plus récent au plus ancien (`?limite=`, 100 par défaut, 1000 au plus) |
 
@@ -233,6 +241,19 @@ en anglais. Hors ligne (PWA, IndexedDB) : tranche ultérieure, avec la caisse.
 - **TVA** (RG37) : paramètre `Entreprise:AssujettiTva`. Assujettie, l'entreprise affiche HT, TVA 19,25 % et TTC ;
   sinon, prix nets et taux appliqué nul.
 
+## Crédit client
+
+- **Client** (UC26) : nom et téléphone obligatoires (RG39), seules données personnelles conservées (loi n° 2024/017) ;
+  plafond fixé par le Comptable, 0 tant qu'il n'est pas défini (décision 31) ; délai de paiement (30 jours par défaut).
+- **Vente à crédit** (RG40, RG41) : la marchandise sort du stock ; au-delà du plafond, la vente exige la validation d'un
+  responsable, tracée sur l'opération. Le client est verrouillé pendant l'opération : deux ventes simultanées ne
+  dépassent pas ensemble le plafond.
+- **Remboursement** (RG42) : imputé sur les ventes les plus anciennes ; jamais au-delà de la dette.
+- **Avoir** sur un ticket à crédit : annule la dette de ce ticket, dans la limite de ce qui en reste dû.
+- **Impayés** (RG43) : ventes non soldées dont l'échéance (date de vente + délai) est passée.
+- Journal immuable des opérations (VenteCredit, Remboursement, Annulation) et de leurs imputations ; le solde dû du
+  client est une projection mise à jour dans la même transaction.
+
 ## Réception simple (V1)
 
 Sans commande fournisseur, lots ni frais d'approche (prévus plus tard) :
@@ -266,6 +287,9 @@ Chaque permission est attribuée à des rôles dans
 | `Referentiel.Consulter`, `Stock.Consulter`, `Prix.Consulter` | tous |
 | `Prix.Gerer` | Gerant |
 | `Caisse.Depassements.Valider` | Gerant *(provisoire pour le crédit)* |
+| `Credit.Consulter` | Gerant, Comptable, Caissier |
+| `Credit.Clients.Gerer` | Gerant |
+| `Credit.Plafonds.Gerer` | Comptable |
 | `Referentiel.Articles.Gerer` | Gerant, Administrateur *(provisoire)* |
 | `Achats.Consulter` | Gerant, Comptable, Magasinier |
 | `Achats.Fournisseurs.Gerer` | Gerant, Magasinier *(provisoire)* |
@@ -317,7 +341,7 @@ sur une machine Linux de GitHub qui dispose de Docker :
 | 13 | Referentiel : conditionnements, codes-barres, scan | Fait |
 | 14 | Module Prix et paramètre TVA | Fait |
 | 15 | Identite : validation par un responsable | Fait |
-| 16 | Module Credit : clients, plafond, remboursements | À faire |
+| 16 | Module Credit : clients, plafond, remboursements | Fait |
 | 17 | Module Caisse : sessions, tickets, avoirs, remises, reçu PDF | À faire |
 | 18 | Client : écran de caisse et écrans de gestion | À faire |
 | 19 | Architecture, CI, README, démonstration de la caisse | À faire |
@@ -340,6 +364,7 @@ Scénario vérifié dans le navigateur sur http://localhost:8080, base vierge :
 
 - Validation par un responsable au poste du caissier (ses identifiants), et attribution au Gérant de la validation
   d'un dépassement de crédit (RG40 cite « un utilisateur autorisé ») : choix provisoires.
+- Délai de paiement par défaut (30 jours) : non fixé par le dossier, choix provisoire.
 - Format des codes internes (`INT` + 6 chiffres) : non fixé par le dossier, choix provisoire.
 - Coût unitaire saisi sur la ligne de réception : absent de `LigneReception` dans le modèle UML (il y vient de la
   commande fournisseur) ; ajouté faute de commande en V1, à reporter dans le dossier. Statuts de réception retenus :

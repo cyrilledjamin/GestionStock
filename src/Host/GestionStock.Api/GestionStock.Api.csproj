@@ -10,6 +10,7 @@
     <!-- Client Blazor WebAssembly : ses fichiers sont servis par l'hôte (même origine que l'API). -->
     <ProjectReference Include="../../Client/GestionStock.Client/GestionStock.Client.csproj" />
     <ProjectReference Include="../../Modules/Achats/GestionStock.Achats/GestionStock.Achats.csproj" />
+    <ProjectReference Include="../../Modules/Credit/GestionStock.Credit/GestionStock.Credit.csproj" />
     <ProjectReference Include="../../Modules/Identite/GestionStock.Identite/GestionStock.Identite.csproj" />
     <ProjectReference Include="../../Modules/Prix/GestionStock.Prix/GestionStock.Prix.csproj" />
     <ProjectReference Include="../../Modules/Referentiel/GestionStock.Referentiel/GestionStock.Referentiel.csproj" />
