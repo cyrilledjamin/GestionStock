@@ -58,7 +58,8 @@ public sealed class StockSite
 
     /// <summary>
     /// Applique un mouvement. Une entrée recalcule le CUMP (RG17) ; une sortie ne le change pas ;
-    /// un mouvement interne ne change pas le site. Le site peut devenir négatif par les ventes en caisse (RG22) :
+    /// un mouvement interne ne change pas le site ; une revalorisation (RG30) répartit son montant sur le stock
+    /// physique présent, sans changer la quantité. Le site peut devenir négatif par les ventes en caisse (RG22) :
     /// le contrôle de RG03 se fait par emplacement (<see cref="StockEmplacement"/>).
     /// </summary>
     public void Appliquer(MouvementStock mouvement)
@@ -73,8 +74,29 @@ public sealed class StockSite
         {
             Cump = NouveauCump(mouvement.Quantite, mouvement.CoutUnitaire);
         }
+        else if (mouvement.Type == TypeMouvement.Revalorisation)
+        {
+            Revaloriser(mouvement);
+        }
 
         QuantitePhysique += mouvement.VariationSite;
+    }
+
+    /// <summary>
+    /// La quantité revalorisée doit encore être en stock : la part des frais qui concerne de la marchandise déjà
+    /// sortie n'entre pas dans le CUMP (le document d'origine la conserve).
+    /// </summary>
+    private void Revaloriser(MouvementStock mouvement)
+    {
+        if (QuantitePhysique <= 0m || mouvement.Quantite > QuantitePhysique)
+        {
+            throw new ExceptionDomaineStock(
+                CodesErreurStock.RevalorisationSansStock,
+                $"Revalorisation de {mouvement.Quantite} unité(s) impossible : {QuantitePhysique} en stock.");
+        }
+
+        var cump = Cump + (mouvement.MontantRevalorisation / QuantitePhysique);
+        Cump = decimal.Round(cump, MouvementStock.DecimalesMontant, MidpointRounding.AwayFromZero);
     }
 
     private decimal NouveauCump(decimal quantiteEntree, decimal coutEntree)

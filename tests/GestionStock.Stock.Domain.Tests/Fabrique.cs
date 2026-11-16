@@ -40,6 +40,9 @@ internal static class Fabrique
     public static MouvementStock Entree(decimal quantite, decimal cout, Guid? destination = null) =>
         Mouvement(TypeMouvement.EntreeReception, destination: destination ?? Reception, quantite: quantite, cout: cout);
 
+    public static MouvementStock Revalorisation(decimal quantite, decimal supplementUnitaire) =>
+        Mouvement(TypeMouvement.Revalorisation, quantite: quantite, cout: supplementUnitaire);
+
     public static MouvementStock VenteCaisse(decimal quantite, Guid? source = null) =>
         Mouvement(TypeMouvement.VenteCaisse, source: source ?? Vente, quantite: quantite, cout: 0m, typeDocument: "TicketCaisse");
 }

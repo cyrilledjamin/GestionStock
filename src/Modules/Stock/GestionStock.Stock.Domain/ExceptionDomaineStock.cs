@@ -49,4 +49,5 @@ public static class CodesErreurStock
     public const string DateNonUtc = "Stock.DateNonUtc";
     public const string MouvementNonConcerne = "Stock.MouvementNonConcerne";
     public const string StockInsuffisant = "Stock.StockInsuffisant";
+    public const string RevalorisationSansStock = "Stock.RevalorisationSansStock";
 }
