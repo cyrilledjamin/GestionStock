@@ -37,7 +37,11 @@ public sealed record ClientCredit(Guid Id, string Nom, string Telephone, decimal
     public decimal CreditDisponible => Math.Max(0m, PlafondCredit - SoldeDu);
 }
 
-public sealed record VenteACredit(Guid ClientId, Guid TicketId, string NumeroTicket, decimal Montant, string Utilisateur, string? ValideePar);
+/// <summary>
+/// Vente à crédit d'un ticket. <paramref name="HorsLigne"/> : vente faite sur le poste coupé du serveur, sur la foi du
+/// dernier solde connu ; elle s'enregistre même au-delà du plafond (7.8), la caisse en signale l'anomalie.
+/// </summary>
+public sealed record VenteACredit(Guid ClientId, Guid TicketId, string NumeroTicket, decimal Montant, string Utilisateur, string? ValideePar, bool HorsLigne = false);
 
 public sealed record RemboursementCredit(Guid ClientId, decimal Montant, Guid DocumentId, string Utilisateur);
 

@@ -255,6 +255,7 @@ public static class Permissions
     public const string SessionsConsulter = "Caisse.Sessions.Consulter";
     public const string SessionsValider = "Caisse.Sessions.Valider";
     public const string SessionsCloturer = "Caisse.Sessions.Cloturer";
+    public const string AnomaliesTraiter = "Caisse.Anomalies.Traiter";
     public const string InventaireConsulter = "Inventaire.Consulter";
     public const string InventaireCompter = "Inventaire.Compter";
     public const string InventaireValider = "Inventaire.Valider";

@@ -36,4 +36,9 @@
   <data name="Caisse.QuantiteRenduTropGrande" xml:space="preserve"><value>Quantité rendue supérieure à la quantité vendue restante.</value></data>
   <data name="Caisse.RemboursementInvalide" xml:space="preserve"><value>Remboursement refusé.</value></data>
   <data name="Caisse.MouvementRefuse" xml:space="preserve"><value>Mouvement de stock refusé : rien n'a été enregistré.</value></data>
+  <data name="Caisse.SessionAutreCaissier" xml:space="preserve"><value>Ces ventes appartiennent à la session d'un autre caissier : il doit se reconnecter sur ce poste pour les envoyer.</value></data>
+  <data name="Caisse.VentesNonSynchronisees" xml:space="preserve"><value>Des ventes faites hors ligne ne sont pas encore arrivées : la clôture attend la synchronisation.</value></data>
+  <data name="Caisse.CommentaireObligatoire" xml:space="preserve"><value>Un commentaire est obligatoire (500 caractères au plus).</value></data>
+  <data name="Caisse.AnomalieDejaTraitee" xml:space="preserve"><value>Cette anomalie est déjà traitée.</value></data>
+  <data name="Caisse.AnomalieIntrouvable" xml:space="preserve"><value>Anomalie introuvable.</value></data>
 </root>

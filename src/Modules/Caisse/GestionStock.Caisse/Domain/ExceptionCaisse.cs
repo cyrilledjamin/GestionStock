@@ -44,4 +44,9 @@ internal static class CodesErreurCaisse
     public const string QuantiteRenduTropGrande = "Caisse.QuantiteRenduTropGrande";
     public const string RemboursementInvalide = "Caisse.RemboursementInvalide";
     public const string MouvementRefuse = "Caisse.MouvementRefuse";
+    public const string SessionAutreCaissier = "Caisse.SessionAutreCaissier";
+    public const string VentesNonSynchronisees = "Caisse.VentesNonSynchronisees";
+    public const string CommentaireObligatoire = "Caisse.CommentaireObligatoire";
+    public const string AnomalieDejaTraitee = "Caisse.AnomalieDejaTraitee";
+    public const string AnomalieIntrouvable = "Caisse.AnomalieIntrouvable";
 }

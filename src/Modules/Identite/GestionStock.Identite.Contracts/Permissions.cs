@@ -74,6 +74,9 @@ public static class Permissions
     /// <summary>Clôturer à la place de son titulaire une session restée ouverte qui bloque un poste (décision du 16/11/2026).</summary>
     public const string SessionsCloturer = "Caisse.Sessions.Cloturer";
 
+    /// <summary>Traiter une anomalie de synchronisation d'une vente faite hors ligne (7.8).</summary>
+    public const string AnomaliesTraiter = "Caisse.Anomalies.Traiter";
+
     /// <summary>Consulter les inventaires et les déclarations de démarque.</summary>
     public const string InventaireConsulter = "Inventaire.Consulter";
 

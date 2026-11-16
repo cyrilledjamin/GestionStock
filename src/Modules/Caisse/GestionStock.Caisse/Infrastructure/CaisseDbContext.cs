@@ -26,6 +26,8 @@ internal sealed class CaisseDbContext(DbContextOptions<CaisseDbContext> options)
 
     public DbSet<CompteurCaisse> Compteurs => Set<CompteurCaisse>();
 
+    public DbSet<AnomalieCaisse> Anomalies => Set<AnomalieCaisse>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema(Schema);
@@ -117,6 +119,23 @@ internal sealed class CaisseDbContext(DbContextOptions<CaisseDbContext> options)
             remboursement.Property(r => r.ReferenceTransaction).HasMaxLength(100);
             remboursement.Property(r => r.Caissier).HasMaxLength(256);
             remboursement.HasOne<SessionCaisse>().WithMany().HasForeignKey(r => r.SessionId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<AnomalieCaisse>(anomalie =>
+        {
+            anomalie.ToTable("anomalie_caisse");
+            anomalie.HasKey(a => a.Id);
+            anomalie.Property(a => a.Id).ValueGeneratedNever();
+            anomalie.Property(a => a.Type).HasConversion<string>().HasMaxLength(30);
+            anomalie.Property(a => a.NumeroCaisse).HasMaxLength(30);
+            anomalie.Property(a => a.Caissier).HasMaxLength(256);
+            anomalie.Property(a => a.NumeroDocument).HasMaxLength(50);
+            anomalie.Property(a => a.Detail).HasMaxLength(AnomalieCaisse.LongueurMaxDetail);
+            anomalie.Property(a => a.TraiteePar).HasMaxLength(256);
+            anomalie.Property(a => a.Commentaire).HasMaxLength(AnomalieCaisse.LongueurMaxCommentaire);
+            anomalie.HasOne<SessionCaisse>().WithMany().HasForeignKey(a => a.SessionId).OnDelete(DeleteBehavior.Restrict);
+            anomalie.HasIndex(a => a.Traitee);
+            anomalie.HasIndex(a => a.DocumentId);
         });
 
         modelBuilder.Entity<CompteurCaisse>(compteur =>

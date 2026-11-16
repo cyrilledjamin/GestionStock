@@ -43,6 +43,9 @@ internal static class MatricePermissions
             // Session restée ouverte qui bloque un poste : le Gérant la clôture à la place de son titulaire.
             [Permissions.SessionsCloturer] = [Roles.Gerant],
 
+            // Anomalies de synchronisation (7.8) : traitées par le Gérant, consultées avec les sessions.
+            [Permissions.AnomaliesTraiter] = [Roles.Gerant],
+
             // 8.3 : le Magasinier fait l'inventaire et déclare la démarque ; le Comptable valide les écarts
             // d'inventaire ; la démarque est validée par le Comptable ou le Gérant.
             [Permissions.InventaireConsulter] = [Roles.Gerant, Roles.Comptable, Roles.Magasinier],

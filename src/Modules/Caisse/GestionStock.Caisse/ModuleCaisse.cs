@@ -22,6 +22,7 @@ public static class ModuleCaisse
         services.AddOptions<OptionsEntrepriseRecu>().Bind(configuration.GetSection(OptionsEntrepriseRecu.Section));
         services.AddScoped<ServiceSessions>();
         services.AddScoped<ServiceTickets>();
+        services.AddScoped<ServiceAnomalies>();
         services.AddScoped<ServiceRecus>();
         services.AddSingleton<IGenerateurRecu, GenerateurRecuPdf>();
         return services;
