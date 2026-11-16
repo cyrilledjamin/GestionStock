@@ -1,0 +1,3 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Contrat public du module Referentiel : seul projet référençable par les autres modules -->
+</Project>
