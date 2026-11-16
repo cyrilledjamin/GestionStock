@@ -26,6 +26,24 @@ internal sealed record NouveauCode(string Valeur);
 
 internal sealed record ChoixVenteRapide(bool VenteRapide);
 
+/// <summary>Conditionnement vendable avec ses codes actifs : de quoi identifier un scan sur le poste hors ligne.</summary>
+internal sealed record VendableCatalogue(
+    Guid ArticleId,
+    string CodeArticle,
+    string Libelle,
+    string? LibelleTraduit,
+    string UniteStock,
+    int PrecisionQuantite,
+    Guid ConditionnementId,
+    string LibelleConditionnement,
+    decimal QuantiteUniteStock,
+    bool EstUnite,
+    bool VenteRapide,
+    IReadOnlyList<string> Codes);
+
+/// <summary>Catalogue de la caisse (7.8) : tout ce qui se vend aujourd'hui, à garder sur le poste pour vendre hors ligne.</summary>
+internal sealed record CatalogueCaisse(DateTime GenereLeUtc, IReadOnlyList<VendableCatalogue> Vendables);
+
 /// <summary>Article vendable tel qu'identifié par un scan ou une recherche (UC22) : article + conditionnement.</summary>
 internal sealed record ArticleVendable(
     Guid ArticleId,
@@ -88,6 +106,30 @@ internal sealed class ServiceConditionnements(ReferentielDbContext contexte)
         conditionnement.ChoisirVenteRapide(saisie.VenteRapide);
         await contexte.SaveChangesAsync(annulation);
         return await Relire(conditionnement, annulation);
+    }
+
+    /// <summary>
+    /// Catalogue complet de la caisse pour le poste (7.8) : conditionnements actifs d'articles actifs, avec leurs codes
+    /// actifs. Le poste y résout un scan comme <see cref="ResoudreAsync"/> le fait en ligne.
+    /// </summary>
+    public async Task<CatalogueCaisse> CatalogueCaisseAsync(DateTime maintenantUtc, CancellationToken annulation)
+    {
+        var vendables = await (
+                from article in contexte.Articles
+                join conditionnement in contexte.Conditionnements on article.Id equals conditionnement.ArticleId
+                where article.Actif && conditionnement.Actif
+                orderby article.Code, conditionnement.QuantiteUniteStock
+                select new { article, conditionnement })
+            .AsNoTracking()
+            .ToListAsync(annulation);
+        var codes = (await contexte.Codes.AsNoTracking().Where(c => c.Actif).Select(c => new { c.ConditionnementId, c.Valeur }).ToListAsync(annulation))
+            .ToLookup(c => c.ConditionnementId, c => c.Valeur);
+        return new CatalogueCaisse(
+            maintenantUtc,
+            [.. vendables.Select(v => new VendableCatalogue(
+                v.article.Id, v.article.Code, v.article.Libelle, v.article.LibelleTraduit, v.article.UniteStock, v.article.PrecisionQuantite,
+                v.conditionnement.Id, v.conditionnement.Libelle, v.conditionnement.QuantiteUniteStock, v.conditionnement.EstUnite,
+                v.conditionnement.VenteRapide, [.. codes[v.conditionnement.Id].Order(StringComparer.Ordinal)]))]);
     }
 
     /// <summary>Grille d'articles rapides de la caisse : conditionnements actifs et marqués, d'articles actifs.</summary>

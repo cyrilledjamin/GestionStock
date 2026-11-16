@@ -27,6 +27,11 @@ internal static class EndpointsPrix
         groupe.MapGet("/regime", (IConsultationPrix prix) => TypedResults.Ok(prix.Regime))
             .RequireAuthorization(Permissions.PrixConsulter);
 
+        // Grille de la caisse, gardée sur le poste pour vendre hors ligne (7.8).
+        groupe.MapGet("/grille", async (ServicePrix service, IHorloge horloge, CancellationToken annulation) =>
+            TypedResults.Ok(await service.GrilleAsync(horloge.AujourdhuiDouala, annulation)))
+            .RequireAuthorization(Permissions.PrixConsulter);
+
         groupe.MapGet("/articles/{articleId:guid}", (Guid articleId, ServicePrix service, CancellationToken annulation) =>
             Executer(async () => TypedResults.Ok(await service.ListerParArticleAsync(articleId, annulation))))
             .RequireAuthorization(Permissions.PrixConsulter);

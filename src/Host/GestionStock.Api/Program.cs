@@ -20,6 +20,10 @@ builder.Services.AddProblemDetails();
 builder.Services.AddOpenApi();
 builder.Services.AddLocalization();
 
+// Faible bande passante (ENF10) : réponses JSON compressées (catalogue et grille de la caisse surtout). Pas en HTTPS,
+// valeur par défaut : une réponse qui mêle un secret et une saisie de l'utilisateur s'y prêterait à BREACH.
+builder.Services.AddResponseCompression();
+
 // Sécurité : tout endpoint est refusé par défaut. Chaque endpoint métier déclare sa permission ;
 // seuls la connexion et les endpoints techniques sont explicitement anonymes.
 // L'authentification (comptes locaux, jetons porteurs) et les permissions viennent du module Identite.
@@ -47,6 +51,7 @@ if (app.Configuration.GetValue<bool>(ExtensionsMigrations.CleAppliquerAuDemarrag
     await app.Services.AppliquerMigrationsAsync();
 }
 
+app.UseResponseCompression();
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 

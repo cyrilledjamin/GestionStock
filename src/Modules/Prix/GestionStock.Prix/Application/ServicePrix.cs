@@ -35,6 +35,12 @@ internal sealed record HistoriquePrix(Guid Id, decimal PrixTtc, DateOnly DebutVa
 
 internal sealed record NouveauPrix(decimal PrixTtc, DateOnly? DebutValidite);
 
+/// <summary>Prix d'un conditionnement pour le poste : en vigueur à la date donnée, et le prochain prix programmé.</summary>
+internal sealed record PrixGrille(Guid ConditionnementId, decimal PrixTtc, DateOnly DebutValidite, decimal? ProchainPrixTtc, DateOnly? ProchaineValidite);
+
+/// <summary>Grille de prix de la caisse (7.8) : gardée sur le poste, elle sert à vendre hors ligne au prix du jour.</summary>
+internal sealed record GrillePrix(DateOnly Date, bool Assujetti, decimal TauxTva, IReadOnlyList<PrixGrille> Prix);
+
 /// <summary>Gestion des prix de vente (UC25) et lecture par la caisse.</summary>
 internal sealed class ServicePrix(
     PrixDbContext contexte,
@@ -75,6 +81,30 @@ internal sealed class ServicePrix(
                 c.Id, c.Libelle, c.QuantiteUniteStock, c.Actif,
                 actuel?.PrixTtc, actuel?.DebutValidite, prochain?.PrixTtc, prochain?.DebutValidite);
         })];
+    }
+
+    /// <summary>
+    /// Grille de tous les conditionnements qui ont un prix en vigueur à la date (jour de Douala), avec le prochain prix
+    /// programmé : un poste coupé du réseau passé minuit applique le bon prix.
+    /// </summary>
+    public async Task<GrillePrix> GrilleAsync(DateOnly date, CancellationToken annulation)
+    {
+        var prix = await contexte.Prix.AsNoTracking().ToListAsync(annulation);
+        var grille = prix
+            .GroupBy(p => p.ConditionnementId)
+            .Select(groupe =>
+            {
+                var ordonnes = groupe.OrderByDescending(p => p.DebutValidite).ThenByDescending(p => p.DateSaisieUtc).ToList();
+                var actuel = ordonnes.FirstOrDefault(p => p.DebutValidite <= date);
+                var prochain = ordonnes.LastOrDefault(p => p.DebutValidite > date);
+                return actuel is null
+                    ? null
+                    : new PrixGrille(groupe.Key, actuel.PrixTtc, actuel.DebutValidite, prochain?.PrixTtc, prochain?.DebutValidite);
+            })
+            .OfType<PrixGrille>()
+            .OrderBy(p => p.ConditionnementId)
+            .ToList();
+        return new GrillePrix(date, Regime.Assujetti, Regime.TauxApplique, grille);
     }
 
     public async Task<IReadOnlyList<HistoriquePrix>> HistoriqueAsync(Guid conditionnementId, CancellationToken annulation) =>

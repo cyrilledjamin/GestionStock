@@ -216,6 +216,30 @@ public sealed class ConditionnementsTests(ApiDeTest api)
     }
 
     [Fact]
+    public async Task Le_catalogue_de_la_caisse_donne_chaque_conditionnement_actif_avec_ses_codes_actifs()
+    {
+        using var gerant = await api.ClientAvecRoleAsync(Roles.Gerant);
+        using var caissier = await api.ClientAvecRoleAsync(Roles.Caissier);
+        var (article, carton) = await ArticleAvecCartonAsync(gerant, 12);
+        var (_, ancien) = await ArticleAvecCartonAsync(gerant, 6);
+        var ean = NouvelEan13();
+        var desactive = NouvelEan13();
+        (await gerant.PostAsJsonAsync($"/api/referentiel/conditionnements/{carton.Id}/codes", new { valeur = ean }, Annulation)).EnsureSuccessStatusCode();
+        var avecCode = await Lire<Conditionnement>(await gerant.PostAsJsonAsync($"/api/referentiel/conditionnements/{carton.Id}/codes", new { valeur = desactive }, Annulation));
+        (await gerant.PostAsync($"/api/referentiel/codes/{avecCode.Codes.Single(c => c.Valeur == desactive).Id}/desactivation", null, Annulation)).EnsureSuccessStatusCode();
+        (await gerant.PutAsJsonAsync($"/api/referentiel/conditionnements/{ancien.Id}", new { libelle = "Ancien carton", actif = false }, Annulation)).EnsureSuccessStatusCode();
+
+        var catalogue = await caissier.GetFromJsonAsync<Catalogue>("/api/referentiel/catalogue-caisse", Annulation);
+
+        var duCarton = catalogue!.Vendables.Single(v => v.ConditionnementId == carton.Id);
+        var unite = catalogue.Vendables.Single(v => v.ArticleId == article.Id && v.EstUnite);
+        Assert.Equal([ean], duCarton.Codes);
+        Assert.Equal((12m, false), (duCarton.QuantiteUniteStock, duCarton.EstUnite));
+        Assert.Equal(article.Code, unite.CodeArticle);
+        Assert.DoesNotContain(catalogue.Vendables, v => v.ConditionnementId == ancien.Id);
+    }
+
+    [Fact]
     public async Task Le_magasinier_ne_gere_pas_les_codes()
     {
         using var gerant = await api.ClientAvecRoleAsync(Roles.Gerant);
@@ -266,6 +290,10 @@ public sealed class ConditionnementsTests(ApiDeTest api)
     internal sealed record Code(Guid Id, string Valeur, string Type, bool Principal, bool Actif);
 
     internal sealed record Conditionnement(Guid Id, Guid ArticleId, string Libelle, string Niveau, decimal QuantiteUniteStock, bool Actif, List<Code> Codes, bool VenteRapide = false);
+
+    private sealed record VendableCatalogue(Guid ArticleId, string CodeArticle, Guid ConditionnementId, decimal QuantiteUniteStock, bool EstUnite, bool VenteRapide, List<string> Codes);
+
+    private sealed record Catalogue(DateTime GenereLeUtc, List<VendableCatalogue> Vendables);
 
     internal sealed record Vendable(Guid ArticleId, string CodeArticle, Guid ConditionnementId, string LibelleConditionnement, decimal QuantiteUniteStock, string? CodeScanne);
 }
