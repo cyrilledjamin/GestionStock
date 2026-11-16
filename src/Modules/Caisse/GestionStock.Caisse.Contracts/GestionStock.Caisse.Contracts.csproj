@@ -1,0 +1,3 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Contrat public du module Caisse : modèle de reçu et son générateur (décision 17), types de documents -->
+</Project>

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Caisse.PosteInconnu" xml:space="preserve"><value>Unknown till.</value></data>
+  <data name="Caisse.FondInvalide" xml:space="preserve"><value>The cash float must be a whole, non-negative amount.</value></data>
+  <data name="Caisse.SessionDejaOuverte" xml:space="preserve"><value>You already have an open till session.</value></data>
+  <data name="Caisse.PosteOccupe" xml:space="preserve"><value>A session is already open on this till.</value></data>
+  <data name="Caisse.AucuneSessionOuverte" xml:space="preserve"><value>No open till session: open a session first.</value></data>
+  <data name="Caisse.SessionIntrouvable" xml:space="preserve"><value>Till session not found.</value></data>
+  <data name="Caisse.SessionNonComptee" xml:space="preserve"><value>The session must be closed (cash counted) before it is validated.</value></data>
+  <data name="Caisse.ComptageInvalide" xml:space="preserve"><value>The counted amount must be a whole, non-negative amount.</value></data>
+  <data name="Caisse.TicketSansLigne" xml:space="preserve"><value>The receipt has no items.</value></data>
+  <data name="Caisse.TicketIntrouvable" xml:space="preserve"><value>Receipt not found.</value></data>
+  <data name="Caisse.IdempotenceObligatoire" xml:space="preserve"><value>Missing receipt identifier.</value></data>
+  <data name="Caisse.ConditionnementIntrouvable" xml:space="preserve"><value>Item not found.</value></data>
+  <data name="Caisse.ArticleInactif" xml:space="preserve"><value>This item is no longer sold.</value></data>
+  <data name="Caisse.PrixAbsent" xml:space="preserve"><value>This item has no selling price.</value></data>
+  <data name="Caisse.QuantiteInvalide" xml:space="preserve"><value>Invalid quantity for this item.</value></data>
+  <data name="Caisse.RemiseInvalide" xml:space="preserve"><value>Invalid discount: whole amount, at most the line amount.</value></data>
+  <data name="Caisse.RemiseNonValidee" xml:space="preserve"><value>Any discount must be approved by a manager.</value></data>
+  <data name="Caisse.MontantNonEntier" xml:space="preserve"><value>Amounts are whole, positive CFA francs.</value></data>
+  <data name="Caisse.PaiementManquant" xml:space="preserve"><value>No payment entered.</value></data>
+  <data name="Caisse.PaiementInsuffisant" xml:space="preserve"><value>Insufficient payment.</value></data>
+  <data name="Caisse.RenduSansEspeces" xml:space="preserve"><value>Only cash can exceed the total (change given).</value></data>
+  <data name="Caisse.ReferenceObligatoire" xml:space="preserve"><value>The Mobile Money transaction reference is required.</value></data>
+  <data name="Caisse.ModeInvalide" xml:space="preserve"><value>Payment method not allowed here.</value></data>
+  <data name="Caisse.ClientObligatoire" xml:space="preserve"><value>A credit sale requires an identified customer.</value></data>
+  <data name="Caisse.ClientIntrouvable" xml:space="preserve"><value>Customer not found or deactivated.</value></data>
+  <data name="Caisse.PlafondDepasse" xml:space="preserve"><value>Credit limit exceeded: a manager must approve.</value></data>
+  <data name="Caisse.ValidationRefusee" xml:space="preserve"><value>Approval refused: wrong manager credentials or insufficient rights.</value></data>
+  <data name="Caisse.AvoirSurAvoir" xml:space="preserve"><value>A credit note cannot apply to another credit note.</value></data>
+  <data name="Caisse.LigneOrigineIntrouvable" xml:space="preserve"><value>This line does not belong to the receipt.</value></data>
+  <data name="Caisse.QuantiteRenduTropGrande" xml:space="preserve"><value>Returned quantity exceeds the remaining sold quantity.</value></data>
+  <data name="Caisse.RemboursementInvalide" xml:space="preserve"><value>Repayment refused.</value></data>
+  <data name="Caisse.MouvementRefuse" xml:space="preserve"><value>Stock movement refused: nothing was recorded.</value></data>
+</root>

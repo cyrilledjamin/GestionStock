@@ -22,6 +22,8 @@ public sealed class DependancesProjetsTests
             Assemblages.NomInfrastructure,
             "GestionStock.Achats",
             "GestionStock.Achats.Contracts",
+            "GestionStock.Caisse",
+            "GestionStock.Caisse.Contracts",
             "GestionStock.Credit",
             "GestionStock.Credit.Contracts",
             "GestionStock.Identite",

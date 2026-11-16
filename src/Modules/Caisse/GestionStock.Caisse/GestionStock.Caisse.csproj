@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Implémentation interne du module Caisse : sessions, tickets, avoirs, paiements, reçus (DDD léger, 7.4) -->
+  <PropertyGroup>
+    <NeutralLanguage>fr</NeutralLanguage>
+  </PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../GestionStock.Caisse.Contracts/GestionStock.Caisse.Contracts.csproj" />
+    <ProjectReference Include="../../Credit/GestionStock.Credit.Contracts/GestionStock.Credit.Contracts.csproj" />
+    <ProjectReference Include="../../Identite/GestionStock.Identite.Contracts/GestionStock.Identite.Contracts.csproj" />
+    <ProjectReference Include="../../Prix/GestionStock.Prix.Contracts/GestionStock.Prix.Contracts.csproj" />
+    <ProjectReference Include="../../Referentiel/GestionStock.Referentiel.Contracts/GestionStock.Referentiel.Contracts.csproj" />
+    <ProjectReference Include="../../Stock/GestionStock.Stock.Contracts/GestionStock.Stock.Contracts.csproj" />
+    <ProjectReference Include="../../../BuildingBlocks/GestionStock.Infrastructure/GestionStock.Infrastructure.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="GestionStock.ArchitectureTests" />
+    <InternalsVisibleTo Include="GestionStock.Api.IntegrationTests" />
+  </ItemGroup>
+</Project>

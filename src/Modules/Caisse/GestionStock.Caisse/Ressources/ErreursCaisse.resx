@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Caisse.PosteInconnu" xml:space="preserve"><value>Poste de caisse inconnu.</value></data>
+  <data name="Caisse.FondInvalide" xml:space="preserve"><value>Le fond de caisse doit être un montant entier positif ou nul.</value></data>
+  <data name="Caisse.SessionDejaOuverte" xml:space="preserve"><value>Vous avez déjà une session de caisse ouverte.</value></data>
+  <data name="Caisse.PosteOccupe" xml:space="preserve"><value>Une session est déjà ouverte sur ce poste.</value></data>
+  <data name="Caisse.AucuneSessionOuverte" xml:space="preserve"><value>Aucune session de caisse ouverte : ouvrez une session.</value></data>
+  <data name="Caisse.SessionIntrouvable" xml:space="preserve"><value>Session de caisse introuvable.</value></data>
+  <data name="Caisse.SessionNonComptee" xml:space="preserve"><value>La session doit être clôturée (espèces comptées) avant d'être validée.</value></data>
+  <data name="Caisse.ComptageInvalide" xml:space="preserve"><value>Le montant compté doit être un montant entier positif ou nul.</value></data>
+  <data name="Caisse.TicketSansLigne" xml:space="preserve"><value>Le ticket ne contient aucun article.</value></data>
+  <data name="Caisse.TicketIntrouvable" xml:space="preserve"><value>Ticket introuvable.</value></data>
+  <data name="Caisse.IdempotenceObligatoire" xml:space="preserve"><value>Identifiant du ticket manquant.</value></data>
+  <data name="Caisse.ConditionnementIntrouvable" xml:space="preserve"><value>Article introuvable.</value></data>
+  <data name="Caisse.ArticleInactif" xml:space="preserve"><value>Cet article n'est plus vendu.</value></data>
+  <data name="Caisse.PrixAbsent" xml:space="preserve"><value>Cet article n'a pas de prix de vente.</value></data>
+  <data name="Caisse.QuantiteInvalide" xml:space="preserve"><value>Quantité invalide pour cet article.</value></data>
+  <data name="Caisse.RemiseInvalide" xml:space="preserve"><value>Remise invalide : montant entier, au plus le montant de la ligne.</value></data>
+  <data name="Caisse.RemiseNonValidee" xml:space="preserve"><value>Toute remise doit être validée par un responsable.</value></data>
+  <data name="Caisse.MontantNonEntier" xml:space="preserve"><value>Les montants sont en francs CFA entiers et positifs.</value></data>
+  <data name="Caisse.PaiementManquant" xml:space="preserve"><value>Aucun paiement saisi.</value></data>
+  <data name="Caisse.PaiementInsuffisant" xml:space="preserve"><value>Paiement insuffisant.</value></data>
+  <data name="Caisse.RenduSansEspeces" xml:space="preserve"><value>Seules les espèces peuvent dépasser le total (monnaie rendue).</value></data>
+  <data name="Caisse.ReferenceObligatoire" xml:space="preserve"><value>La référence de transaction Mobile Money est obligatoire.</value></data>
+  <data name="Caisse.ModeInvalide" xml:space="preserve"><value>Mode de paiement non autorisé ici.</value></data>
+  <data name="Caisse.ClientObligatoire" xml:space="preserve"><value>Une vente à crédit exige un client identifié.</value></data>
+  <data name="Caisse.ClientIntrouvable" xml:space="preserve"><value>Client introuvable ou désactivé.</value></data>
+  <data name="Caisse.PlafondDepasse" xml:space="preserve"><value>Plafond de crédit dépassé : validation d'un responsable nécessaire.</value></data>
+  <data name="Caisse.ValidationRefusee" xml:space="preserve"><value>Validation refusée : identifiants du responsable incorrects ou droit insuffisant.</value></data>
+  <data name="Caisse.AvoirSurAvoir" xml:space="preserve"><value>Un avoir ne peut pas porter sur un autre avoir.</value></data>
+  <data name="Caisse.LigneOrigineIntrouvable" xml:space="preserve"><value>Cette ligne n'appartient pas au ticket.</value></data>
+  <data name="Caisse.QuantiteRenduTropGrande" xml:space="preserve"><value>Quantité rendue supérieure à la quantité vendue restante.</value></data>
+  <data name="Caisse.RemboursementInvalide" xml:space="preserve"><value>Remboursement refusé.</value></data>
+  <data name="Caisse.MouvementRefuse" xml:space="preserve"><value>Mouvement de stock refusé : rien n'a été enregistré.</value></data>
+</root>

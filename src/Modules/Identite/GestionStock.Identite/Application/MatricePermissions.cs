@@ -32,6 +32,14 @@ internal static class MatricePermissions
             [Permissions.ClientsGerer] = [Roles.Gerant],
             [Permissions.PlafondsGerer] = [Roles.Comptable],
 
+            // 8.3 : le Caissier vend, fait les avoirs et encaisse les remboursements sur sa propre caisse ;
+            // l'Administrateur ne fait aucune opération de vente ; le Gérant valide les écarts de caisse, le Comptable
+            // valide les clôtures.
+            [Permissions.CaisseVendre] = [Roles.Caissier],
+            [Permissions.TicketsConsulter] = [Roles.Caissier, Roles.Gerant, Roles.Comptable],
+            [Permissions.SessionsConsulter] = [Roles.Gerant, Roles.Comptable],
+            [Permissions.SessionsValider] = [Roles.Gerant, Roles.Comptable],
+
             // Provisoire : la gestion des articles n'est attribuée à aucun rôle par la section 8.3.
             [Permissions.ArticlesGerer] = [Roles.Gerant, Roles.Administrateur],
 

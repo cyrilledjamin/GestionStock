@@ -28,6 +28,9 @@ src/
   Modules/Achats/
     GestionStock.Achats.Contracts    contrat public : types de documents (journal des mouvements)
     GestionStock.Achats              fournisseurs, réception simple (brouillon → validation → entrée en stock)
+  Modules/Caisse/
+    GestionStock.Caisse.Contracts    contrat public : IGenerateurRecu et modèle de reçu (décision 17)
+    GestionStock.Caisse              sessions, tickets, avoirs, paiements, remboursements, reçu PDF
   Modules/Credit/
     GestionStock.Credit.Contracts    contrat public : IServiceCredit (vente à crédit, remboursement, annulation)
     GestionStock.Credit              clients, plafonds, journal des opérations, imputations, impayés
@@ -132,6 +135,8 @@ Uniquement par variables d'environnement ou `appsettings` ; aucun chemin ni adre
 | `ConnectionStrings:GestionStock` | `ConnectionStrings__GestionStock` | Chaîne de connexion PostgreSQL (obligatoire) ; le chiffrement GSS (Kerberos) y est désactivé sauf si `GSS Encryption Mode` est fourni |
 | `Stockage:RepertoireRacine` | `Stockage__RepertoireRacine` | Répertoire des fichiers (reçus, imports) ; `donnees/fichiers` par défaut. Contient aussi `cles-protection/`, les clés qui signent les jetons de connexion : conservées, elles évitent qu'un redémarrage déconnecte tout le monde (à inclure dans les sauvegardes) |
 | `BaseDeDonnees:AppliquerMigrationsAuDemarrage` | `BaseDeDonnees__AppliquerMigrationsAuDemarrage` | Applique les migrations de chaque module au démarrage ; `false` par défaut, `true` en Development et dans docker-compose |
+| `Entreprise:Nom`, `:Adresse`, `:Telephone`, `:NumeroContribuable` | `Entreprise__Nom`… | Identité imprimée en tête des reçus |
+| `Caisse:Postes` | `Caisse__Postes__0`, `Caisse__Postes__1`… | Postes de caisse de la boutique ; `CAISSE-1` par défaut |
 | `Entreprise:AssujettiTva` | `Entreprise__AssujettiTva` | Entreprise assujettie à la TVA (RG37) : reçu HT / TVA / TTC ; `false` par défaut, prix nets (`ENTREPRISE_ASSUJETTIE_TVA` dans `deploy/.env`) |
 | `Entreprise:TauxTva` | `Entreprise__TauxTva` | Taux légal en %, 19,25 par défaut |
 | `Identite:AdministrateurInitial:Identifiant` | `Identite__AdministrateurInitial__Identifiant` | Compte Administrateur créé au démarrage si la base ne contient aucun compte (`ADMIN_IDENTIFIANT` dans `deploy/.env`) |
@@ -186,6 +191,17 @@ Si le port 5432 est déjà pris (PostgreSQL installé sur le poste), choisir un 
 | `GET /api/credit/impayes` | `Credit.Consulter` | Clients ayant une dette échue (RG43) |
 | `POST /api/credit/clients`, `PUT /api/credit/clients/{id}` | `Credit.Clients.Gerer` | `{ nom, telephone, delaiPaiementJours?, actif }` |
 | `PUT /api/credit/clients/{id}/plafond` | `Credit.Plafonds.Gerer` | `{ plafondCredit }` |
+| `GET /api/caisse/postes` | `Caisse.Vendre` | Postes de caisse configurés |
+| `POST /api/caisse/sessions` | `Caisse.Vendre` | `{ numeroCaisse, fondCaisse }` : ouvre la session du caissier connecté |
+| `GET /api/caisse/sessions/courante` | `Caisse.Vendre` | Session ouverte du caissier avec ses totaux (204 s'il n'en a pas) |
+| `POST /api/caisse/sessions/courante/cloture` | `Caisse.Vendre` | `{ especesComptees }` : clôture, écart calculé |
+| `GET /api/caisse/sessions`, `GET /api/caisse/sessions/{id}` | `Caisse.Sessions.Consulter` | Sessions (`?statut=Ouverte|Comptee|Validee`) et leurs totaux |
+| `POST /api/caisse/sessions/{id}/validation` | `Caisse.Sessions.Valider` | Valide une session clôturée et son écart |
+| `POST /api/caisse/tickets` | `Caisse.Vendre` | Vente : `{ idIdempotence, clientId?, lignes: [{ conditionnementId, quantite, remise?, codeScanne? }], paiements: [{ mode, montant, reference? }], validation? }` ; 201, ou 200 si déjà reçue |
+| `POST /api/caisse/avoirs` | `Caisse.Vendre` | `{ idIdempotence, ticketOrigineId, lignes: [{ ligneOrigineId, quantite }], modeRemboursement?, reference? }` |
+| `POST /api/caisse/remboursements` | `Caisse.Vendre` | Remboursement de crédit : `{ idIdempotence, clientId, mode, montant, reference? }` |
+| `GET /api/caisse/tickets/{id}`, `/tickets/numero/{numero}`, `/sessions/{id}/tickets` | `Caisse.Tickets.Consulter` | Tickets (quantités déjà rendues par ligne) |
+| `GET /api/caisse/tickets/{id}/recu.pdf` | `Caisse.Tickets.Consulter` | Reçu PDF 80 mm dans la langue de la requête |
 | `GET /api/stock/soldes` | `Stock.Consulter` | Soldes article × site de la boutique : physique, réservé, bloqué, disponible, CUMP |
 | `GET /api/stock/articles/{id}/mouvements` | `Stock.Consulter` | Journal d'un article, du plus récent au plus ancien (`?limite=`, 100 par défaut, 1000 au plus) |
 
@@ -241,6 +257,35 @@ en anglais. Hors ligne (PWA, IndexedDB) : tranche ultérieure, avec la caisse.
 - **TVA** (RG37) : paramètre `Entreprise:AssujettiTva`. Assujettie, l'entreprise affiche HT, TVA 19,25 % et TTC ;
   sinon, prix nets et taux appliqué nul.
 
+## Caisse
+
+- **Session** (UC24, RG36) : le Caissier l'ouvre sur un poste avec un fond de caisse ; une seule session ouverte par
+  poste et par caissier. Clôture par comptage des espèces : espèces théoriques = fond + espèces des ventes (moins le
+  rendu) − espèces rendues sur les avoirs + remboursements de crédit en espèces ; l'écart est enregistré, puis validé
+  par le Gérant ou le Comptable (8.3).
+- **Ticket** (UC17) : le poste envoie les conditionnements et quantités ; **le prix vient du module Prix** (RG37).
+  Validation en **une seule transaction** : ticket, un mouvement `VenteCaisse` par ligne depuis l'emplacement de vente
+  (quantité × facteur du conditionnement, au CUMP courant), part à crédit. **Jamais refusé pour stock insuffisant**
+  (RG22). Numérotation **continue par poste** (`CAISSE-1-000042`, RG34) : le compteur est verrouillé et annulé avec la
+  transaction, donc sans trou même en cas de refus ou de ventes simultanées. Un ticket n'est jamais modifié.
+- **Idempotence** : `idIdempotence` est généré par le poste ; un renvoi après coupure renvoie le ticket déjà enregistré
+  (verrou transactionnel sur l'identifiant), et les mouvements de stock en dérivent leur propre identifiant.
+- **Paiements** (RG35) : espèces, Mobile Money (référence obligatoire), carte, crédit (client obligatoire, RG39),
+  combinables ; seules les espèces dépassent le total (monnaie rendue). Montants en **francs CFA entiers** (pas de
+  subdivision en usage, 1.5) : chaque ligne est arrondie à l'unité, remises et paiements sont entiers.
+- **Remise** : plafonds par rôle non définis, donc toute remise exige la validation d'un responsable (décision 31) ;
+  **dépassement de plafond de crédit** : idem (RG40). Le responsable saisit ses identifiants sur le poste ; son
+  identifiant est tracé sur le ticket.
+- **Avoir** (UC18, RG34) : nouveau ticket numéroté lié au ticket d'origine, quantités bornées par ce qui reste à rendre,
+  remise d'origine rendue au prorata ; la marchandise revient sur l'emplacement de vente (`AvoirCaisse`, au CUMP
+  courant) ; la dette éventuelle du ticket est annulée d'abord, le reste est rendu en espèces (par défaut), Mobile Money
+  ou carte.
+- **Remboursement de crédit** (RG42) : encaissé dans la session, en espèces ou Mobile Money.
+- **Reçu** (décision 26) : PDF 80 mm généré derrière `IGenerateurRecu` (décision 17), dans la langue de l'utilisateur,
+  heure de Douala, HT / TVA / TTC si l'entreprise est assujettie, « prix nets » sinon. Police Courier (l'une des 14
+  polices standard des lecteurs PDF, à chasse fixe comme un ticket thermique) : aucune police à embarquer, aucune
+  dépendance. L'impression se fait sur le poste client.
+
 ## Crédit client
 
 - **Client** (UC26) : nom et téléphone obligatoires (RG39), seules données personnelles conservées (loi n° 2024/017) ;
@@ -290,6 +335,9 @@ Chaque permission est attribuée à des rôles dans
 | `Credit.Consulter` | Gerant, Comptable, Caissier |
 | `Credit.Clients.Gerer` | Gerant |
 | `Credit.Plafonds.Gerer` | Comptable |
+| `Caisse.Vendre` | Caissier |
+| `Caisse.Tickets.Consulter` | Caissier, Gerant, Comptable |
+| `Caisse.Sessions.Consulter`, `Caisse.Sessions.Valider` | Gerant, Comptable |
 | `Referentiel.Articles.Gerer` | Gerant, Administrateur *(provisoire)* |
 | `Achats.Consulter` | Gerant, Comptable, Magasinier |
 | `Achats.Fournisseurs.Gerer` | Gerant, Magasinier *(provisoire)* |
@@ -342,7 +390,7 @@ sur une machine Linux de GitHub qui dispose de Docker :
 | 14 | Module Prix et paramètre TVA | Fait |
 | 15 | Identite : validation par un responsable | Fait |
 | 16 | Module Credit : clients, plafond, remboursements | Fait |
-| 17 | Module Caisse : sessions, tickets, avoirs, remises, reçu PDF | À faire |
+| 17 | Module Caisse : sessions, tickets, avoirs, remises, reçu PDF | Fait |
 | 18 | Client : écran de caisse et écrans de gestion | À faire |
 | 19 | Architecture, CI, README, démonstration de la caisse | À faire |
 
@@ -364,6 +412,8 @@ Scénario vérifié dans le navigateur sur http://localhost:8080, base vierge :
 
 - Validation par un responsable au poste du caissier (ses identifiants), et attribution au Gérant de la validation
   d'un dépassement de crédit (RG40 cite « un utilisateur autorisé ») : choix provisoires.
+- Avoir valorisé au CUMP courant à son retour en stock (le dossier ne précise pas la valorisation d'un retour).
+- Montants de caisse en francs CFA entiers et arrondi de chaque ligne à l'unité (déduits de 1.5 et RG32).
 - Délai de paiement par défaut (30 jours) : non fixé par le dossier, choix provisoire.
 - Format des codes internes (`INT` + 6 chiffres) : non fixé par le dossier, choix provisoire.
 - Coût unitaire saisi sur la ligne de réception : absent de `LigneReception` dans le modèle UML (il y vient de la
