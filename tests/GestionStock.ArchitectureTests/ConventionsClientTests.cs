@@ -27,9 +27,7 @@ public sealed partial class ConventionsClientTests
     [Fact]
     public void Les_permissions_du_client_sont_celles_de_l_API()
     {
-        var source = File.ReadAllText(Path.Combine(RepertoireClient, "Services", "Modeles.cs"));
-        var blocPermissions = source[source.IndexOf("public static class Permissions", StringComparison.Ordinal)..];
-        var client = ConstanteChaine().Matches(blocPermissions).ToDictionary(m => m.Groups[1].Value, m => m.Groups[2].Value);
+        var client = ConstanteChaine().Matches(BlocClasse("Permissions")).ToDictionary(m => m.Groups[1].Value, m => m.Groups[2].Value);
 
         var api = typeof(Permissions).GetFields(BindingFlags.Public | BindingFlags.Static)
             .Where(f => f.IsLiteral)
@@ -41,8 +39,7 @@ public sealed partial class ConventionsClientTests
     [Fact]
     public void Les_roles_du_client_sont_ceux_de_l_API()
     {
-        var source = File.ReadAllText(Path.Combine(RepertoireClient, "Services", "Modeles.cs"));
-        var ligne = source.Split('\n').Single(l => l.Contains("Tous { get; } = [", StringComparison.Ordinal));
+        var ligne = BlocClasse("Roles").Split('\n').Single(l => l.Contains("Tous { get; } = [", StringComparison.Ordinal));
 
         var client = Regex.Matches(ligne, "\"([^\"]+)\"").Select(m => m.Groups[1].Value);
 
@@ -59,14 +56,28 @@ public sealed partial class ConventionsClientTests
             .SelectMany(f => CleStatique().Matches(File.ReadAllText(f)).Select(m => m.Groups[1].Value))
             .ToHashSet(StringComparer.Ordinal);
 
-        // Clés construites à l'exécution : rôles, statuts de réception, types de mouvement.
+        // Clés construites à l'exécution : rôles, statuts, types de mouvement, modes de paiement, opérations, niveaux.
         utilisees.UnionWith(Roles.Tous.Select(r => $"Role.{r}"));
         utilisees.UnionWith(["Statut.Brouillon", "Statut.Validee"]);
         utilisees.UnionWith(Enum.GetNames<TypeMouvementStock>().Select(t => $"Mouvement.{t}"));
+        utilisees.UnionWith(["Mode.Especes", "Mode.MobileMoney", "Mode.Carte", "Mode.Credit"]);
+        utilisees.UnionWith(["StatutSession.Ouverte", "StatutSession.Comptee", "StatutSession.Validee"]);
+        utilisees.UnionWith(["Operation.VenteCredit", "Operation.Remboursement", "Operation.Annulation"]);
+        utilisees.UnionWith(["Niveau.Unite", "Niveau.Pack", "Niveau.Carton", "Niveau.Sac", "Niveau.Palette"]);
 
         Assert.Empty(utilisees.Except(francais));
         Assert.Empty(utilisees.Except(anglais));
         Assert.Equal(francais.Order(), anglais.Order());
+    }
+
+    /// <summary>Corps d'une classe statique de Services/Modeles.cs, de sa déclaration à son accolade fermante.</summary>
+    private static string BlocClasse(string nom)
+    {
+        var source = File.ReadAllText(Path.Combine(RepertoireClient, "Services", "Modeles.cs")).ReplaceLineEndings("\n");
+        var debut = source.IndexOf($"public static class {nom}\n", StringComparison.Ordinal);
+        Assert.True(debut >= 0, $"Classe {nom} introuvable dans Modeles.cs.");
+        var fin = source.IndexOf("\n}", debut, StringComparison.Ordinal);
+        return source[debut..fin];
     }
 
     private static HashSet<string> Cles(string fichier) =>

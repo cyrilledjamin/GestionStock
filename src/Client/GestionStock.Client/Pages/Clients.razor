@@ -1,0 +1,89 @@
+@page "/clients"
+@inject Api Api
+@inject Session Session
+
+<PageTitle>@L["Clients"] · GestionStock</PageTitle>
+
+<h1>@L["Clients"]</h1>
+
+<div class="barre">
+    <input type="search" placeholder="@L["ChercherClient"]" @bind="_recherche" @bind:event="oninput" @bind:after="Charger" />
+    <label class="case"><input type="checkbox" @bind="_impayes" @bind:after="Charger" /> @L["SeulementImpayes"]</label>
+    @if (Session.A(Permissions.ClientsGerer) && !_creation)
+    {
+        <button class="principal" @onclick="() => _creation = true">@L["NouveauClient"]</button>
+    }
+</div>
+
+<Message Texte="@_erreur" />
+
+@if (_creation)
+{
+    <form class="fiche" @onsubmit="Creer">
+        <h2>@L["NouveauClient"]</h2>
+        <div class="grille">
+            <label>@L["Nom"] <input @bind="_nom" required maxlength="200" /></label>
+            <label>@L["Telephone"] <input @bind="_telephone" required maxlength="30" placeholder="+237 6…" /></label>
+            <label>@L["DelaiPaiement"] <input type="number" min="0" step="1" @bind="_delai" /></label>
+        </div>
+        <p class="discret">@L["DonneesPersonnellesAide"]</p>
+        <div class="actions">
+            <button type="submit" class="principal">@L["Enregistrer"]</button>
+            <button type="button" @onclick="() => _creation = false">@L["Annuler"]</button>
+        </div>
+    </form>
+}
+
+<table>
+    <thead><tr><th>@L["Nom"]</th><th>@L["Telephone"]</th><th class="nombre">@L["Plafond"]</th><th class="nombre">@L["SoldeDu"]</th><th class="nombre">@L["EnRetard"]</th></tr></thead>
+    <tbody>
+        @foreach (var client in _clients)
+        {
+            <tr class="@(client.Actif ? "" : "inactif") @(client.MontantEnRetard > 0 ? "negatif" : "")">
+                <td><a href="clients/@client.Id">@client.Nom</a></td>
+                <td>@client.Telephone</td>
+                <td class="nombre">@Format.Montant(client.PlafondCredit)</td>
+                <td class="nombre">@Format.Montant(client.SoldeDu)</td>
+                <td class="nombre">@(client.MontantEnRetard > 0 ? Format.Montant(client.MontantEnRetard) : "")</td>
+            </tr>
+        }
+        @if (_clients.Count == 0)
+        {
+            <tr><td colspan="5" class="vide">@L["AucunClient"]</td></tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    private List<ClientCredit> _clients = [];
+    private string _recherche = "";
+    private bool _impayes;
+    private bool _creation;
+    private string _nom = "";
+    private string _telephone = "";
+    private int _delai = 30;
+    private string? _erreur;
+
+    protected override Task OnInitializedAsync() => Charger();
+
+    private async Task Charger()
+    {
+        var url = _impayes ? "api/credit/impayes" : $"api/credit/clients?recherche={Uri.EscapeDataString(_recherche)}";
+        var resultat = await Api.GetAsync<List<ClientCredit>>(url);
+        _clients = resultat.Valeur ?? [];
+        _erreur = resultat.Erreur;
+    }
+
+    private async Task Creer()
+    {
+        var resultat = await Api.PostAsync<ClientCredit>("api/credit/clients", new { Nom = _nom, Telephone = _telephone, DelaiPaiementJours = _delai });
+        _erreur = resultat.Erreur;
+        if (resultat.Reussi)
+        {
+            _creation = false;
+            _nom = "";
+            _telephone = "";
+            await Charger();
+        }
+    }
+}

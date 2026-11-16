@@ -1,0 +1,52 @@
+@* Recherche et choix d'un client à crédit (nom ou téléphone). *@
+@inject Api Api
+
+<div class="choix-client">
+    @if (Client is null)
+    {
+        <input type="search" placeholder="@(Libelle ?? L["ChercherClient"])" @bind="_recherche" @bind:event="oninput" @bind:after="Rechercher" />
+        @if (_resultats.Count > 0)
+        {
+            <ul class="resultats">
+                @foreach (var client in _resultats)
+                {
+                    <li><button type="button" class="lien" @onclick="() => Choisir(client)">@client.Nom · @client.Telephone</button></li>
+                }
+            </ul>
+        }
+    }
+    else
+    {
+        <div class="client-choisi">
+            <span><strong>@Client.Nom</strong> · @Client.Telephone<br />
+                <small class="discret">@L["SoldeDu"] @Format.Montant(Client.SoldeDu) / @L["Plafond"] @Format.Montant(Client.PlafondCredit)</small></span>
+            <button type="button" class="lien" @onclick="() => Choisir(null)">✕</button>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public ClientCredit? Client { get; set; }
+
+    [Parameter] public EventCallback<ClientCredit?> ClientChanged { get; set; }
+
+    [Parameter] public string? Libelle { get; set; }
+
+    private string _recherche = "";
+    private List<ClientCredit> _resultats = [];
+
+    private async Task Rechercher()
+    {
+        _resultats = _recherche.Trim().Length < 2
+            ? []
+            : ((await Api.GetAsync<List<ClientCredit>>($"api/credit/clients?recherche={Uri.EscapeDataString(_recherche.Trim())}")).Valeur ?? [])
+                .Where(c => c.Actif).Take(10).ToList();
+    }
+
+    private async Task Choisir(ClientCredit? client)
+    {
+        _recherche = "";
+        _resultats = [];
+        await ClientChanged.InvokeAsync(client);
+    }
+}

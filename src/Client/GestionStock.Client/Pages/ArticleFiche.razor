@@ -1,0 +1,168 @@
+@page "/articles/{Id:guid}"
+@inject Api Api
+@inject Session Session
+
+<PageTitle>@(_article?.Code ?? L["Article"]) · GestionStock</PageTitle>
+
+<p><a href="articles">← @L["Articles"]</a></p>
+<Message Texte="@_erreur" />
+<Message Texte="@_succes" Erreur="false" />
+
+@if (_article is not null)
+{
+    <h1><code>@_article.Code</code> @Format.Libelle(_article)</h1>
+    <p class="discret">@L["UniteStock"] : @_article.UniteStock · @L["Precision"] : @_article.PrecisionQuantite</p>
+
+    <h2>@L["ConditionnementsEtPrix"]</h2>
+    <table class="fiche-article">
+        <thead>
+            <tr><th>@L["Conditionnement"]</th><th class="nombre">@L["Contenu"]</th><th>@L["Codes"]</th><th class="nombre">@L["PrixActuel"]</th><th>@L["PrixProgramme"]</th><th></th></tr>
+        </thead>
+        <tbody>
+            @foreach (var conditionnement in _conditionnements)
+            {
+                var prix = _prix.FirstOrDefault(p => p.ConditionnementId == conditionnement.Id);
+                <tr class="@(conditionnement.Actif ? "" : "inactif")">
+                    <td>@conditionnement.Libelle <small class="discret">@L[$"Niveau.{conditionnement.Niveau}"]</small></td>
+                    <td class="nombre">@Format.Quantite(conditionnement.QuantiteUniteStock) @_article.UniteStock</td>
+                    <td>
+                        @foreach (var codeBarres in conditionnement.Codes.Where(c => c.Actif))
+                        {
+                            <div class="code">
+                                <code>@codeBarres.Valeur</code>
+                                @if (Session.A(Permissions.ArticlesGerer))
+                                {
+                                    <button class="lien" title="@L["DesactiverCode"]" @onclick="() => DesactiverCode(codeBarres.Id)">✕</button>
+                                }
+                            </div>
+                        }
+                        @if (Session.A(Permissions.ArticlesGerer) && conditionnement.Actif)
+                        {
+                            <div class="code-ajout">
+                                <input placeholder="@L["CodeBarresAide"]" @bind="_nouveauxCodes[conditionnement.Id]" />
+                                <button class="lien" @onclick="() => AjouterCode(conditionnement.Id)">@L["Ajouter"]</button>
+                                <button class="lien" @onclick="() => GenererCode(conditionnement.Id)">@L["GenererCodeInterne"]</button>
+                            </div>
+                        }
+                    </td>
+                    <td class="nombre">@(prix?.PrixTtc is { } p ? Format.Montant(p) : "—")</td>
+                    <td>
+                        @if (prix?.ProchainPrixTtc is { } prochain)
+                        {
+                            <span>@Format.Montant(prochain) <small class="discret">@L["ALaDate", prix.ProchaineValidite!.Value.ToString("d", CultureInfo.CurrentCulture)]</small></span>
+                        }
+                    </td>
+                    <td>
+                        @if (Session.A(Permissions.PrixGerer) && conditionnement.Actif)
+                        {
+                            <div class="code-ajout">
+                                <input type="number" min="1" step="1" placeholder="@L["NouveauPrix"]" @bind="_nouveauxPrix[conditionnement.Id]" />
+                                <input type="date" @bind="_datesPrix[conditionnement.Id]" />
+                                <button class="lien" @onclick="() => FixerPrix(conditionnement.Id)">@L["Fixer"]</button>
+                            </div>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    @if (Session.A(Permissions.ArticlesGerer))
+    {
+        <form class="fiche" @onsubmit="AjouterConditionnement">
+            <h2>@L["NouveauConditionnement"]</h2>
+            <div class="grille">
+                <label>@L["Libelle"] <input @bind="_libelle" required maxlength="50" placeholder="@L["ConditionnementExemple"]" /></label>
+                <label>@L["Niveau"]
+                    <select @bind="_niveau">
+                        @foreach (var niveau in new[] { "Pack", "Carton", "Sac", "Palette" })
+                        {
+                            <option value="@niveau">@L[$"Niveau.{niveau}"]</option>
+                        }
+                    </select>
+                </label>
+                <label>@L["Contenu"] (@_article.UniteStock) <input type="number" min="0" step="any" @bind="_facteur" required /></label>
+            </div>
+            <div class="actions"><button type="submit" class="principal">@L["Ajouter"]</button></div>
+        </form>
+    }
+}
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+
+    private Article? _article;
+    private List<Conditionnement> _conditionnements = [];
+    private List<PrixConditionnement> _prix = [];
+    private Dictionary<Guid, string?> _nouveauxCodes = [];
+    private Dictionary<Guid, decimal?> _nouveauxPrix = [];
+    private Dictionary<Guid, DateOnly?> _datesPrix = [];
+    private string _libelle = "";
+    private string _niveau = "Carton";
+    private decimal _facteur;
+    private string? _erreur;
+    private string? _succes;
+
+    protected override Task OnParametersSetAsync() => Charger();
+
+    private async Task Charger()
+    {
+        var article = await Api.GetAsync<Article>($"api/referentiel/articles/{Id}");
+        _erreur = article.Erreur;
+        _article = article.Valeur;
+        _conditionnements = (await Api.GetAsync<List<Conditionnement>>($"api/referentiel/articles/{Id}/conditionnements")).Valeur ?? [];
+        _prix = (await Api.GetAsync<List<PrixConditionnement>>($"api/prix/articles/{Id}")).Valeur ?? [];
+        foreach (var conditionnement in _conditionnements)
+        {
+            _nouveauxCodes.TryAdd(conditionnement.Id, null);
+            _nouveauxPrix.TryAdd(conditionnement.Id, null);
+            _datesPrix.TryAdd(conditionnement.Id, null);
+        }
+    }
+
+    private async Task Executer<T>(Task<Resultat<T>> appel, string succes)
+    {
+        var resultat = await appel;
+        _erreur = resultat.Erreur;
+        _succes = resultat.Reussi ? succes : null;
+        if (resultat.Reussi)
+        {
+            await Charger();
+        }
+    }
+
+    private async Task AjouterConditionnement()
+    {
+        await Executer(Api.PostAsync<Conditionnement>($"api/referentiel/articles/{Id}/conditionnements", new { Libelle = _libelle, Niveau = _niveau, QuantiteUniteStock = _facteur }), L["ConditionnementAjoute"]);
+        if (_erreur is null)
+        {
+            _libelle = "";
+            _facteur = 0;
+        }
+    }
+
+    private async Task AjouterCode(Guid conditionnement)
+    {
+        await Executer(Api.PostAsync<Conditionnement>($"api/referentiel/conditionnements/{conditionnement}/codes", new { Valeur = _nouveauxCodes[conditionnement] ?? "" }), L["CodeAjoute"]);
+        if (_erreur is null)
+        {
+            _nouveauxCodes[conditionnement] = null;
+        }
+    }
+
+    private Task GenererCode(Guid conditionnement) =>
+        Executer(Api.PostAsync<Conditionnement>($"api/referentiel/conditionnements/{conditionnement}/codes/interne"), L["CodeAjoute"]);
+
+    private Task DesactiverCode(Guid code) =>
+        Executer(Api.PostAsync<Conditionnement>($"api/referentiel/codes/{code}/desactivation"), L["CodeDesactive"]);
+
+    private async Task FixerPrix(Guid conditionnement)
+    {
+        await Executer(Api.PostAsync<object>($"api/prix/conditionnements/{conditionnement}", new { PrixTtc = _nouveauxPrix[conditionnement] ?? 0, DebutValidite = _datesPrix[conditionnement] }), L["PrixFixe"]);
+        if (_erreur is null)
+        {
+            _nouveauxPrix[conditionnement] = null;
+            _datesPrix[conditionnement] = null;
+        }
+    }
+}

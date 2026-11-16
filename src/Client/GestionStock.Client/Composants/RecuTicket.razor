@@ -1,0 +1,110 @@
+@* Reçu 80 mm imprimé par le navigateur du poste (la feuille de style d'impression n'affiche que lui). *@
+@inject Api Api
+@inject IJSRuntime Js
+
+@if (Ticket is not null)
+{
+    <div class="recu-actions">
+        <button class="principal" @onclick="Imprimer">@L["ImprimerRecu"]</button>
+        <button @onclick="TelechargerPdf">@L["RecuPdf"]</button>
+        @ChildContent
+    </div>
+    <Message Texte="@_erreur" />
+
+    <div class="recu">
+        <div class="centre gras">@(_entete?.Nom ?? "GestionStock")</div>
+        @if (_entete?.Adresse is { Length: > 0 } adresse)
+        {
+            <div class="centre">@adresse</div>
+        }
+        @if (_entete?.Telephone is { Length: > 0 } telephone)
+        {
+            <div class="centre">@telephone</div>
+        }
+        <hr />
+        <div class="gras">@(Ticket.EstAvoir ? L["Avoir"] : L["Ticket"]) @Ticket.Numero</div>
+        @if (_numeroOrigine is not null)
+        {
+            <div>@L["AvoirSur"] @_numeroOrigine</div>
+        }
+        <div>@Format.Date(Ticket.DateUtc)</div>
+        <div>@L["Caissier"] : @Ticket.Caissier</div>
+        @if (_client is not null)
+        {
+            <div>@L["Client"] : @_client</div>
+        }
+        <hr />
+        @foreach (var ligne in Ticket.Lignes)
+        {
+            <div>@ligne.Libelle</div>
+            <div class="ligne-recu"><span>&nbsp;&nbsp;@Format.Quantite(ligne.Quantite) x @Format.Montant(ligne.PrixUnitaire)</span><span>@Format.Montant(ligne.MontantTtc + ligne.Remise)</span></div>
+            @if (ligne.Remise > 0)
+            {
+                <div class="ligne-recu"><span>&nbsp;&nbsp;@L["Remise"]</span><span>-@Format.Montant(ligne.Remise)</span></div>
+            }
+        }
+        <hr />
+        <div class="ligne-recu gras"><span>@L["Total"]</span><span>@Format.Montant(Ticket.TotalTtc)</span></div>
+        @if (Ticket.TauxTva > 0)
+        {
+            <div class="ligne-recu"><span>@L["TotalHt"]</span><span>@Format.Montant(Ticket.TotalHt)</span></div>
+            <div class="ligne-recu"><span>@L["Tva"] @Ticket.TauxTva.ToString("0.##", CultureInfo.CurrentCulture) %</span><span>@Format.Montant(Ticket.TotalTva)</span></div>
+        }
+        else
+        {
+            <div>@L["PrixNets"]</div>
+        }
+        @foreach (var paiement in Ticket.Paiements)
+        {
+            <div class="ligne-recu"><span>@L[$"Mode.{paiement.Mode}"]</span><span>@Format.Montant(paiement.Montant)</span></div>
+            @if (!string.IsNullOrEmpty(paiement.Reference))
+            {
+                <div>&nbsp;&nbsp;@L["Reference"] @paiement.Reference</div>
+            }
+        }
+        @if (Ticket.Rendu > 0)
+        {
+            <div class="ligne-recu gras"><span>@L["Rendu"]</span><span>@Format.Montant(Ticket.Rendu)</span></div>
+        }
+        <hr />
+        <div class="centre">@L["Merci"]</div>
+    </div>
+}
+
+@code {
+    [Parameter] public TicketCaisse? Ticket { get; set; }
+
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private EnteteRecu? _entete;
+    private string? _numeroOrigine;
+    private string? _client;
+    private string? _erreur;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _entete = (await Api.GetAsync<EnteteRecu>("api/caisse/entete")).Valeur;
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _numeroOrigine = Ticket?.TicketOrigineId is { } origine
+            ? (await Api.GetAsync<TicketCaisse>($"api/caisse/tickets/{origine}")).Valeur?.Numero
+            : null;
+        _client = Ticket?.ClientId is { } client
+            ? (await Api.GetAsync<FicheClient>($"api/credit/clients/{client}")).Valeur?.Client.Nom
+            : null;
+    }
+
+    private async Task Imprimer() => await Js.InvokeVoidAsync("gestionStock.imprimer");
+
+    private async Task TelechargerPdf()
+    {
+        var pdf = await Api.GetOctetsAsync($"api/caisse/tickets/{Ticket!.Id}/recu.pdf");
+        _erreur = pdf is null ? L["RecuIndisponible"].Value : null;
+        if (pdf is not null)
+        {
+            await Js.InvokeVoidAsync("gestionStock.telecharger", $"recu-{Ticket.Numero}.pdf", "application/pdf", Convert.ToBase64String(pdf));
+        }
+    }
+}

@@ -223,7 +223,16 @@ Ouvrir http://localhost:8080 (docker-compose) puis se connecter. Le menu dépend
 | Réceptions | Liste ; saisie en brouillon (lignes, valeur calculée), enregistrement, validation |
 | Fournisseurs | Liste, création, modification, désactivation |
 | Articles | Recherche, création, modification, désactivation |
+| Fiche article | Conditionnements, codes-barres (saisis, générés, désactivés) et prix (en vigueur, programmé, nouveau) |
+| Caisse | Ouverture de session (poste, fond) ; scan à la douchette (le curseur revient sur le scan après chaque ajout) ou recherche ; panier ; client et crédit ; paiements combinés avec rendu ; validation d'un responsable si remise ou plafond dépassé ; reçu 80 mm imprimable et PDF ; remboursement de crédit ; clôture avec écart |
+| Tickets de la session, ticket | Recherche par numéro, réimpression, avoir (quantités à rendre, mode de remboursement) |
+| Sessions de caisse | Supervision (Gérant, Comptable) : ventes nettes, espèces théoriques et comptées, écart, validation |
+| Clients, fiche client | Clients à crédit, impayés, création (Gérant), plafond (Comptable), ventes non soldées, journal |
 | Utilisateurs | Création des comptes avec leur rôle (Administrateur) |
+
+Le reçu s'imprime par le navigateur du poste (feuille de style d'impression au format 80 mm, seul le reçu est
+imprimé) ou se télécharge en PDF pour l'envoyer par WhatsApp. Le panier affiche les prix lus dans l'application ;
+le serveur les relit à l'encaissement.
 
 Les jetons de connexion restent dans le `sessionStorage` de l'onglet : ils disparaissent à sa fermeture (poste partagé).
 Montants arrondis à l'unité en XAF, quantités selon la précision de l'article, libellé traduit quand l'interface est
@@ -391,7 +400,7 @@ sur une machine Linux de GitHub qui dispose de Docker :
 | 15 | Identite : validation par un responsable | Fait |
 | 16 | Module Credit : clients, plafond, remboursements | Fait |
 | 17 | Module Caisse : sessions, tickets, avoirs, remises, reçu PDF | Fait |
-| 18 | Client : écran de caisse et écrans de gestion | À faire |
+| 18 | Client : écran de caisse et écrans de gestion | Fait |
 | 19 | Architecture, CI, README, démonstration de la caisse | À faire |
 
 ## Démonstration

@@ -4,11 +4,16 @@ using GestionStock.Caisse.Application;
 using GestionStock.Caisse.Domain;
 using GestionStock.Identite.Contracts;
 using GestionStock.Infrastructure.Http;
+using GestionStock.Prix.Contracts;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Options;
 
 namespace GestionStock.Caisse.Endpoints;
+
+/// <summary>Identité de l'entreprise en tête des reçus.</summary>
+internal sealed record EnteteRecu(string Nom, string? Adresse, string? Telephone, string? NumeroContribuable, bool AssujettiTva);
 
 /// <summary>Endpoints HTTP du module Caisse (préfixe <c>/api/caisse</c>).</summary>
 internal static class EndpointsCaisse
@@ -42,6 +47,11 @@ internal static class EndpointsCaisse
         groupe.MapPost("/sessions/courante/cloture", (ClotureSession saisie, ServiceSessions sessions, CancellationToken annulation) =>
             Executer(async () => TypedResults.Ok(await sessions.CloturerAsync(saisie, annulation))))
             .RequireAuthorization(Permissions.CaisseVendre);
+
+        // En-tête des reçus (identité de l'entreprise, régime de TVA) pour le reçu imprimé par le navigateur.
+        groupe.MapGet("/entete", (IOptions<OptionsEntrepriseRecu> entreprise, IConsultationPrix prix) => TypedResults.Ok(new EnteteRecu(
+                entreprise.Value.Nom, entreprise.Value.Adresse, entreprise.Value.Telephone, entreprise.Value.NumeroContribuable, prix.Regime.Assujetti)))
+            .RequireAuthorization(Permissions.TicketsConsulter);
 
         // Supervision des sessions (Gérant, Comptable)
         groupe.MapGet("/sessions", async (StatutSession? statut, ServiceSessions sessions, CancellationToken annulation) =>

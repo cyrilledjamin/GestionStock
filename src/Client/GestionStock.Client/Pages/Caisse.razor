@@ -1,0 +1,406 @@
+@page "/caisse"
+@inject Api Api
+@inject IJSRuntime Js
+
+<PageTitle>@L["Caisse"] · GestionStock</PageTitle>
+
+@if (!_charge)
+{
+    <p class="discret">…</p>
+}
+else if (_session is null)
+{
+    <h1>@L["Caisse"]</h1>
+    <Message Texte="@_erreur" />
+    <Message Texte="@_succes" Erreur="false" />
+    <form class="fiche etroite" @onsubmit="Ouvrir">
+        <h2>@L["OuvrirSession"]</h2>
+        <label>@L["Poste"]
+            <select @bind="_poste">
+                @foreach (var poste in _postes)
+                {
+                    <option value="@poste">@poste</option>
+                }
+            </select>
+        </label>
+        <label>@L["FondCaisse"]
+            <input type="number" min="0" step="1" @bind="_fond" />
+        </label>
+        <div class="actions"><button type="submit" class="principal">@L["OuvrirSession"]</button></div>
+    </form>
+}
+else if (_dernierTicket is not null)
+{
+    <h1>@(_dernierTicket.EstAvoir ? L["Avoir"] : L["Ticket"]) @_dernierTicket.Numero</h1>
+    @if (_dernierTicket.Rendu > 0)
+    {
+        <div class="rendu-grand">@L["Rendu"] : @Format.Montant(_dernierTicket.Rendu)</div>
+    }
+    <RecuTicket Ticket="_dernierTicket">
+        <button class="valider" @onclick="NouvelleVente">@L["NouvelleVente"]</button>
+    </RecuTicket>
+}
+else
+{
+    <div class="entete-caisse">
+        <h1>@L["Caisse"] <small class="discret">@_session.NumeroCaisse</small></h1>
+        <div class="actions">
+            <a class="bouton" href="caisse/tickets">@L["TicketsDuJour"]</a>
+            <button @onclick="() => _panneau = Panneau.Remboursement">@L["RemboursementCredit"]</button>
+            <button @onclick="() => _panneau = Panneau.Cloture">@L["Cloturer"]</button>
+        </div>
+    </div>
+
+    <Message Texte="@_erreur" />
+    <Message Texte="@_succes" Erreur="false" />
+
+    @if (_panneau == Panneau.Cloture)
+    {
+        <form class="fiche" @onsubmit="Cloturer">
+            <h2>@L["Cloturer"]</h2>
+            <p class="discret">@L["ClotureAide"]</p>
+            <label>@L["EspecesComptees"]
+                <input type="number" min="0" step="1" @bind="_especesComptees" required />
+            </label>
+            <div class="actions">
+                <button type="submit" class="principal">@L["Cloturer"]</button>
+                <button type="button" @onclick="() => _panneau = Panneau.Aucun">@L["Annuler"]</button>
+            </div>
+        </form>
+    }
+    else if (_panneau == Panneau.Remboursement)
+    {
+        <form class="fiche" @onsubmit="Rembourser">
+            <h2>@L["RemboursementCredit"]</h2>
+            <ChoixClient @bind-Client="_clientRemboursement" />
+            @if (_clientRemboursement is not null)
+            {
+                <p>@L["SoldeDu"] : <strong>@Format.Montant(_clientRemboursement.SoldeDu)</strong></p>
+            }
+            <div class="grille">
+                <label>@L["Montant"] <input type="number" min="1" step="1" @bind="_montantRemboursement" required /></label>
+                <label>@L["Mode"]
+                    <select @bind="_modeRemboursement">
+                        <option value="@ModesPaiement.Especes">@L["Mode.Especes"]</option>
+                        <option value="@ModesPaiement.MobileMoney">@L["Mode.MobileMoney"]</option>
+                    </select>
+                </label>
+                @if (_modeRemboursement == ModesPaiement.MobileMoney)
+                {
+                    <label>@L["Reference"] <input @bind="_referenceRemboursement" required /></label>
+                }
+            </div>
+            <div class="actions">
+                <button type="submit" class="principal" disabled="@(_clientRemboursement is null)">@L["Encaisser"]</button>
+                <button type="button" @onclick="() => _panneau = Panneau.Aucun">@L["Annuler"]</button>
+            </div>
+        </form>
+    }
+
+    <div class="caisse">
+        <section>
+            <div class="scan">
+                <input id="scan" placeholder="@L["ScanAide"]" @bind="_code" @bind:event="oninput" @onkeydown="SurTouche" autocomplete="off" />
+                <input type="search" placeholder="@L["RechercherArticle"]" @bind="_recherche" @bind:event="oninput" @bind:after="Rechercher" />
+            </div>
+            @if (_resultats.Count > 0)
+            {
+                <ul class="resultats">
+                    @foreach (var vendable in _resultats)
+                    {
+                        <li><button class="lien" @onclick="() => Ajouter(vendable)">@vendable.CodeArticle — @Format.Libelle(Article(vendable)) <small class="discret">(@vendable.LibelleConditionnement)</small></button></li>
+                    }
+                </ul>
+            }
+
+            <table class="saisie panier">
+                <thead><tr><th>@L["Article"]</th><th class="nombre">@L["Quantite"]</th><th class="nombre">@L["Prix"]</th><th class="nombre">@L["Remise"]</th><th class="nombre">@L["Montant"]</th><th></th></tr></thead>
+                <tbody>
+                    @foreach (var ligne in _lignes)
+                    {
+                        <tr>
+                            <td>@Format.Libelle(Article(ligne.Vendable)) <small class="discret">@ligne.Vendable.LibelleConditionnement</small></td>
+                            <td class="nombre"><input type="number" min="0" step="@Pas(ligne.Vendable)" @bind="ligne.Quantite" /></td>
+                            <td class="nombre">@Format.Montant(ligne.Prix)</td>
+                            <td class="nombre"><input type="number" min="0" step="1" @bind="ligne.Remise" /></td>
+                            <td class="nombre">@Format.Montant(ligne.Montant)</td>
+                            <td><button class="lien" @onclick="() => _lignes.Remove(ligne)">@L["Retirer"]</button></td>
+                        </tr>
+                    }
+                    @if (_lignes.Count == 0)
+                    {
+                        <tr><td colspan="6" class="vide">@L["PanierVide"]</td></tr>
+                    }
+                </tbody>
+            </table>
+        </section>
+
+        <aside class="encaissement">
+            <div class="total-grand">@Format.Montant(Total)</div>
+
+            <ChoixClient @bind-Client="_client" Libelle="@L["ClientCredit"]" />
+
+            <h3>@L["Paiements"]</h3>
+            <div class="modes">
+                @foreach (var mode in ModesPaiement.Tous)
+                {
+                    <button type="button" @onclick="() => AjouterPaiement(mode)" disabled="@(mode == ModesPaiement.Credit && _client is null)">@L[$"Mode.{mode}"]</button>
+                }
+            </div>
+            @foreach (var paiement in _paiements)
+            {
+                <div class="paiement">
+                    <span>@L[$"Mode.{paiement.Mode}"]</span>
+                    <input type="number" min="0" step="1" @bind="paiement.Montant" />
+                    @if (paiement.Mode is ModesPaiement.MobileMoney or ModesPaiement.Carte)
+                    {
+                        <input placeholder="@L["Reference"]" @bind="paiement.Reference" />
+                    }
+                    <button class="lien" @onclick="() => _paiements.Remove(paiement)">✕</button>
+                </div>
+            }
+            <div class="ligne-recu"><span>@(Reste >= 0 ? L["ResteAPayer"] : L["Rendu"])</span><strong>@Format.Montant(Math.Abs(Reste))</strong></div>
+
+            @if (_validationNecessaire || _lignes.Any(l => l.Remise > 0))
+            {
+                <div class="validation">
+                    <strong>@L["ValidationResponsable"]</strong>
+                    <input placeholder="@L["Identifiant"]" @bind="_validationIdentifiant" autocomplete="off" />
+                    <input type="password" placeholder="@L["MotDePasse"]" @bind="_validationMotDePasse" autocomplete="off" />
+                </div>
+            }
+
+            <button class="principal encaisser" disabled="@(_enCours || _lignes.Count == 0 || Reste > 0)" @onclick="Encaisser">@L["Encaisser"]</button>
+            <p class="discret">@L["TotauxSession", _session.Totaux.NombreVentes, Format.Montant(_session.Totaux.Ventes)]</p>
+        </aside>
+    </div>
+}
+
+@code {
+    private enum Panneau { Aucun, Cloture, Remboursement }
+
+    private bool _charge;
+    private SessionCaisse? _session;
+    private List<string> _postes = [];
+    private string _poste = "";
+    private decimal _fond;
+    private string? _erreur;
+    private string? _succes;
+    private Panneau _panneau;
+
+    private string _code = "";
+    private string _recherche = "";
+    private List<ArticleVendable> _resultats = [];
+    private List<LignePanier> _lignes = [];
+    private List<PaiementSaisi> _paiements = [];
+    private ClientCredit? _client;
+    private Guid _idIdempotence = Guid.NewGuid();
+    private bool _validationNecessaire;
+    private string _validationIdentifiant = "";
+    private string _validationMotDePasse = "";
+    private bool _enCours;
+    private TicketCaisse? _dernierTicket;
+
+    private decimal _especesComptees;
+    private ClientCredit? _clientRemboursement;
+    private decimal _montantRemboursement;
+    private string _modeRemboursement = ModesPaiement.Especes;
+    private string? _referenceRemboursement;
+
+    private decimal Total => _lignes.Sum(l => l.Montant);
+
+    /// <summary>Positif : reste à payer ; négatif : monnaie à rendre.</summary>
+    private decimal Reste => Total - _paiements.Sum(p => p.Montant);
+
+    protected override async Task OnInitializedAsync()
+    {
+        _postes = (await Api.GetAsync<List<string>>("api/caisse/postes")).Valeur ?? [];
+        _poste = _postes.FirstOrDefault() ?? "";
+        await ChargerSession();
+        _charge = true;
+    }
+
+    /// <summary>
+    /// Le curseur revient dans le champ de scan (douchette) à l'ouverture, après un ajout d'article et pour une
+    /// nouvelle vente, mais jamais pendant une saisie dans un autre champ.
+    /// </summary>
+    private bool _focaliserScan = true;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_focaliserScan && _session is not null && _dernierTicket is null && _panneau == Panneau.Aucun)
+        {
+            _focaliserScan = false;
+            await Js.InvokeVoidAsync("gestionStock.focaliser", "scan");
+        }
+    }
+
+    private async Task ChargerSession()
+    {
+        var resultat = await Api.GetAsync<SessionCaisse>("api/caisse/sessions/courante");
+        _session = resultat.Valeur;
+        _erreur = resultat.Erreur;
+    }
+
+    private async Task Ouvrir()
+    {
+        var resultat = await Api.PostAsync<SessionCaisse>("api/caisse/sessions", new { NumeroCaisse = _poste, FondCaisse = _fond });
+        _erreur = resultat.Erreur;
+        _session = resultat.Valeur ?? _session;
+        _focaliserScan = true;
+    }
+
+    private async Task SurTouche(KeyboardEventArgs e)
+    {
+        if (e.Key != "Enter" || string.IsNullOrWhiteSpace(_code))
+        {
+            return;
+        }
+
+        var code = _code.Trim();
+        _code = "";
+        var resultat = await Api.GetAsync<ArticleVendable>($"api/referentiel/scan/{Uri.EscapeDataString(code)}");
+        _erreur = resultat.Erreur;
+        if (resultat.Valeur is { } vendable)
+        {
+            await Ajouter(vendable);
+        }
+
+        _focaliserScan = true;
+    }
+
+    private async Task Rechercher()
+    {
+        _resultats = _recherche.Trim().Length < 2
+            ? []
+            : (await Api.GetAsync<List<ArticleVendable>>($"api/referentiel/vendables?recherche={Uri.EscapeDataString(_recherche.Trim())}")).Valeur ?? [];
+    }
+
+    private async Task Ajouter(ArticleVendable vendable)
+    {
+        _succes = null;
+        _resultats = [];
+        _recherche = "";
+        _focaliserScan = true;
+        var existante = _lignes.FirstOrDefault(l => l.Vendable.ConditionnementId == vendable.ConditionnementId);
+        if (existante is not null)
+        {
+            existante.Quantite += 1;
+            return;
+        }
+
+        // Le prix affiché vient de l'application ; le serveur le relit à l'encaissement (RG37).
+        var prix = await Api.GetAsync<PrixApplicable>($"api/prix/conditionnements/{vendable.ConditionnementId}");
+        if (prix.Valeur is null)
+        {
+            _erreur = prix.Erreur ?? L["PrixAbsentArticle", vendable.CodeArticle];
+            return;
+        }
+
+        _erreur = null;
+        _lignes.Add(new LignePanier { Vendable = vendable, Prix = prix.Valeur.PrixTtc, Quantite = 1 });
+    }
+
+    private void AjouterPaiement(string mode)
+    {
+        _paiements.Add(new PaiementSaisi { Mode = mode, Montant = Math.Max(0, Reste) });
+    }
+
+    private async Task Encaisser()
+    {
+        _enCours = true;
+        var demande = new
+        {
+            IdIdempotence = _idIdempotence,
+            ClientId = _client?.Id,
+            Lignes = _lignes.Select(l => new { l.Vendable.ConditionnementId, l.Quantite, l.Remise, l.Vendable.CodeScanne }).ToList(),
+            Paiements = _paiements.Where(p => p.Montant > 0).Select(p => new { p.Mode, p.Montant, p.Reference }).ToList(),
+            Validation = string.IsNullOrWhiteSpace(_validationIdentifiant) ? null : new { Identifiant = _validationIdentifiant, MotDePasse = _validationMotDePasse },
+        };
+        var resultat = await Api.PostAsync<TicketCaisse>("api/caisse/tickets", demande);
+        _enCours = false;
+        _erreur = resultat.Erreur;
+        _validationNecessaire |= resultat.Code is "Caisse.PlafondDepasse" or "Caisse.RemiseNonValidee" or "Caisse.ValidationRefusee";
+        _validationMotDePasse = "";
+        if (resultat.Valeur is { } ticket)
+        {
+            _dernierTicket = ticket;
+            await ChargerSession();
+        }
+    }
+
+    private void NouvelleVente()
+    {
+        _dernierTicket = null;
+        _lignes = [];
+        _paiements = [];
+        _client = null;
+        _idIdempotence = Guid.NewGuid();
+        _validationNecessaire = false;
+        _validationIdentifiant = "";
+        _erreur = null;
+        _focaliserScan = true;
+    }
+
+    private async Task Cloturer()
+    {
+        var resultat = await Api.PostAsync<SessionCaisse>("api/caisse/sessions/courante/cloture", new { EspecesComptees = _especesComptees });
+        _erreur = resultat.Erreur;
+        if (resultat.Valeur is { } session)
+        {
+            _panneau = Panneau.Aucun;
+            _session = null;
+            _erreur = null;
+            _succes = L["SessionCloturee", Format.Montant(session.Totaux.EspecesTheoriques), Format.Montant(session.Ecart ?? 0)];
+        }
+    }
+
+    private async Task Rembourser()
+    {
+        var resultat = await Api.PostAsync<RemboursementCredit>("api/caisse/remboursements", new
+        {
+            IdIdempotence = Guid.NewGuid(),
+            ClientId = _clientRemboursement!.Id,
+            Mode = _modeRemboursement,
+            Montant = _montantRemboursement,
+            Reference = _referenceRemboursement,
+        });
+        _erreur = resultat.Erreur;
+        if (resultat.Valeur is { } remboursement)
+        {
+            _succes = L["RemboursementEnregistre", Format.Montant(remboursement.Montant), Format.Montant(remboursement.SoldeDuApres)];
+            _panneau = Panneau.Aucun;
+            _clientRemboursement = null;
+            _montantRemboursement = 0;
+            _referenceRemboursement = null;
+            await ChargerSession();
+        }
+    }
+
+    private static Article Article(ArticleVendable v) =>
+        new(v.ArticleId, v.CodeArticle, v.Libelle, v.LibelleTraduit, v.UniteStock, v.PrecisionQuantite, true);
+
+    /// <summary>Pas de saisie : entier pour une vente à la pièce ou en carton, décimal pour le poids (RG46).</summary>
+    private static string Pas(ArticleVendable v) =>
+        v.QuantiteUniteStock == 1m && v.PrecisionQuantite > 0
+            ? (1m / (decimal)Math.Pow(10, v.PrecisionQuantite)).ToString(CultureInfo.InvariantCulture)
+            : "1";
+
+    private sealed class LignePanier
+    {
+        public required ArticleVendable Vendable { get; init; }
+        public decimal Quantite { get; set; }
+        public decimal Prix { get; init; }
+        public decimal Remise { get; set; }
+
+        /// <summary>Même calcul que le serveur : quantité × prix arrondi à l'unité, moins la remise.</summary>
+        public decimal Montant => decimal.Round(Quantite * Prix, 0, MidpointRounding.AwayFromZero) - Remise;
+    }
+
+    private sealed class PaiementSaisi
+    {
+        public required string Mode { get; init; }
+        public decimal Montant { get; set; }
+        public string? Reference { get; set; }
+    }
+}
