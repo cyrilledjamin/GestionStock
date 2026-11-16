@@ -9,6 +9,8 @@
   <ItemGroup>
     <ProjectReference Include="../GestionStock.Stock.Contracts/GestionStock.Stock.Contracts.csproj" />
     <ProjectReference Include="../GestionStock.Stock.Domain/GestionStock.Stock.Domain.csproj" />
+    <ProjectReference Include="../../Identite/GestionStock.Identite.Contracts/GestionStock.Identite.Contracts.csproj" />
+    <ProjectReference Include="../../Referentiel/GestionStock.Referentiel.Contracts/GestionStock.Referentiel.Contracts.csproj" />
     <ProjectReference Include="../../../BuildingBlocks/GestionStock.Infrastructure/GestionStock.Infrastructure.csproj" />
   </ItemGroup>
   <ItemGroup>

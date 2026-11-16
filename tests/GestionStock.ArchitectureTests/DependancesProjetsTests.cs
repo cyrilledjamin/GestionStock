@@ -20,6 +20,8 @@ public sealed class DependancesProjetsTests
             Assemblages.NomHote,
             Assemblages.NomSharedKernel,
             Assemblages.NomInfrastructure,
+            "GestionStock.Achats",
+            "GestionStock.Achats.Contracts",
             "GestionStock.Identite",
             "GestionStock.Identite.Contracts",
             "GestionStock.Referentiel",

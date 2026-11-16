@@ -1,3 +1,4 @@
+using GestionStock.Achats;
 using GestionStock.Identite;
 using GestionStock.Infrastructure;
 using GestionStock.Infrastructure.Persistance;
@@ -24,6 +25,7 @@ builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddIdentiteModule(builder.Configuration);
 builder.Services.AddReferentielModule(builder.Configuration);
 builder.Services.AddStockModule(builder.Configuration);
+builder.Services.AddAchatsModule(builder.Configuration);
 
 var app = builder.Build();
 
@@ -61,6 +63,7 @@ if (app.Environment.IsDevelopment())
 app.MapIdentiteEndpoints();
 app.MapReferentielEndpoints();
 app.MapStockEndpoints();
+app.MapAchatsEndpoints();
 
 await app.RunAsync();
 

@@ -22,6 +22,9 @@ src/
     GestionStock.Infrastructure      connexion et transaction partagées, stockage de fichiers, santé, erreurs HTTP
   Host/
     GestionStock.Api                 assemble les modules (AddXxxModule / MapXxxEndpoints)
+  Modules/Achats/
+    GestionStock.Achats.Contracts    contrat public : types de documents (journal des mouvements)
+    GestionStock.Achats              fournisseurs, réception simple (brouillon → validation → entrée en stock)
   Modules/Identite/
     GestionStock.Identite.Contracts  contrat public : Roles, Permissions
     GestionStock.Identite            comptes locaux (ASP.NET Core Identity), jetons porteurs, matrice des permissions
@@ -31,7 +34,7 @@ src/
   Modules/Stock/
     GestionStock.Stock.Contracts     contrat public : IServiceMouvementsStock, IConsultationStock
     GestionStock.Stock.Domain        C# pur : MouvementStock, StockSite, StockEmplacement
-    GestionStock.Stock               implémentation : Application / Infrastructure / Endpoints
+    GestionStock.Stock               implémentation : Application / Infrastructure / Endpoints (lecture seule)
 tests/
   GestionStock.Api.IntegrationTests  API complète par HTTP sur PostgreSQL réelle (Testcontainers)
   GestionStock.ArchitectureTests     règles de dépendance et conventions
@@ -137,6 +140,13 @@ Si le port 5432 est déjà pris (PostgreSQL installé sur le poste), choisir un 
 | `POST /api/referentiel/articles` | `Referentiel.Articles.Gerer` | `{ code, libelle, libelleTraduit?, uniteStock, precisionQuantite }` → crée un article (409 si le code existe) |
 | `PUT /api/referentiel/articles/{id}` | `Referentiel.Articles.Gerer` | `{ libelle, libelleTraduit?, actif }` : le code, l'unité et la précision sont fixés à la création |
 | `GET /api/referentiel/site` | `Referentiel.Consulter` | Site de la boutique et son emplacement de vente |
+| `GET /api/achats/fournisseurs` | `Achats.Consulter` | Fournisseurs actifs ; `?inclureInactifs=true` |
+| `POST /api/achats/fournisseurs`, `PUT /api/achats/fournisseurs/{id}` | `Achats.Fournisseurs.Gerer` | `{ nom, telephone?, actif }` |
+| `GET /api/achats/receptions`, `GET /api/achats/receptions/{id}` | `Achats.Consulter` | Réceptions (la plus récente d'abord) ; détail avec lignes et articles |
+| `POST /api/achats/receptions`, `PUT /api/achats/receptions/{id}` | `Achats.Receptions.Saisir` | `{ fournisseurId, numeroBonLivraison?, lignes: [{ articleId, quantite, coutUnitaire }] }` : brouillon |
+| `POST /api/achats/receptions/{id}/validation` | `Achats.Receptions.Valider` | Valide et fait entrer la marchandise en stock (409 si déjà validée) |
+| `GET /api/stock/soldes` | `Stock.Consulter` | Soldes article × site de la boutique : physique, réservé, bloqué, disponible, CUMP |
+| `GET /api/stock/articles/{id}/mouvements` | `Stock.Consulter` | Journal d'un article, du plus récent au plus ancien (`?limite=`, 100 par défaut, 1000 au plus) |
 
 Tout autre endpoint est refusé par défaut (401 sans jeton) : chaque endpoint métier déclare sa permission
 (`RequireAuthorization(Permissions.X)`), 403 si l'utilisateur ne la détient pas. Les jetons s'envoient dans
@@ -152,6 +162,19 @@ l'en-tête `Authorization: Bearer <jeton>`. Les erreurs sont des ProblemDetails 
 - **Site et emplacement** : la migration crée la boutique (`BOUTIQUE`, type Magasin, sans séparation réserve / rayon)
   et son emplacement de vente `VENTE` (RG20). Sans gestion par emplacements, la marchandise reçue y est disponible
   dès la validation (RG13). Pas d'écran de gestion des sites en V1 (mono-site).
+
+## Réception simple (V1)
+
+Sans commande fournisseur, lots ni frais d'approche (prévus plus tard) :
+
+1. le Magasinier ou le Gérant saisit la réception en **brouillon** : fournisseur actif, numéro de bon de livraison
+   facultatif, lignes article × quantité (en unité de stock, selon la précision de l'article) × coût unitaire ;
+   un numéro `R-000001` est attribué ;
+2. le brouillon reste modifiable (ses lignes sont remplacées) ;
+3. la **validation** contrôle à nouveau chaque ligne, puis écrit dans **une seule transaction** le statut de la
+   réception et un mouvement `EntreeReception` par ligne vers l'emplacement de vente (RG13), avec le CUMP recalculé
+   par le module Stock (RG17). Si une ligne est refusée, rien n'est écrit. Une réception validée ne se modifie plus ;
+   deux validations simultanées n'écrivent qu'une fois (verrou de la réception, idempotence des mouvements).
 
 ## Comptes, rôles et permissions
 
@@ -178,7 +201,7 @@ Chaque permission est attribuée à des rôles dans
 | --- | --- | --- |
 | `GestionStock.Stock.Domain.Tests` | Règles du domaine : mouvements, soldes, CUMP, RG03 / RG22 | Non |
 | `GestionStock.Infrastructure.Tests` | Horloge, stockage de fichiers, chaîne de connexion | Non |
-| `GestionStock.Api.IntegrationTests` | API complète par HTTP : connexion, jetons, 401 / 403, comptes, articles, messages traduits | Oui |
+| `GestionStock.Api.IntegrationTests` | API complète par HTTP : connexion, jetons, 401 / 403, comptes, articles, fournisseurs, réceptions (CUMP, transaction, validation simultanée), soldes et journal | Oui |
 | `GestionStock.ArchitectureTests` | Dépendances entre projets, visibilité, couches, traductions | Non |
 | `GestionStock.Stock.IntegrationTests` | PostgreSQL 17 réelle : migration, transaction partagée, idempotence, journal immuable, mouvements simultanés | Oui |
 
@@ -211,12 +234,15 @@ sur une machine Linux de GitHub qui dispose de Docker :
 | 7 | Tests d'intégration (Testcontainers) | Fait (exécutés en CI) |
 | 8 | Module Identite : comptes locaux, rôles, permissions, jetons porteurs | Fait |
 | 9 | Module Referentiel : articles, site et emplacement de vente | Fait |
-| 10 | Module Achats minimal : fournisseurs, réception simple ; lectures du stock | À faire |
+| 10 | Module Achats minimal : fournisseurs, réception simple ; lectures du stock | Fait |
 | 11 | Client Blazor WebAssembly : premiers écrans | À faire |
 | 12 | Tests d'architecture, Docker, démonstration de bout en bout | À faire |
 
 ## Points ouverts
 
+- Coût unitaire saisi sur la ligne de réception : absent de `LigneReception` dans le modèle UML (il y vient de la
+  commande fournisseur) ; ajouté faute de commande en V1, à reporter dans le dossier. Statuts de réception retenus :
+  Brouillon et Validee.
 - Rôles pour la gestion des articles et des fournisseurs, et validation d'une réception sans commande
   (le processus 6.1 cite l'Acheteur, rôle absent de la V1) : attributions provisoires, à confirmer (voir ci-dessus).
 

@@ -10,6 +10,8 @@ internal static class Correspondances
 
     public static TypeEmplacement VersDomaine(this TypeEmplacementStock type) => (TypeEmplacement)(int)type;
 
+    public static TypeMouvementStock VersContrat(this TypeMouvement type) => (TypeMouvementStock)(int)type;
+
     public static SoldeStockSite VersContrat(this StockSite solde) => new(
         solde.ArticleId,
         solde.SiteId,

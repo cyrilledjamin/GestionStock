@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Achats.NomObligatoire" xml:space="preserve"><value>Le nom du fournisseur est obligatoire.</value></data>
+  <data name="Achats.NomTropLong" xml:space="preserve"><value>Le nom du fournisseur est trop long : 200 caractères au maximum.</value></data>
+  <data name="Achats.TelephoneTropLong" xml:space="preserve"><value>Le téléphone est trop long : 30 caractères au maximum.</value></data>
+  <data name="Achats.FournisseurIntrouvable" xml:space="preserve"><value>Fournisseur introuvable.</value></data>
+  <data name="Achats.FournisseurInactif" xml:space="preserve"><value>Ce fournisseur est désactivé.</value></data>
+  <data name="Achats.ReceptionIntrouvable" xml:space="preserve"><value>Réception introuvable.</value></data>
+  <data name="Achats.ReceptionSansLigne" xml:space="preserve"><value>Une réception doit comporter au moins une ligne.</value></data>
+  <data name="Achats.ReceptionDejaValidee" xml:space="preserve"><value>Cette réception est déjà validée : elle ne peut plus être modifiée.</value></data>
+  <data name="Achats.BonLivraisonTropLong" xml:space="preserve"><value>Le numéro de bon de livraison est trop long : 50 caractères au maximum.</value></data>
+  <data name="Achats.QuantiteNonPositive" xml:space="preserve"><value>La quantité reçue doit être supérieure à zéro.</value></data>
+  <data name="Achats.PrecisionQuantite" xml:space="preserve"><value>Trop de décimales pour la quantité de cet article.</value></data>
+  <data name="Achats.CoutNegatif" xml:space="preserve"><value>Le coût unitaire ne peut pas être négatif.</value></data>
+  <data name="Achats.PrecisionCout" xml:space="preserve"><value>Le coût unitaire admet au plus 4 décimales.</value></data>
+  <data name="Achats.ArticleIntrouvable" xml:space="preserve"><value>Article introuvable.</value></data>
+  <data name="Achats.ArticleInactif" xml:space="preserve"><value>Cet article est désactivé.</value></data>
+  <data name="Achats.MouvementRefuse" xml:space="preserve"><value>Entrée en stock refusée : rien n'a été enregistré.</value></data>
+</root>
