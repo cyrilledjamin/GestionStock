@@ -163,6 +163,20 @@ a.tuile:hover { border-color: var(--vert); box-shadow: var(--ombre-haute); }
 @keyframes tourner { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .attente .roue { animation: none; } }
 
+/* Accueil : tableau de bord par rôle */
+.bloc-accueil { margin: var(--e-5) 0; }
+.bloc-accueil h2 { display: flex; align-items: baseline; gap: var(--e-2); flex-wrap: wrap; }
+.indicateurs { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: var(--e-3); }
+.indicateur { display: flex; flex-direction: column; gap: var(--e-1); padding: var(--e-4); background: var(--surface); border: 1px solid var(--bordure); border-left: 4px solid var(--vert); border-radius: var(--rayon-grand); box-shadow: var(--ombre); color: var(--texte); text-decoration: none; }
+a.indicateur:hover { box-shadow: var(--ombre-haute); }
+.indicateur span { font-size: var(--t-s); color: var(--discret); }
+.indicateur strong { font-size: var(--t-xl); font-variant-numeric: tabular-nums; }
+.indicateur small { color: var(--discret); }
+.indicateur .aller { font-style: normal; color: var(--vert); font-weight: 600; margin-top: var(--e-1); }
+.indicateur.attention { border-left-color: var(--ambre); background: var(--ambre-clair); }
+.indicateur.alerte { border-left-color: var(--rouge); background: var(--rouge-clair); }
+.indicateur.alerte strong { color: var(--rouge); }
+
 /* Chargement et erreurs Blazor */
 .chargement { display: grid; place-items: center; min-height: 100vh; color: var(--discret); }
 #blazor-error-ui { display: none; position: fixed; bottom: 0; left: 0; right: 0; padding: var(--e-3) var(--e-4); background: var(--rouge-clair); color: var(--rouge); }
@@ -316,6 +330,9 @@ kbd { font-family: var(--police-chasse-fixe); font-size: var(--t-xs); font-weigh
     .ligne-panier .quantite { grid-column: 1; }
     .ligne-panier .outils-ligne { grid-column: 2; justify-content: flex-end; }
     .grille-articles { grid-template-columns: repeat(2, 1fr); }
+    .indicateurs { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--e-2); }
+    .indicateur { padding: var(--e-3); }
+    .indicateur strong { font-size: var(--t-l); }
 }
 
 @media (prefers-reduced-motion: reduce) { .menu { transition: none; } }

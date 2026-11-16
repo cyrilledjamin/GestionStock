@@ -140,6 +140,19 @@ public static class ModesPaiementFournisseur
 
 // --- Rapports -----------------------------------------------------------------------------------------------------
 
+/// <summary>Chiffres de l'accueil du Gérant et du Comptable (une seule requête).</summary>
+public sealed record TableauDeBord(
+    DateOnly Jour,
+    TotauxVentes VentesDuJour,
+    int SessionsOuvertes,
+    int SessionsAValider,
+    decimal EcartsAValider,
+    int StocksNegatifs,
+    decimal ValeurStock,
+    decimal TotalCreances,
+    decimal TotalEnRetard,
+    decimal TotalDettes);
+
 public sealed record TotauxVentes(int NombreVentes, int NombreAvoirs, decimal ChiffreAffairesTtc, decimal ChiffreAffairesHt, decimal CoutDesVentes, decimal Marge, decimal? TauxMarge, decimal Remises);
 
 public sealed record VentesDuJour(DateOnly Jour, int NombreTickets, decimal ChiffreAffairesTtc, decimal ChiffreAffairesHt, decimal CoutDesVentes, decimal Marge);

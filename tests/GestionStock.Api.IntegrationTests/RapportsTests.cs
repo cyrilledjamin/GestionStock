@@ -41,6 +41,28 @@ public sealed class RapportsTests(ApiDeTest api)
     }
 
     [Fact]
+    public async Task Le_tableau_de_bord_reprend_les_ventes_du_jour_la_caisse_et_les_points_a_surveiller()
+    {
+        var b = await BoutiqueAsync();
+        await ReceptionnerAsync(b, 2m, 300m);
+        var avant = await b.Gerant.GetFromJsonAsync<TableauDeBord>("/api/rapports/tableau-de-bord", Annulation);
+
+        await VendreAsync(b, (b.Unite, 5m)); // 2 en stock : l'article passe en négatif
+        (await b.Caissier.PostAsJsonAsync("/api/caisse/sessions/courante/cloture", new { especesComptees = 2400 }, Annulation)).EnsureSuccessStatusCode();
+        var apres = await b.Comptable.GetFromJsonAsync<TableauDeBord>("/api/rapports/tableau-de-bord", Annulation);
+        var caissier = await b.Caissier.GetAsync("/api/rapports/tableau-de-bord", Annulation);
+
+        // Base partagée avec les autres tests, qui vendent et font des avoirs en parallèle : le nombre de ventes ne peut
+        // qu'augmenter, mais le chiffre d'affaires du jour peut baisser entre deux lectures (avoirs).
+        Assert.True(apres!.VentesDuJour.NombreVentes >= avant!.VentesDuJour.NombreVentes + 1);
+        Assert.True(apres.VentesDuJour.ChiffreAffairesTtc > 0m);
+        Assert.True(apres.SessionsAValider >= 1);
+        Assert.True(apres.StocksNegatifs >= 1);
+        Assert.Equal(DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeBySystemTimeZoneId(DateTime.UtcNow, "Africa/Douala")), apres.Jour);
+        Assert.Equal(HttpStatusCode.Forbidden, caissier.StatusCode);
+    }
+
+    [Fact]
     public async Task Le_rapport_de_stock_valorise_chaque_article_au_CUMP()
     {
         var b = await BoutiqueAsync();
@@ -207,6 +229,8 @@ public sealed class RapportsTests(ApiDeTest api)
     private sealed record VenteCaissier(string Caissier, int NombreTickets, decimal ChiffreAffairesTtc);
 
     private sealed record RapportVentes(DateOnly Du, DateOnly Au, Totaux Totaux, List<VenteJour> ParJour, List<Article> ParArticle, List<VenteCaissier> ParCaissier);
+
+    private sealed record TableauDeBord(DateOnly Jour, Totaux VentesDuJour, int SessionsOuvertes, int SessionsAValider, decimal EcartsAValider, int StocksNegatifs, decimal TotalCreances, decimal TotalDettes);
 
     private sealed record LigneStock(Guid ArticleId, decimal Quantite, decimal Cump, decimal Valeur);
 

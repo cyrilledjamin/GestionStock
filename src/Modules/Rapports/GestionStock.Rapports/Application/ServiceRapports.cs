@@ -82,6 +82,24 @@ internal sealed record RapportCaisse(
     IReadOnlyList<LigneStock> StocksNegatifs,
     IReadOnlyList<FraisNonIncorpore> FraisNonIncorpores);
 
+// --- Tableau de bord de l'accueil --------------------------------------------------------------------------------
+
+/// <summary>
+/// Chiffres de l'accueil du Gérant et du Comptable : ventes du jour et points à surveiller, tirés des mêmes calculs
+/// que les rapports (une seule requête HTTP, ENF10).
+/// </summary>
+internal sealed record TableauDeBord(
+    DateOnly Jour,
+    TotauxVentes VentesDuJour,
+    int SessionsOuvertes,
+    int SessionsAValider,
+    decimal EcartsAValider,
+    int StocksNegatifs,
+    decimal ValeurStock,
+    decimal TotalCreances,
+    decimal TotalEnRetard,
+    decimal TotalDettes);
+
 /// <summary>
 /// Rapports V1 (décision 33) : ventes et marge, stock et valeur, créances et dettes, caisse et anomalies.
 /// Le personnel est désigné par « Prénom Nom (matricule) » (vue <c>identite.v_utilisateurs</c>).
@@ -178,6 +196,37 @@ internal sealed class ServiceRapports(NpgsqlDataSource sourceDeDonnees, IHorloge
             .ToList();
 
         return new RapportVentes(periode.Du, periode.Au, totaux, parJour, parArticle, parCaissier);
+    }
+
+    /// <summary>Tableau de bord de l'accueil : ventes d'aujourd'hui (jour de Douala), caisse, stock, créances et dettes.</summary>
+    public async Task<TableauDeBord> TableauDeBordAsync(CancellationToken annulation)
+    {
+        // Sessions de toutes dates : une session comptée hier et pas encore validée reste à faire.
+        const string SqlSessions = """
+            SELECT count(*) FILTER (WHERE s.statut = 'Ouverte') AS ouvertes,
+                   count(*) FILTER (WHERE s.statut = 'Comptee') AS a_valider,
+                   COALESCE(sum(s.ecart) FILTER (WHERE s.statut = 'Comptee'), 0) AS ecarts
+            FROM caisse.v_sessions s
+            """;
+
+        var jour = Aujourdhui;
+        var ventes = await VentesAsync(new Periode(jour, jour), annulation);
+        var stock = await StockAsync(annulation);
+        var creances = await CreancesDettesAsync(annulation);
+        var sessions = await LireAsync(
+            (connexion, transaction) => connexion.QuerySingleAsync<SyntheseSessions>(new CommandDefinition(SqlSessions, transaction: transaction, cancellationToken: annulation)),
+            annulation);
+        return new TableauDeBord(
+            jour,
+            ventes.Totaux,
+            (int)sessions.Ouvertes,
+            (int)sessions.AValider,
+            sessions.Ecarts,
+            stock.StocksNegatifs.Count,
+            stock.ValeurTotale,
+            creances.TotalCreances,
+            creances.TotalEnRetard,
+            creances.TotalDettes);
     }
 
     public async Task<RapportStock> StockAsync(CancellationToken annulation)
@@ -313,6 +362,8 @@ internal sealed class ServiceRapports(NpgsqlDataSource sourceDeDonnees, IHorloge
         await transaction.CommitAsync(annulation);
         return resultat;
     }
+
+    private sealed record SyntheseSessions(long Ouvertes, long AValider, decimal Ecarts);
 
     private static object Parametres(Periode periode) => new { Debut = periode.DebutUtc, Fin = periode.FinUtc };
 

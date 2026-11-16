@@ -33,6 +33,9 @@ internal static class EndpointsRapports
         // Journaux comptables exportables (UC16), dans l'ordre de présentation.
         groupe.MapGet("/journaux", () => TypedResults.Ok(JournauxComptables.Tous));
 
+        groupe.MapGet("/tableau-de-bord", async (ServiceRapports service, CancellationToken annulation) =>
+            TypedResults.Ok(await service.TableauDeBordAsync(annulation)));
+
         groupe.MapGet("/stock", async (ServiceRapports service, CancellationToken annulation) =>
             TypedResults.Ok(await service.StockAsync(annulation)));
 

@@ -1,5 +1,7 @@
 @page "/"
+@using System.Globalization
 @inject Session Session
+@inject Api Api
 
 <PageTitle>@L["Accueil"] · GestionStock</PageTitle>
 
@@ -8,6 +10,125 @@
     <h1>@L["Bonjour", string.IsNullOrWhiteSpace(profil.Prenom) ? profil.Identifiant : profil.Prenom]</h1>
     <p class="discret">@L["AccueilIntro"]</p>
 
+    @if (!_charge)
+    {
+        <Chargement />
+    }
+    else
+    {
+        @if (Session.A(Permissions.CaisseVendre))
+        {
+            @* Caissier : sa caisse d'abord, avec le chemin pour y aller. *@
+            <section class="bloc-accueil">
+                <h2>@L["MaCaisse"]</h2>
+                <div class="indicateurs">
+                    @if (_maSession is { } session)
+                    {
+                        <a class="indicateur" href="caisse">
+                            <span>@L["SessionOuverteSur", session.NumeroCaisse, Format.Date(session.OuvertureUtc)]</span>
+                            <strong>@Format.Montant(session.Totaux.Ventes - session.Totaux.Avoirs)</strong>
+                            <small>@L["NombreVentes", session.Totaux.NombreVentes]</small>
+                            <em class="aller">@L["ReprendreLaVente"] →</em>
+                        </a>
+                    }
+                    else
+                    {
+                        <a class="indicateur" href="caisse">
+                            <span>@L["AucuneSessionOuverte"]</span>
+                            <strong>—</strong>
+                            <em class="aller">@L["OuvrirLaCaisse"] →</em>
+                        </a>
+                    }
+                </div>
+            </section>
+        }
+
+        @if (_tableau is { } t)
+        {
+            <section class="bloc-accueil">
+                <h2>@L["Aujourdhui"] <small class="discret">@t.Jour.ToString("D", CultureInfo.CurrentCulture)</small></h2>
+                <div class="indicateurs">
+                    <a class="indicateur" href="rapports">
+                        <span>@L["VentesDuJour"]</span>
+                        <strong>@Format.Montant(t.VentesDuJour.ChiffreAffairesTtc)</strong>
+                        <small>@L["NombreTickets", t.VentesDuJour.NombreVentes, t.VentesDuJour.NombreAvoirs]</small>
+                    </a>
+                    <a class="indicateur @(t.VentesDuJour.Marge < 0 ? "alerte" : "")" href="rapports">
+                        <span>@L["Marge"]</span>
+                        <strong>@Format.Montant(t.VentesDuJour.Marge)</strong>
+                        <small>@(t.VentesDuJour.TauxMarge is { } taux ? $"{taux.ToString("0.#", CultureInfo.CurrentCulture)} %" : "")</small>
+                    </a>
+                    <a class="indicateur" href="sessions">
+                        <span>@L["CaissesOuvertes"]</span>
+                        <strong>@t.SessionsOuvertes</strong>
+                    </a>
+                </div>
+            </section>
+
+            <section class="bloc-accueil">
+                <h2>@L["ASurveiller"]</h2>
+                <div class="indicateurs">
+                    <a class="indicateur @(t.SessionsAValider > 0 ? "attention" : "")" href="sessions">
+                        <span>@L["SessionsAValider"]</span>
+                        <strong>@t.SessionsAValider</strong>
+                        @if (t.SessionsAValider > 0)
+                        {
+                            <small>@L["EcartsCumules", Format.Montant(t.EcartsAValider)]</small>
+                        }
+                    </a>
+                    <a class="indicateur @(t.StocksNegatifs > 0 ? "alerte" : "")" href="stock">
+                        <span>@L["StocksNegatifs"]</span>
+                        <strong>@t.StocksNegatifs</strong>
+                        <small>@L["ValeurDuStock", Format.Montant(t.ValeurStock)]</small>
+                    </a>
+                    <a class="indicateur @(t.TotalEnRetard > 0 ? "attention" : "")" href="clients">
+                        <span>@L["CreancesClients"]</span>
+                        <strong>@Format.Montant(t.TotalCreances)</strong>
+                        @if (t.TotalEnRetard > 0)
+                        {
+                            <small>@L["DontEnRetard", Format.Montant(t.TotalEnRetard)]</small>
+                        }
+                    </a>
+                    <a class="indicateur" href="dettes">
+                        <span>@L["DettesFournisseurs"]</span>
+                        <strong>@Format.Montant(t.TotalDettes)</strong>
+                    </a>
+                </div>
+            </section>
+        }
+
+        @if (_receptionsBrouillon is not null || _inventairesEnCours is not null || _demarquesDeclarees is not null)
+        {
+            <section class="bloc-accueil">
+                <h2>@L["AFaire"]</h2>
+                <div class="indicateurs">
+                    @if (_receptionsBrouillon is { } receptions)
+                    {
+                        <a class="indicateur @(receptions > 0 ? "attention" : "")" href="receptions">
+                            <span>@L["ReceptionsEnBrouillon"]</span>
+                            <strong>@receptions</strong>
+                        </a>
+                    }
+                    @if (_inventairesEnCours is { } inventaires)
+                    {
+                        <a class="indicateur @(inventaires > 0 ? "attention" : "")" href="inventaires">
+                            <span>@L["InventairesEnCours"]</span>
+                            <strong>@inventaires</strong>
+                        </a>
+                    }
+                    @if (_demarquesDeclarees is { } demarques)
+                    {
+                        <a class="indicateur @(demarques > 0 ? "attention" : "")" href="demarques">
+                            <span>@(Session.A(Permissions.DemarqueValider) ? L["DemarquesAValider"] : L["DemarquesEnAttente"])</span>
+                            <strong>@demarques</strong>
+                        </a>
+                    }
+                </div>
+            </section>
+        }
+    }
+
+    <h2>@L["Raccourcis"]</h2>
     <div class="tuiles">
         @if (Session.A(Permissions.CaisseVendre))
         {
@@ -59,4 +180,57 @@
             <a class="tuile" href="utilisateurs"><Icone Nom="utilisateurs" /><strong>@L["Utilisateurs"]</strong><span>@L["UtilisateursAide"]</span></a>
         }
     </div>
+}
+
+@code {
+    private bool _charge;
+    private TableauDeBord? _tableau;
+    private SessionCaisse? _maSession;
+    private int? _receptionsBrouillon;
+    private int? _inventairesEnCours;
+    private int? _demarquesDeclarees;
+
+    /// <summary>
+    /// Chaque bloc ne se charge qu'avec la permission correspondante, en parallèle ; un bloc dont la lecture échoue
+    /// est simplement omis (l'accueil reste utilisable, ses raccourcis aussi).
+    /// </summary>
+    protected override async Task OnInitializedAsync()
+    {
+        var lectures = new List<Task>();
+        if (Session.A(Permissions.RapportsConsulter))
+        {
+            lectures.Add(Lire(async () => _tableau = (await Api.GetAsync<TableauDeBord>("api/rapports/tableau-de-bord")).Valeur));
+        }
+
+        if (Session.A(Permissions.CaisseVendre))
+        {
+            lectures.Add(Lire(async () => _maSession = (await Api.GetAsync<SessionCaisse>("api/caisse/sessions/courante")).Valeur));
+        }
+
+        if (Session.A(Permissions.AchatsConsulter))
+        {
+            lectures.Add(Lire(async () => _receptionsBrouillon = (await Api.GetAsync<List<ResumeReception>>("api/achats/receptions")).Valeur?.Count(r => r.Statut == "Brouillon")));
+        }
+
+        if (Session.A(Permissions.InventaireConsulter))
+        {
+            lectures.Add(Lire(async () => _inventairesEnCours = (await Api.GetAsync<List<ResumeInventaire>>("api/inventaires?statut=EnCours")).Valeur?.Count));
+            lectures.Add(Lire(async () => _demarquesDeclarees = (await Api.GetAsync<List<DeclarationDemarque>>("api/demarques?statut=Declaree")).Valeur?.Count));
+        }
+
+        await Task.WhenAll(lectures);
+        _charge = true;
+    }
+
+    private static async Task Lire(Func<Task> lecture)
+    {
+        try
+        {
+            await lecture();
+        }
+        catch (HttpRequestException)
+        {
+            // Réseau coupé : le bloc reste vide, les raccourcis restent disponibles.
+        }
+    }
 }
