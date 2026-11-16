@@ -13,7 +13,14 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GestionStock.Caisse.Application;
 
-internal sealed record LigneDemandee(Guid ConditionnementId, decimal Quantite, decimal Remise = 0m, string? CodeScanne = null);
+/// <summary>Ligne demandée. <paramref name="PrixUnitaire"/> : prix appliqué par le poste, pris en compte hors ligne seulement.</summary>
+internal sealed record LigneDemandee(Guid ConditionnementId, decimal Quantite, decimal Remise = 0m, string? CodeScanne = null, decimal? PrixUnitaire = null);
+
+/// <summary>
+/// Opération faite sur le poste coupé du serveur (7.8) : sa session, le numéro de ticket attribué par le poste (RG34) et
+/// l'heure du terrain. Au rejeu, ces valeurs font foi ; un écart devient une anomalie, jamais un refus.
+/// </summary>
+internal sealed record TerrainHorsLigne(Guid SessionId, long? Numero, DateTime DateUtc);
 
 /// <summary>Ticket envoyé par le poste. <see cref="IdIdempotence"/> est généré par le poste (renvoi sans doublon).</summary>
 internal sealed record DemandeVente(
@@ -21,19 +28,24 @@ internal sealed record DemandeVente(
     Guid? ClientId,
     IReadOnlyList<LigneDemandee> Lignes,
     IReadOnlyList<PaiementSaisi> Paiements,
-    ValidationResponsable? Validation);
+    ValidationResponsable? Validation,
+    TerrainHorsLigne? HorsLigne = null);
 
-internal sealed record LigneRendue(Guid LigneOrigineId, decimal Quantite);
+/// <summary>Ligne rendue, désignée par son identifiant ou, pour un ticket fait hors ligne, par son rang sur le ticket.</summary>
+internal sealed record LigneRendue(Guid? LigneOrigineId, decimal Quantite, int? OrdreOrigine = null);
 
 /// <summary>Avoir sur un ticket : lignes rendues ; remboursement (hors part à crédit) en espèces par défaut.</summary>
+/// <remarks>Le ticket d'origine est désigné par son identifiant, ou par son identifiant d'idempotence s'il a été fait hors ligne.</remarks>
 internal sealed record DemandeAvoir(
     Guid IdIdempotence,
-    Guid TicketOrigineId,
+    Guid? TicketOrigineId,
     IReadOnlyList<LigneRendue> Lignes,
     ModePaiement? ModeRemboursement,
-    string? Reference);
+    string? Reference,
+    Guid? TicketOrigineIdIdempotence = null,
+    TerrainHorsLigne? HorsLigne = null);
 
-internal sealed record DemandeRemboursement(Guid IdIdempotence, Guid ClientId, ModePaiement Mode, decimal Montant, string? Reference);
+internal sealed record DemandeRemboursement(Guid IdIdempotence, Guid ClientId, ModePaiement Mode, decimal Montant, string? Reference, TerrainHorsLigne? HorsLigne = null);
 
 internal sealed record LigneTicketDto(
     Guid Id,
@@ -98,31 +110,41 @@ internal sealed class ServiceTickets(
             return (existant, true);
         }
 
-        var session = await sessions.ExigerCouranteAsync(annulation);
+        var terrain = demande.HorsLigne;
+        var anomalies = new List<Signalement>();
+        var session = await SessionDeLOperation(terrain, anomalies, annulation);
+        var date = DateDeLOperation(terrain, session, anomalies);
         var regime = prix.Regime;
-        var lignes = await PreparerVente(demande.Lignes ?? [], annulation);
+        var lignes = await PreparerVente(demande.Lignes ?? [], terrain is null ? null : FuseauDouala.Jour(date), anomalies, annulation);
         var paiements = demande.Paiements ?? [];
-        if (demande.ClientId is { } clientId && await credit.ObtenirClientAsync(clientId, annulation) is null)
-        {
-            throw new ExceptionCaisse(CodesErreurCaisse.ClientIntrouvable);
-        }
+        var client = demande.ClientId is { } clientId
+            ? await credit.ObtenirClientAsync(clientId, annulation) ?? throw new ExceptionCaisse(CodesErreurCaisse.ClientIntrouvable)
+            : null;
 
-        // Validation d'un responsable : remise (décision 31) ou dépassement de plafond de crédit (RG40).
+        // Validation d'un responsable : remise (décision 31) ou dépassement de plafond de crédit (RG40). Hors ligne, le
+        // poste refuse l'une et l'autre (décision 39) ; un plafond dépassé faute de solde à jour devient une anomalie.
         var valideur = await VerifierResponsable(demande.Validation, annulation);
+        var montantCredit = paiements.Where(p => p.Mode == ModePaiement.Credit).Sum(p => p.Montant);
+        if (terrain is not null && client is not null && montantCredit > 0m && client.SoldeDu + montantCredit > client.PlafondCredit)
+        {
+            anomalies.Add(new Signalement(TypeAnomalie.PlafondDepasse, $"{client.Nom} : {client.SoldeDu + montantCredit:0} / {client.PlafondCredit:0}"));
+        }
 
         var ticket = await Ecrire(
             demande.IdIdempotence,
             session,
+            terrain?.Numero,
+            anomalies,
             async (numero, jeton) =>
             {
-                var vente = TicketCaisse.Vente(demande.IdIdempotence, session, numero, horloge.MaintenantUtc, lignes, paiements, demande.ClientId, regime.TauxApplique, valideur, valideur);
+                var vente = TicketCaisse.Vente(demande.IdIdempotence, session, numero, date, lignes, paiements, demande.ClientId, regime.TauxApplique, valideur, valideur);
                 contexte.Tickets.Add(vente);
                 await contexte.SaveChangesAsync(jeton);
                 await EcrireMouvements(vente, TypeMouvementStock.VenteCaisse, jeton);
                 if (vente.MontantCredit > 0m)
                 {
                     await credit.EnregistrerVenteAsync(
-                        new VenteACredit(vente.ClientId!.Value, vente.Id, vente.NumeroComplet, vente.MontantCredit, vente.Caissier, valideur),
+                        new VenteACredit(vente.ClientId!.Value, vente.Id, vente.NumeroComplet, vente.MontantCredit, vente.Caissier, valideur, HorsLigne: terrain is not null),
                         jeton);
                 }
 
@@ -141,8 +163,13 @@ internal sealed class ServiceTickets(
             return (existant, true);
         }
 
-        var session = await sessions.ExigerCouranteAsync(annulation);
-        var origine = await contexte.Tickets.AsNoTracking().SingleOrDefaultAsync(t => t.Id == demande.TicketOrigineId, annulation)
+        var terrain = demande.HorsLigne;
+        var anomalies = new List<Signalement>();
+        var session = await SessionDeLOperation(terrain, anomalies, annulation);
+        var date = DateDeLOperation(terrain, session, anomalies);
+        var origine = await contexte.Tickets.AsNoTracking().SingleOrDefaultAsync(
+                t => demande.TicketOrigineId != null ? t.Id == demande.TicketOrigineId : t.IdIdempotence == demande.TicketOrigineIdIdempotence,
+                annulation)
             ?? throw new ExceptionCaisse(CodesErreurCaisse.TicketIntrouvable);
         if (origine.EstAvoir)
         {
@@ -153,6 +180,8 @@ internal sealed class ServiceTickets(
         var ticket = await Ecrire(
             demande.IdIdempotence,
             session,
+            terrain?.Numero,
+            anomalies,
             async (numero, jeton) =>
             {
                 // Quantités déjà rendues relues dans la transaction : deux avoirs simultanés ne rendent pas deux fois.
@@ -162,7 +191,7 @@ internal sealed class ServiceTickets(
                     ? Math.Min(total, await credit.ResteDuSurTicketAsync(origine.Id, jeton))
                     : 0m;
 
-                var avoir = TicketCaisse.Avoir(demande.IdIdempotence, session, numero, horloge.MaintenantUtc, origine, lignes, annulationCredit, remboursement);
+                var avoir = TicketCaisse.Avoir(demande.IdIdempotence, session, numero, date, origine, lignes, annulationCredit, remboursement);
                 contexte.Tickets.Add(avoir);
                 await contexte.SaveChangesAsync(jeton);
                 await EcrireMouvements(avoir, TypeMouvementStock.AvoirCaisse, jeton);
@@ -188,7 +217,9 @@ internal sealed class ServiceTickets(
         var existant = await contexte.Remboursements.AsNoTracking().SingleOrDefaultAsync(r => r.IdIdempotence == demande.IdIdempotence, annulation);
         if (existant is null)
         {
-            var session = await sessions.ExigerCouranteAsync(annulation);
+            var anomalies = new List<Signalement>();
+            var session = await SessionDeLOperation(demande.HorsLigne, anomalies, annulation);
+            var date = DateDeLOperation(demande.HorsLigne, session, anomalies);
             if (await credit.ObtenirClientAsync(demande.ClientId, annulation) is null)
             {
                 throw new ExceptionCaisse(CodesErreurCaisse.ClientIntrouvable);
@@ -198,8 +229,9 @@ internal sealed class ServiceTickets(
                 async jeton =>
                 {
                     await VerrouillerIdempotence(demande.IdIdempotence, jeton);
-                    var remboursement = RemboursementCaisse.Encaisser(demande.IdIdempotence, session, demande.ClientId, new PaiementSaisi(demande.Mode, demande.Montant, demande.Reference), horloge.MaintenantUtc);
+                    var remboursement = RemboursementCaisse.Encaisser(demande.IdIdempotence, session, demande.ClientId, new PaiementSaisi(demande.Mode, demande.Montant, demande.Reference), date);
                     contexte.Remboursements.Add(remboursement);
+                    contexte.Anomalies.AddRange(anomalies.Select(a => AnomalieCaisse.Signaler(a.Type, session, remboursement.Id, null, a.Detail, horloge.MaintenantUtc)));
                     await contexte.SaveChangesAsync(jeton);
                     await TraduireCredit(() => credit.EnregistrerRemboursementAsync(
                         new RemboursementCredit(remboursement.ClientId, remboursement.Montant, remboursement.Id, remboursement.Caissier), jeton));
@@ -254,7 +286,13 @@ internal sealed class ServiceTickets(
     /// Ouvre la transaction, sérialise les renvois du même ticket, attribue le numéro suivant du poste (sans trou : le
     /// compteur est annulé avec la transaction, RG34) puis écrit le ticket.
     /// </summary>
-    private async Task<TicketCaisse> Ecrire(Guid idIdempotence, SessionCaisse session, Func<long, CancellationToken, Task<TicketCaisse>> ecriture, CancellationToken annulation)
+    private async Task<TicketCaisse> Ecrire(
+        Guid idIdempotence,
+        SessionCaisse session,
+        long? numeroDuTerrain,
+        IReadOnlyList<Signalement> anomalies,
+        Func<long, CancellationToken, Task<TicketCaisse>> ecriture,
+        CancellationToken annulation)
     {
         try
         {
@@ -267,8 +305,19 @@ internal sealed class ServiceTickets(
                         return await contexte.Tickets.AsNoTracking().SingleAsync(t => t.IdIdempotence == idIdempotence, jeton);
                     }
 
-                    var numero = await NumeroSuivant(session.NumeroCaisse, jeton);
-                    return await ecriture(numero, jeton);
+                    // Liste propre à cette tentative : une transaction rejouée ne signale pas deux fois.
+                    var aSignaler = new List<Signalement>(anomalies);
+                    var numero = numeroDuTerrain is { } propose
+                        ? await NumeroDuTerrain(session.NumeroCaisse, propose, aSignaler, jeton)
+                        : await NumeroSuivant(session.NumeroCaisse, jeton);
+                    var ticket = await ecriture(numero, jeton);
+                    if (aSignaler.Count > 0)
+                    {
+                        contexte.Anomalies.AddRange(aSignaler.Select(a => AnomalieCaisse.Signaler(a.Type, session, ticket.Id, ticket.NumeroComplet, a.Detail, horloge.MaintenantUtc)));
+                        await contexte.SaveChangesAsync(jeton);
+                    }
+
+                    return ticket;
                 },
                 annulation);
         }
@@ -280,6 +329,79 @@ internal sealed class ServiceTickets(
         {
             throw TraduireCredit(erreur);
         }
+    }
+
+    /// <summary>
+    /// Numéro attribué par le poste hors ligne (RG34) : il est gardé et le compteur avance jusqu'à lui. Des numéros
+    /// sautés deviennent une anomalie ; un numéro déjà pris (cas anormal) cède la place au numéro libre suivant.
+    /// </summary>
+    private async Task<long> NumeroDuTerrain(string poste, long propose, List<Signalement> anomalies, CancellationToken annulation)
+    {
+        await contexte.Database.ExecuteSqlAsync(
+            $"INSERT INTO caisse.compteur_caisse (numero_caisse, dernier_numero) VALUES ({poste}, 0) ON CONFLICT DO NOTHING",
+            annulation);
+        var dernier = (await contexte.Database
+            .SqlQuery<long>($"SELECT dernier_numero AS \"Value\" FROM caisse.compteur_caisse WHERE numero_caisse = {poste} FOR UPDATE")
+            .ToListAsync(annulation)).Single();
+        long numero;
+        if (propose > dernier)
+        {
+            if (propose > dernier + 1)
+            {
+                anomalies.Add(new Signalement(TypeAnomalie.NumeroManquant, propose == dernier + 2 ? $"{dernier + 1}" : $"{dernier + 1}-{propose - 1}"));
+            }
+
+            numero = propose;
+        }
+        else
+        {
+            numero = dernier + 1;
+            anomalies.Add(new Signalement(TypeAnomalie.NumeroReattribue, $"{propose} -> {numero}"));
+        }
+
+        await contexte.Database.ExecuteSqlAsync(
+            $"UPDATE caisse.compteur_caisse SET dernier_numero = {numero} WHERE numero_caisse = {poste}",
+            annulation);
+        return numero;
+    }
+
+    /// <summary>
+    /// Session de l'opération : celle ouverte du caissier en ligne ; hors ligne, celle du poste au moment de la vente,
+    /// même clôturée depuis (l'opération est alors enregistrée et signalée).
+    /// </summary>
+    private async Task<SessionCaisse> SessionDeLOperation(TerrainHorsLigne? terrain, List<Signalement> anomalies, CancellationToken annulation)
+    {
+        if (terrain is null)
+        {
+            return await sessions.ExigerCouranteAsync(annulation);
+        }
+
+        var session = await sessions.SessionDuTerrainAsync(terrain.SessionId, annulation);
+        if (session.Statut != StatutSession.Ouverte)
+        {
+            anomalies.Add(new Signalement(TypeAnomalie.SessionCloturee, $"{session.NumeroCaisse} {session.ClotureUtc:O}"));
+        }
+
+        return session;
+    }
+
+    /// <summary>Heure de l'opération : celle du serveur en ligne ; celle du poste hors ligne, ramenée dans la session et jamais dans le futur.</summary>
+    private DateTime DateDeLOperation(TerrainHorsLigne? terrain, SessionCaisse session, List<Signalement> anomalies)
+    {
+        var maintenant = horloge.MaintenantUtc;
+        if (terrain is null)
+        {
+            return maintenant;
+        }
+
+        var date = terrain.DateUtc.Kind == DateTimeKind.Local ? terrain.DateUtc.ToUniversalTime() : DateTime.SpecifyKind(terrain.DateUtc, DateTimeKind.Utc);
+        var corrigee = date > maintenant ? maintenant : date < session.OuvertureUtc ? session.OuvertureUtc : date;
+        if (corrigee != date)
+        {
+            anomalies.Add(new Signalement(TypeAnomalie.DateCorrigee, $"{date:O} -> {corrigee:O}"));
+        }
+
+        return corrigee;
     }
 
     private async Task<long> NumeroSuivant(string poste, CancellationToken annulation)
@@ -328,14 +450,18 @@ internal sealed class ServiceTickets(
 
     // --- Préparation ---------------------------------------------------------------------------------------------
 
-    private async Task<List<LignePreparee>> PreparerVente(IReadOnlyList<LigneDemandee> demandees, CancellationToken annulation)
+    /// <summary>
+    /// Lignes d'une vente au prix en vigueur (RG37). Hors ligne (<paramref name="jourDuTerrain"/>), le prix du jour de la
+    /// vente ; si le poste a appliqué un autre prix, le sien fait foi (le client a payé ce prix) et l'écart est signalé.
+    /// </summary>
+    private async Task<List<LignePreparee>> PreparerVente(IReadOnlyList<LigneDemandee> demandees, DateOnly? jourDuTerrain, List<Signalement> anomalies, CancellationToken annulation)
     {
         if (demandees.Count == 0)
         {
             throw new ExceptionCaisse(CodesErreurCaisse.TicketSansLigne);
         }
 
-        var aujourdhui = horloge.AujourdhuiDouala;
+        var aujourdhui = jourDuTerrain ?? horloge.AujourdhuiDouala;
         var lignes = new List<LignePreparee>();
         foreach (var demandee in demandees)
         {
@@ -347,9 +473,23 @@ internal sealed class ServiceTickets(
                 throw new ExceptionCaisse(CodesErreurCaisse.ArticleInactif, article.Code);
             }
 
-            // RG37 : le prix vient de l'application, jamais du poste.
-            var prixApplicable = await prix.ObtenirPrixAsync(conditionnement.Id, aujourdhui, annulation)
-                ?? throw new ExceptionCaisse(CodesErreurCaisse.PrixAbsent, $"{article.Code} ({conditionnement.Libelle})");
+            // RG37 : en ligne, le prix vient de l'application, jamais du poste.
+            var prixApplicable = await prix.ObtenirPrixAsync(conditionnement.Id, aujourdhui, annulation);
+            decimal prixUnitaire;
+            if (jourDuTerrain is not null && demandee.PrixUnitaire is { } prixDuTerrain)
+            {
+                prixUnitaire = prixDuTerrain;
+                if (prixApplicable?.PrixTtc != prixDuTerrain)
+                {
+                    anomalies.Add(new Signalement(TypeAnomalie.PrixDifferent, $"{article.Code} ({conditionnement.Libelle}) : {prixDuTerrain:0} / {prixApplicable?.PrixTtc.ToString("0", System.Globalization.CultureInfo.InvariantCulture) ?? "-"}"));
+                }
+            }
+            else
+            {
+                prixUnitaire = prixApplicable?.PrixTtc
+                    ?? throw new ExceptionCaisse(CodesErreurCaisse.PrixAbsent, $"{article.Code} ({conditionnement.Libelle})");
+            }
+
             ExigerPrecision(demandee.Quantite, conditionnement.QuantiteUniteStock, article);
 
             lignes.Add(new LignePreparee(
@@ -360,7 +500,7 @@ internal sealed class ServiceTickets(
                 string.IsNullOrWhiteSpace(demandee.CodeScanne) ? null : demandee.CodeScanne.Trim(),
                 demandee.Quantite,
                 conditionnement.QuantiteUniteStock,
-                prixApplicable.PrixTtc,
+                prixUnitaire,
                 demandee.Remise));
         }
 
@@ -378,7 +518,7 @@ internal sealed class ServiceTickets(
         var lignes = new List<LignePreparee>();
         foreach (var rendue in rendues)
         {
-            var ligne = origine.Lignes.SingleOrDefault(l => l.Id == rendue.LigneOrigineId)
+            var ligne = origine.Lignes.SingleOrDefault(l => rendue.LigneOrigineId is { } id ? l.Id == id : l.Ordre == rendue.OrdreOrigine)
                 ?? throw new ExceptionCaisse(CodesErreurCaisse.LigneOrigineIntrouvable);
             if (rendue.Quantite <= 0m)
             {

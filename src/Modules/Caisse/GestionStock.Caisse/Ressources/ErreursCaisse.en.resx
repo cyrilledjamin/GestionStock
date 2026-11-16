@@ -36,4 +36,9 @@
   <data name="Caisse.QuantiteRenduTropGrande" xml:space="preserve"><value>Returned quantity exceeds the remaining sold quantity.</value></data>
   <data name="Caisse.RemboursementInvalide" xml:space="preserve"><value>Repayment refused.</value></data>
   <data name="Caisse.MouvementRefuse" xml:space="preserve"><value>Stock movement refused: nothing was recorded.</value></data>
+  <data name="Caisse.SessionAutreCaissier" xml:space="preserve"><value>These sales belong to another cashier's session: they must sign in on this till to send them.</value></data>
+  <data name="Caisse.VentesNonSynchronisees" xml:space="preserve"><value>Some sales made offline have not arrived yet: closing waits for synchronisation.</value></data>
+  <data name="Caisse.CommentaireObligatoire" xml:space="preserve"><value>A comment is required (500 characters at most).</value></data>
+  <data name="Caisse.AnomalieDejaTraitee" xml:space="preserve"><value>This anomaly has already been handled.</value></data>
+  <data name="Caisse.AnomalieIntrouvable" xml:space="preserve"><value>Anomaly not found.</value></data>
 </root>

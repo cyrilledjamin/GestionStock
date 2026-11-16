@@ -76,6 +76,15 @@ internal static class EndpointsCaisse
             Executer(async () => TypedResults.Ok(await sessions.CloturerAPlaceAsync(id, saisie, annulation))))
             .RequireAuthorization(Permissions.SessionsCloturer);
 
+        // Anomalies de synchronisation des ventes faites hors ligne (7.8) : consultées avec les sessions, traitées par le Gérant.
+        groupe.MapGet("/anomalies", async (bool? traitees, ServiceAnomalies anomalies, CancellationToken annulation) =>
+            TypedResults.Ok(await anomalies.ListerAsync(traitees, annulation)))
+            .RequireAuthorization(Permissions.SessionsConsulter);
+
+        groupe.MapPost("/anomalies/{id:guid}/traitement", (Guid id, TraitementAnomalie saisie, ServiceAnomalies anomalies, CancellationToken annulation) =>
+            Executer(async () => TypedResults.Ok(await anomalies.TraiterAsync(id, saisie, annulation))))
+            .RequireAuthorization(Permissions.AnomaliesTraiter);
+
         // Supervision des sessions (Gérant, Comptable)
         groupe.MapGet("/sessions", async (StatutSession? statut, ServiceSessions sessions, CancellationToken annulation) =>
             TypedResults.Ok(await sessions.ListerAsync(statut, annulation)))
@@ -148,10 +157,11 @@ internal static class EndpointsCaisse
         {
             var statut = erreur.Code switch
             {
-                CodesErreurCaisse.SessionIntrouvable or CodesErreurCaisse.TicketIntrouvable => StatusCodes.Status404NotFound,
+                CodesErreurCaisse.SessionIntrouvable or CodesErreurCaisse.TicketIntrouvable or CodesErreurCaisse.AnomalieIntrouvable => StatusCodes.Status404NotFound,
                 CodesErreurCaisse.SessionDejaOuverte or CodesErreurCaisse.PosteOccupe or CodesErreurCaisse.AucuneSessionOuverte
-                    or CodesErreurCaisse.SessionNonComptee => StatusCodes.Status409Conflict,
-                CodesErreurCaisse.ValidationRefusee => StatusCodes.Status403Forbidden,
+                    or CodesErreurCaisse.SessionNonComptee or CodesErreurCaisse.VentesNonSynchronisees
+                    or CodesErreurCaisse.AnomalieDejaTraitee => StatusCodes.Status409Conflict,
+                CodesErreurCaisse.ValidationRefusee or CodesErreurCaisse.SessionAutreCaissier => StatusCodes.Status403Forbidden,
                 _ => StatusCodes.Status400BadRequest,
             };
             return ReponsesErreur.Probleme(statut, erreur.Code, Ressources, erreur.Detail);

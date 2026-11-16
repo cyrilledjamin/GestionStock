@@ -46,7 +46,11 @@ internal sealed record SessionDto(
 
 internal sealed record OuvertureSession(string NumeroCaisse, decimal FondCaisse);
 
-internal sealed record ClotureSession(decimal EspecesComptees);
+/// <summary>
+/// Clôture par comptage. <paramref name="DernierNumero"/> : dernier ticket numéroté par le poste ; tant que le serveur
+/// ne l'a pas reçu, des ventes hors ligne manquent et la clôture attend (RG36).
+/// </summary>
+internal sealed record ClotureSession(decimal EspecesComptees, long? DernierNumero = null);
 
 /// <summary>Poste occupé par une session ouverte : qui la tient et depuis quand (le caissier bloqué sait à qui s'adresser).</summary>
 internal sealed record OccupationPoste(string NumeroCaisse, Guid SessionId, string Caissier, DateTime OuvertureUtc);
@@ -96,6 +100,19 @@ internal sealed class ServiceSessions(
         return await VersDto(session, annulation);
     }
 
+    /// <summary>
+    /// Session d'une opération faite hors ligne : celle du caissier connecté, même clôturée depuis (l'opération est
+    /// alors enregistrée et signalée, 7.8). Les ventes d'un caissier ne s'envoient pas sous le compte d'un autre.
+    /// </summary>
+    public async Task<SessionCaisse> SessionDuTerrainAsync(Guid id, CancellationToken annulation)
+    {
+        var session = await contexte.Sessions.AsNoTracking().SingleOrDefaultAsync(s => s.Id == id, annulation)
+            ?? throw new ExceptionCaisse(CodesErreurCaisse.SessionIntrouvable);
+        return session.Caissier == utilisateur.Identifiant
+            ? session
+            : throw new ExceptionCaisse(CodesErreurCaisse.SessionAutreCaissier);
+    }
+
     /// <summary>Session ouverte du caissier connecté ; null s'il n'en a pas.</summary>
     public async Task<SessionDto?> CouranteAsync(CancellationToken annulation)
     {
@@ -111,6 +128,12 @@ internal sealed class ServiceSessions(
     {
         ArgumentNullException.ThrowIfNull(saisie);
         var session = await ExigerCouranteAsync(annulation);
+        if (saisie.DernierNumero is { } dernierDuPoste
+            && (await contexte.Compteurs.AsNoTracking().Where(c => c.NumeroCaisse == session.NumeroCaisse).Select(c => (long?)c.DernierNumero).SingleOrDefaultAsync(annulation) ?? 0) < dernierDuPoste)
+        {
+            throw new ExceptionCaisse(CodesErreurCaisse.VentesNonSynchronisees);
+        }
+
         var totaux = await Totaux(session, annulation);
         session.Cloturer(saisie.EspecesComptees, totaux.EspecesTheoriques, utilisateur.Identifiant, horloge.MaintenantUtc);
         await contexte.SaveChangesAsync(annulation);

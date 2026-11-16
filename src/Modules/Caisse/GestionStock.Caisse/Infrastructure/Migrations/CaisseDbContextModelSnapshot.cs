@@ -23,6 +23,86 @@ namespace GestionStock.Caisse.Infrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("GestionStock.Caisse.Domain.AnomalieCaisse", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Caissier")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("caissier");
+
+                    b.Property<string>("Commentaire")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("commentaire");
+
+                    b.Property<DateTime>("DateUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_utc");
+
+                    b.Property<string>("Detail")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("detail");
+
+                    b.Property<Guid>("DocumentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("document_id");
+
+                    b.Property<string>("NumeroCaisse")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("numero_caisse");
+
+                    b.Property<string>("NumeroDocument")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("numero_document");
+
+                    b.Property<Guid>("SessionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("session_id");
+
+                    b.Property<bool>("Traitee")
+                        .HasColumnType("boolean")
+                        .HasColumnName("traitee");
+
+                    b.Property<string>("TraiteePar")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("traitee_par");
+
+                    b.Property<DateTime?>("TraitementUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("traitement_utc");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("type");
+
+                    b.HasKey("Id")
+                        .HasName("pk_anomalie_caisse");
+
+                    b.HasIndex("DocumentId")
+                        .HasDatabaseName("ix_anomalie_caisse_document_id");
+
+                    b.HasIndex("SessionId")
+                        .HasDatabaseName("ix_anomalie_caisse_session_id");
+
+                    b.HasIndex("Traitee")
+                        .HasDatabaseName("ix_anomalie_caisse_traitee");
+
+                    b.ToTable("anomalie_caisse", "caisse");
+                });
+
             modelBuilder.Entity("GestionStock.Caisse.Domain.LigneTicket", b =>
                 {
                     b.Property<Guid>("Id")
@@ -413,6 +493,16 @@ namespace GestionStock.Caisse.Infrastructure.Migrations
                         .HasName("pk_compteur_caisse");
 
                     b.ToTable("compteur_caisse", "caisse");
+                });
+
+            modelBuilder.Entity("GestionStock.Caisse.Domain.AnomalieCaisse", b =>
+                {
+                    b.HasOne("GestionStock.Caisse.Domain.SessionCaisse", null)
+                        .WithMany()
+                        .HasForeignKey("SessionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_anomalie_caisse_session_caisse_session_id");
                 });
 
             modelBuilder.Entity("GestionStock.Caisse.Domain.LigneTicket", b =>

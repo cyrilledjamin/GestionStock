@@ -226,7 +226,9 @@ Si le port 5432 est déjà pris (PostgreSQL installé sur le poste), choisir un 
 | `GET /api/caisse/boutique/logo` | anonyme | Image du logo configuré (404 sans logo) |
 | `GET /api/caisse/postes/occupation` | `Caisse.Vendre` | Postes tenus par une session ouverte : titulaire et heure d'ouverture (le caissier bloqué sait à qui s'adresser) |
 | `POST /api/caisse/sessions/{id}/cloture` | `Caisse.Sessions.Cloturer` | `{ especesComptees }` : le Gérant clôture à la place de son titulaire une session restée ouverte (décision 36) ; auteur enregistré dans `clotureePar`, écart à valider |
-| `POST /api/caisse/sessions/courante/cloture` | `Caisse.Vendre` | `{ especesComptees }` : clôture, écart calculé |
+| `POST /api/caisse/sessions/courante/cloture` | `Caisse.Vendre` | `{ especesComptees, dernierNumero? }` : clôture, écart calculé ; refusée (409 `Caisse.VentesNonSynchronisees`) tant que le dernier ticket numéroté par le poste n'est pas arrivé (RG36) |
+| `GET /api/caisse/anomalies?traitees=` | `Caisse.Sessions.Consulter` | Anomalies de synchronisation des opérations faites hors ligne (7.8) |
+| `POST /api/caisse/anomalies/{id}/traitement` | `Caisse.Anomalies.Traiter` | `{ commentaire }` : traitement par le Gérant, une fois, tracé |
 | `GET /api/caisse/sessions`, `GET /api/caisse/sessions/{id}` | `Caisse.Sessions.Consulter` | Sessions (`?statut=Ouverte|Comptee|Validee`) et leurs totaux |
 | `POST /api/caisse/sessions/{id}/validation` | `Caisse.Sessions.Valider` | Valide une session clôturée et son écart |
 | `POST /api/caisse/tickets` | `Caisse.Vendre` | Vente : `{ idIdempotence, clientId?, lignes: [{ conditionnementId, quantite, remise?, codeScanne? }], paiements: [{ mode, montant, reference? }], validation? }` ; 201, ou 200 si déjà reçue |
@@ -378,6 +380,26 @@ en anglais. Hors ligne (PWA, IndexedDB) : tranche ultérieure, avec la caisse.
   heure de Douala, HT / TVA / TTC si l'entreprise est assujettie, « prix nets » sinon. Police Courier (l'une des 14
   polices standard des lecteurs PDF, à chasse fixe comme un ticket thermique) : aucune police à embarquer, aucune
   dépendance. L'impression se fait sur le poste client.
+
+### Opérations faites hors ligne (7.8, ENF08)
+
+Une vente, un avoir ou un remboursement de crédit fait sur le poste coupé du serveur porte un bloc `horsLigne`
+(`sessionId`, `numero`, `dateUtc`) et, par ligne, le `prixUnitaire` appliqué. Au rejeu, ce qui a eu lieu sur le terrain
+fait foi ; un écart est enregistré comme **anomalie**, jamais comme refus :
+
+| Anomalie | Cas | Ce que fait le serveur |
+| --- | --- | --- |
+| `NumeroManquant` | le poste propose un numéro au-delà du suivant | garde le numéro, avance le compteur du poste (RG34) |
+| `NumeroReattribue` | le numéro est déjà pris (anormal) | attribue le numéro libre suivant |
+| `PrixDifferent` | le prix du poste n'est pas celui en vigueur à la date du ticket | garde le prix du poste (celui payé) |
+| `PlafondDepasse` | la vente à crédit dépasse le plafond, connu à la synchronisation | enregistre la dette |
+| `SessionCloturee` | la session a été clôturée entre-temps (décision 36) | rattache l'opération à cette session |
+| `DateCorrigee` | heure du poste avant l'ouverture ou dans le futur | la ramène dans ses bornes |
+
+Le renvoi d'une opération déjà reçue (même identifiant d'idempotence) renvoie l'enregistrement existant, sans doublon.
+Un avoir peut désigner un ticket fait hors ligne par son identifiant d'idempotence et ses lignes par leur rang. Les
+opérations d'une session ne s'envoient que sous le compte de son caissier (403 `Caisse.SessionAutreCaissier`). Hors
+ligne, remise et dépassement de plafond sont refusés par le poste : ils exigent un responsable vérifié en ligne.
 
 ## Reprise des données
 
@@ -576,6 +598,7 @@ Chaque permission est attribuée à des rôles dans
 | `Caisse.Tickets.Consulter` | Caissier, Gerant, Comptable |
 | `Caisse.Sessions.Consulter`, `Caisse.Sessions.Valider` | Gerant, Comptable |
 | `Caisse.Sessions.Cloturer` | Gerant *(décision 36 : session restée ouverte)* |
+| `Caisse.Anomalies.Traiter` | Gerant *(anomalies de synchronisation, 7.8)* |
 | `Referentiel.Articles.Gerer` | Gerant, Administrateur *(provisoire)* |
 | `Achats.Consulter` | Gerant, Comptable, Magasinier |
 | `Achats.Fournisseurs.Gerer` | Gerant, Magasinier *(provisoire)* |
@@ -662,7 +685,7 @@ sur une machine Linux de GitHub qui dispose de Docker :
 | 40 | Identité et finitions (nom et logo, unités traduites, quantités) | Fait |
 | 41 | Vérification, CI, README, démonstration de la tranche 6 | Fait |
 | 42 | Hors ligne : catalogue et grille de prix de la caisse, compression des réponses | Fait |
-| 43 | Hors ligne : tickets du terrain côté serveur, anomalies, clôture gardée | À faire |
+| 43 | Hors ligne : tickets du terrain côté serveur, anomalies, clôture gardée | Fait |
 | 44 | Hors ligne : application installable (PWA), stockage du poste, état de connexion | À faire |
 | 45 | Hors ligne : vente, avoir, remboursement en file, synchronisation | À faire |
 | 46 | Anomalies de synchronisation à traiter | À faire |

@@ -45,7 +45,7 @@ internal sealed class ServiceCredit(CreditDbContext contexte, IUniteDeTravail un
             async jeton =>
             {
                 var client = await VerrouillerClient(vente.ClientId, jeton);
-                client.Devoir(vente.Montant, valideParResponsable: vente.ValideePar is not null);
+                client.Devoir(vente.Montant, valideParResponsable: vente.ValideePar is not null || vente.HorsLigne);
                 contexte.Operations.Add(OperationCredit.Vente(client, vente.Montant, vente.TicketId, vente.NumeroTicket, vente.Utilisateur, vente.ValideePar, horloge.MaintenantUtc));
                 await contexte.SaveChangesAsync(jeton);
             },
