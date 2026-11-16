@@ -4,6 +4,7 @@ using GestionStock.Caisse.Application;
 using GestionStock.Caisse.Domain;
 using GestionStock.Identite.Contracts;
 using GestionStock.Infrastructure.Http;
+using GestionStock.Infrastructure.Stockage;
 using GestionStock.Prix.Contracts;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -52,6 +53,18 @@ internal static class EndpointsCaisse
         groupe.MapPost("/sessions/courante/cloture", (ClotureSession saisie, ServiceSessions sessions, CancellationToken annulation) =>
             Executer(async () => TypedResults.Ok(await sessions.CloturerAsync(saisie, annulation))))
             .RequireAuthorization(Permissions.CaisseVendre);
+
+        // Identité de la boutique (nom, logo facultatif) : publique par choix explicite, l'écran de connexion l'affiche.
+        // Rien d'autre n'est exposé sans connexion (ni adresse, ni numéro de contribuable).
+        groupe.MapGet("/boutique", async (IOptions<OptionsEntrepriseRecu> entreprise, IStockageFichiers stockage, CancellationToken annulation) =>
+                TypedResults.Ok(new IdentiteBoutique(entreprise.Value.Nom, await LogoDisponible(entreprise.Value, stockage, annulation))))
+            .AllowAnonymous();
+
+        groupe.MapGet("/boutique/logo", async (IOptions<OptionsEntrepriseRecu> entreprise, IStockageFichiers stockage, CancellationToken annulation) =>
+                await LogoDisponible(entreprise.Value, stockage, annulation)
+                    ? Results.Stream(await stockage.OuvrirAsync(entreprise.Value.Logo!, annulation), entreprise.Value.TypeLogo)
+                    : Results.NotFound())
+            .AllowAnonymous();
 
         // En-tête des reçus (identité de l'entreprise, régime de TVA) pour le reçu imprimé par le navigateur.
         groupe.MapGet("/entete", (IOptions<OptionsEntrepriseRecu> entreprise, IConsultationPrix prix) => TypedResults.Ok(new EnteteRecu(
@@ -119,6 +132,10 @@ internal static class EndpointsCaisse
             }))
             .RequireAuthorization(Permissions.TicketsConsulter);
     }
+
+    /// <summary>Logo configuré, au format accepté (PNG, JPEG, WebP), et présent dans le stockage.</summary>
+    private static async Task<bool> LogoDisponible(OptionsEntrepriseRecu entreprise, IStockageFichiers stockage, CancellationToken annulation) =>
+        entreprise.TypeLogo is not null && await stockage.ExisteAsync(entreprise.Logo!, annulation);
 
     /// <summary>Traduit les règles violées en réponses 400 / 404 / 409.</summary>
     private static async Task<IResult> Executer(Func<Task<IResult>> action)

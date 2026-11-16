@@ -31,7 +31,7 @@
         {
             <div class="client-choisi"><span><code>@_article.CodeArticle</code> @_article.Libelle</span><button type="button" class="lien" @onclick="() => _article = null">✕</button></div>
             <div class="grille">
-                <label>@L["Quantite"] (@_article.UniteStock) <input type="number" min="0" step="any" @bind="_quantite" required /></label>
+                <label>@L["Quantite"] (@Format.Unite(_article.UniteStock)) <input type="number" min="0" step="any" @bind="_quantite" required /></label>
                 <label>@L["Motif"]
                     <select @bind="_motif">
                         @foreach (var motif in MotifsDemarque.Tous)
@@ -65,7 +65,7 @@
                 <td class="court">@demarque.Numero</td>
                 <td class="court">@Format.Date(demarque.DeclareeLeUtc)</td>
                 <td><code>@demarque.CodeArticle</code> @demarque.Libelle @if (demarque.Commentaire is not null) { <br /><small class="discret">@demarque.Commentaire</small> }</td>
-                <td class="nombre">@Format.Quantite(demarque.Quantite) @demarque.UniteStock</td>
+                <td class="nombre">@Format.Quantite(demarque.Quantite) @Format.Unite(demarque.UniteStock)</td>
                 <td>@L[$"MotifDemarque.{demarque.Motif}"]</td>
                 <td>@demarque.DeclareePar</td>
                 <td>

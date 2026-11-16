@@ -15,14 +15,14 @@ else
     <div class="cadre @(_menuOuvert ? "menu-ouvert" : "")">
         @* Écran étroit : barre du haut avec le bouton du menu en tiroir. *@
         <header class="barre-haut">
-            <span class="marque"><Icone Nom="marque" /> GestionStock</span>
+            <span class="marque"><MarqueBoutique AvecLogiciel="false" /></span>
             <button class="ouvrir-menu" aria-expanded="@(_menuOuvert ? "true" : "false")" aria-controls="menu" @onclick="BasculerMenu">
                 <span aria-hidden="true">☰</span> @L["Menu"]
             </button>
         </header>
         <div class="voile" @onclick="FermerMenu"></div>
         <nav class="menu" id="menu" aria-label="@L["Menu"]">
-            <div class="marque"><Icone Nom="marque" /> GestionStock</div>
+            <div class="marque"><MarqueBoutique /></div>
             <NavLink href="" Match="NavLinkMatch.All"><Icone Nom="accueil" />@L["Accueil"]</NavLink>
             @if (Session.A(Permissions.CaisseVendre))
             {

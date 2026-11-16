@@ -68,7 +68,7 @@
             <tr class="@(article.Actif ? "" : "inactif")">
                 <td data-label="@L["Code"]"><a href="articles/@article.Id"><code>@article.Code</code></a></td>
                 <td data-label="@L["Libelle"]">@article.Libelle @if (article.LibelleTraduit is not null) { <small class="discret"> · @article.LibelleTraduit</small> }</td>
-                <td data-label="@L["UniteStock"]">@article.UniteStock</td>
+                <td data-label="@L["UniteStock"]">@Format.Unite(article.UniteStock)</td>
                 <td data-label="@L["Precision"]" class="nombre">@article.PrecisionQuantite</td>
                 <td data-label="@L["Etat"]">@(article.Actif ? L["Actif"] : L["Inactif"])</td>
                 <td class="actions-ligne">

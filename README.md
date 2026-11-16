@@ -148,7 +148,8 @@ Uniquement par variables d'environnement ou `appsettings` ; aucun chemin ni adre
 | `Stockage:RepertoireRacine` | `Stockage__RepertoireRacine` | Répertoire des fichiers (reçus, imports) ; `donnees/fichiers` par défaut. Contient aussi `cles-protection/`, les clés qui signent les jetons de connexion : conservées, elles évitent qu'un redémarrage déconnecte tout le monde (à inclure dans les sauvegardes) |
 | `BaseDeDonnees:AppliquerMigrationsAuDemarrage` | `BaseDeDonnees__AppliquerMigrationsAuDemarrage` | Applique les migrations de chaque module au démarrage ; `false` par défaut, `true` en Development et dans docker-compose |
 | `Entreprise:Nom`, `:Adresse`, `:Telephone`, `:NumeroContribuable` | `Entreprise__Nom`… | Identité imprimée en tête des reçus (`ENTREPRISE_NOM`, `ENTREPRISE_ADRESSE`, `ENTREPRISE_TELEPHONE`, `ENTREPRISE_NIU` dans `deploy/.env`) |
-| `Caisse:Postes` | `Caisse__Postes__0`, `Caisse__Postes__1`… | Postes de caisse de la boutique ; `CAISSE-1` par défaut (`CAISSE_POSTE` dans `deploy/.env`) |
+| `Caisse:Postes` | `Caisse__Postes__0`, `Caisse__Postes__1`… | Postes de caisse de la boutique ; `CAISSE-1` par défaut (`CAISSE_POSTE` dans `deploy/.env`) ; le nom s'affiche aussi dans le menu et sur l'écran de connexion |
+| `Entreprise:Logo` | `Entreprise__Logo` | Logo facultatif (`ENTREPRISE_LOGO`) : chemin d'une image PNG, JPEG ou WebP dans le stockage de fichiers, ex. `identite/logo.png`, copiée par `docker compose -f deploy/docker-compose.yml cp logo.png api:/donnees/fichiers/identite/logo.png` puis `up -d`. Affiché dans le menu, à la connexion et sur le reçu imprimé ; le SVG est refusé (il pourrait exécuter du script). Sans logo, l'icône de l'application |
 | `Entreprise:AssujettiTva` | `Entreprise__AssujettiTva` | Entreprise assujettie à la TVA (RG37) : reçu HT / TVA / TTC ; `false` par défaut, prix nets (`ENTREPRISE_ASSUJETTIE_TVA` dans `deploy/.env`) |
 | `Entreprise:TauxTva` | `Entreprise__TauxTva` | Taux légal en %, 19,25 par défaut |
 | `Identite:AdministrateurInitial:Identifiant` | `Identite__AdministrateurInitial__Identifiant` | Compte Administrateur créé au démarrage si la base ne contient aucun compte (`ADMIN_IDENTIFIANT` dans `deploy/.env`) |
@@ -219,6 +220,8 @@ Si le port 5432 est déjà pris (PostgreSQL installé sur le poste), choisir un 
 | `GET /api/caisse/postes` | `Caisse.Vendre` | Postes de caisse configurés |
 | `POST /api/caisse/sessions` | `Caisse.Vendre` | `{ numeroCaisse, fondCaisse }` : ouvre la session du caissier connecté |
 | `GET /api/caisse/sessions/courante` | `Caisse.Vendre` | Session ouverte du caissier avec ses totaux (204 s'il n'en a pas) |
+| `GET /api/caisse/boutique` | anonyme | Nom de la boutique et présence d'un logo (écran de connexion) ; rien d'autre n'est public |
+| `GET /api/caisse/boutique/logo` | anonyme | Image du logo configuré (404 sans logo) |
 | `GET /api/caisse/postes/occupation` | `Caisse.Vendre` | Postes tenus par une session ouverte : titulaire et heure d'ouverture (le caissier bloqué sait à qui s'adresser) |
 | `POST /api/caisse/sessions/{id}/cloture` | `Caisse.Sessions.Cloturer` | `{ especesComptees }` : le Gérant clôture à la place de son titulaire une session restée ouverte (décision 36) ; auteur enregistré dans `clotureePar`, écart à valider |
 | `POST /api/caisse/sessions/courante/cloture` | `Caisse.Vendre` | `{ especesComptees }` : clôture, écart calculé |
@@ -299,6 +302,12 @@ tickets) passent en cartes, chaque valeur gardant l'intitulé de sa colonne, les
 cadre. À la caisse, sur tablette et téléphone, une barre fixée en bas garde le total, le reste ou le rendu et le bouton
 « Payer » (vers l'encaissement) puis « Encaisser » ; l'en-tête de caisse tient sur une ligne. Les tests de conventions refusent une couleur en
 dur hors des jetons, un style en ligne, une icône inconnue et l'absence de la balise `viewport`.
+
+**Identité et finitions** : nom de la boutique (et logo s'il est configuré) dans le menu, à la connexion et sur le
+reçu ; quantités sans zéros inutiles (« 20 kg », « 2,5 kg ») ; unités courantes traduites en anglais (boîte → box,
+pièce → piece, sac → bag…, liste fixe côté client ; une unité absente de la liste reste telle quelle) ; caissier
+désigné sur le reçu par « Prénom Nom (matricule) », comme dans les rapports (annuaire `IAnnuairePersonnel` de
+`Identite.Contracts`).
 
 Tous les champs de mot de passe (connexion, création de compte, validation par un responsable à la caisse) sont masqués
 par défaut et ont un bouton « Afficher » / « Masquer » pour vérifier la saisie. Un mot de passe enregistré ne peut pas
@@ -643,7 +652,7 @@ sur une machine Linux de GitHub qui dispose de Docker :
 | 37 | Design : caisse, ouverture, session bloquée (clôture par le Gérant), clôture guidée | Fait |
 | 38 | Accueil en tableau de bord par rôle | Fait |
 | 39 | Téléphone et tablette : listes en cartes, caisse sur tablette | Fait |
-| 40 | Identité et finitions (nom et logo, unités traduites, quantités) | À faire |
+| 40 | Identité et finitions (nom et logo, unités traduites, quantités) | Fait |
 | 41 | Vérification, CI, README, démonstration de la tranche 6 | À faire |
 
 ## Démonstration

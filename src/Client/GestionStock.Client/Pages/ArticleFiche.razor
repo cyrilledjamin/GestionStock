@@ -11,7 +11,7 @@
 @if (_article is not null)
 {
     <h1><code>@_article.Code</code> @Format.Libelle(_article)</h1>
-    <p class="discret">@L["UniteStock"] : @_article.UniteStock · @L["Precision"] : @_article.PrecisionQuantite</p>
+    <p class="discret">@L["UniteStock"] : @Format.Unite(_article.UniteStock) · @L["Precision"] : @_article.PrecisionQuantite</p>
 
     <h2>@L["ConditionnementsEtPrix"]</h2>
     <table class="fiche-article">
@@ -38,7 +38,7 @@
                             <small class="pastille validee">@L["VenteRapide"]</small>
                         }
                     </td>
-                    <td class="nombre">@Format.Quantite(conditionnement.QuantiteUniteStock) @_article.UniteStock</td>
+                    <td class="nombre">@Format.Quantite(conditionnement.QuantiteUniteStock) @Format.Unite(_article.UniteStock)</td>
                     <td>
                         @foreach (var codeBarres in conditionnement.Codes.Where(c => c.Actif))
                         {
@@ -95,7 +95,7 @@
                         }
                     </select>
                 </label>
-                <label>@L["Contenu"] (@_article.UniteStock) <input type="number" min="0" step="any" @bind="_facteur" required /></label>
+                <label>@L["Contenu"] (@Format.Unite(_article.UniteStock)) <input type="number" min="0" step="any" @bind="_facteur" required /></label>
             </div>
             <div class="actions"><button type="submit" class="principal">@L["Ajouter"]</button></div>
         </form>

@@ -61,6 +61,8 @@ public sealed class ApiDeTest : IAsyncLifetime
                 .UseSetting("ConnectionStrings:GestionStock", chaine)
                 .UseSetting("BaseDeDonnees:AppliquerMigrationsAuDemarrage", "true")
                 .UseSetting("Stockage:RepertoireRacine", repertoire)
+                .UseSetting("Entreprise:Nom", "Boutique de test")
+                .UseSetting("Entreprise:Logo", CheminLogo)
                 .UseSetting("Identite:AdministrateurInitial:Identifiant", Administrateur)
                 .UseSetting("Identite:AdministrateurInitial:MotDePasse", MotDePasseAdministrateur);
         });
@@ -75,6 +77,9 @@ public sealed class ApiDeTest : IAsyncLifetime
     private static string Poste(int index) => $"T{index + 1:D3}";
 
     /// <summary>Services de l'hôte, pour appeler un contrat de module hors HTTP.</summary>
+    /// <summary>Logo configuré pour les tests ; le fichier n'existe qu'une fois déposé par le test du logo.</summary>
+    public const string CheminLogo = "identite/logo.png";
+
     public IServiceProvider Services
     {
         get

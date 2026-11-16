@@ -1,6 +1,7 @@
 @* Reçu 80 mm imprimé par le navigateur du poste (la feuille de style d'impression n'affiche que lui). *@
 @inject Api Api
 @inject IJSRuntime Js
+@inject Boutique Boutique
 
 @if (Ticket is not null)
 {
@@ -12,7 +13,11 @@
     <Message Texte="@_erreur" />
 
     <div class="recu">
-        <div class="centre gras">@(_entete?.Nom ?? "GestionStock")</div>
+        @if (Boutique.AUnLogo)
+        {
+            <div class="centre"><img class="logo-recu" src="@Boutique.AdresseLogo" alt="" /></div>
+        }
+        <div class="centre gras">@(_entete?.Nom ?? Boutique.Nom)</div>
         @if (_entete?.Adresse is { Length: > 0 } adresse)
         {
             <div class="centre">@adresse</div>
@@ -28,7 +33,7 @@
             <div>@L["AvoirSur"] @_numeroOrigine</div>
         }
         <div>@Format.Date(Ticket.DateUtc)</div>
-        <div>@L["Caissier"] : @Ticket.Caissier</div>
+        <div>@L["Caissier"] : @Ticket.CaissierDesignation</div>
         @if (_client is not null)
         {
             <div>@L["Client"] : @_client</div>

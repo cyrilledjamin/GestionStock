@@ -56,6 +56,7 @@ internal sealed record TicketDto(
     string Numero,
     DateTime DateUtc,
     string Caissier,
+    string CaissierDesignation,
     bool EstAvoir,
     Guid? TicketOrigineId,
     Guid? ClientId,
@@ -84,6 +85,7 @@ internal sealed class ServiceTickets(
     IServiceMouvementsStock mouvements,
     IServiceCredit credit,
     IValidationResponsable validation,
+    IAnnuairePersonnel annuaire,
     IUniteDeTravail uniteDeTravail,
     IHorloge horloge)
 {
@@ -449,7 +451,7 @@ internal sealed class ServiceTickets(
     {
         var rendues = t.EstAvoir ? [] : await QuantitesRendues(t, annulation);
         return new TicketDto(
-            t.Id, t.IdIdempotence, t.NumeroComplet, t.DateUtc, t.Caissier, t.EstAvoir, t.TicketOrigineId, t.ClientId,
+            t.Id, t.IdIdempotence, t.NumeroComplet, t.DateUtc, t.Caissier, await annuaire.DesignationAsync(t.Caissier, annulation), t.EstAvoir, t.TicketOrigineId, t.ClientId,
             t.TotalTtc, t.TotalHt, t.TotalTva, t.TauxTva, t.Rendu, t.RemiseValideePar, t.CreditValidePar,
             [.. t.Lignes.OrderBy(l => l.Ordre).Select(l => new LigneTicketDto(
                 l.Id, l.Ordre, l.ArticleId, l.ConditionnementId, l.Libelle, l.LibelleConditionnement, l.Quantite,
