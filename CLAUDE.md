@@ -65,7 +65,7 @@ commandes clients avec réservation, terminaux Android, facturation électroniqu
 - Build : `dotnet build`
 - Tests : `dotnet test`
 - Base locale : `docker compose -f deploy/docker-compose.yml up -d db`
-- Nouvelle migration : `dotnet ef migrations add <Nom> -p src/Modules/<Module>/GestionStock.<Module> -s src/Host/GestionStock.Api`
+- Nouvelle migration : `dotnet ef migrations add <Nom> -p src/Modules/<Module>/GestionStock.<Module> -s src/Host/GestionStock.Api -c <Module>DbContext -o Infrastructure/Migrations`
 
 ## Façon de travailler
 - Avant une fonctionnalité qui touche plusieurs modules, proposer un plan (mode Plan) avant d'écrire du code.

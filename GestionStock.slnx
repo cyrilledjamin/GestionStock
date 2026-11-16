@@ -8,12 +8,17 @@
     <Project Path="src/Host/GestionStock.Api/GestionStock.Api.csproj" />
   </Folder>
   <Folder Name="/src/Modules/" />
+  <Folder Name="/src/Modules/Identite/">
+    <Project Path="src/Modules/Identite/GestionStock.Identite.Contracts/GestionStock.Identite.Contracts.csproj" />
+    <Project Path="src/Modules/Identite/GestionStock.Identite/GestionStock.Identite.csproj" />
+  </Folder>
   <Folder Name="/src/Modules/Stock/">
     <Project Path="src/Modules/Stock/GestionStock.Stock.Contracts/GestionStock.Stock.Contracts.csproj" />
     <Project Path="src/Modules/Stock/GestionStock.Stock.Domain/GestionStock.Stock.Domain.csproj" />
     <Project Path="src/Modules/Stock/GestionStock.Stock/GestionStock.Stock.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/GestionStock.Api.IntegrationTests/GestionStock.Api.IntegrationTests.csproj" />
     <Project Path="tests/GestionStock.ArchitectureTests/GestionStock.ArchitectureTests.csproj" />
     <Project Path="tests/GestionStock.Infrastructure.Tests/GestionStock.Infrastructure.Tests.csproj" />
     <Project Path="tests/GestionStock.Stock.Domain.Tests/GestionStock.Stock.Domain.Tests.csproj" />

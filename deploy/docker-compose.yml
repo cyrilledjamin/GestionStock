@@ -34,6 +34,8 @@ services:
       ConnectionStrings__GestionStock: "Host=db;Port=5432;Database=${POSTGRES_DB:-gestionstock};Username=${POSTGRES_USER:-gestionstock};Password=${POSTGRES_PASSWORD:?Définir POSTGRES_PASSWORD dans deploy/.env}"
       BaseDeDonnees__AppliquerMigrationsAuDemarrage: "true"
       Stockage__RepertoireRacine: /donnees/fichiers
+      Identite__AdministrateurInitial__Identifiant: ${ADMIN_IDENTIFIANT:-admin}
+      Identite__AdministrateurInitial__MotDePasse: ${ADMIN_MOT_DE_PASSE:?Définir ADMIN_MOT_DE_PASSE dans deploy/.env}
     ports:
       - "${API_PORT:-8080}:8080"
     volumes:
