@@ -165,6 +165,57 @@ public sealed class ConditionnementsTests(ApiDeTest api)
     }
 
     [Fact]
+    public async Task Le_gerant_choisit_les_articles_rapides_de_la_caisse()
+    {
+        using var gerant = await api.ClientAvecRoleAsync(Roles.Gerant);
+        using var caissier = await api.ClientAvecRoleAsync(Roles.Caissier);
+        var (article, carton) = await ArticleAvecCartonAsync(gerant, 6);
+        var unite = (await ListerAsync(gerant, article.Id)).Single(c => c.QuantiteUniteStock == 1m);
+
+        var marque = await Lire<Conditionnement>(await gerant.PutAsJsonAsync($"/api/referentiel/conditionnements/{unite.Id}/vente-rapide", new { venteRapide = true }, Annulation));
+        (await gerant.PutAsJsonAsync($"/api/referentiel/conditionnements/{carton.Id}/vente-rapide", new { venteRapide = true }, Annulation)).EnsureSuccessStatusCode();
+        var avant = await RapidesAsync(caissier);
+        var demarque = await Lire<Conditionnement>(await gerant.PutAsJsonAsync($"/api/referentiel/conditionnements/{unite.Id}/vente-rapide", new { venteRapide = false }, Annulation));
+        var apres = await RapidesAsync(caissier);
+
+        Assert.True(marque.VenteRapide);
+        Assert.Contains(avant, v => v.ConditionnementId == unite.Id);
+        Assert.Contains(avant, v => v.ConditionnementId == carton.Id);
+        Assert.False(demarque.VenteRapide);
+        Assert.DoesNotContain(apres, v => v.ConditionnementId == unite.Id);
+        Assert.Contains(apres, v => v.ConditionnementId == carton.Id);
+    }
+
+    [Fact]
+    public async Task Un_conditionnement_desactive_quitte_les_articles_rapides_et_ne_peut_y_revenir()
+    {
+        using var gerant = await api.ClientAvecRoleAsync(Roles.Gerant);
+        var (_, carton) = await ArticleAvecCartonAsync(gerant, 6);
+        (await gerant.PutAsJsonAsync($"/api/referentiel/conditionnements/{carton.Id}/vente-rapide", new { venteRapide = true }, Annulation)).EnsureSuccessStatusCode();
+
+        var desactive = await Lire<Conditionnement>(await gerant.PutAsJsonAsync($"/api/referentiel/conditionnements/{carton.Id}", new { libelle = "Ancien carton", actif = false }, Annulation));
+        var refus = await gerant.PutAsJsonAsync($"/api/referentiel/conditionnements/{carton.Id}/vente-rapide", new { venteRapide = true }, Annulation);
+
+        Assert.False(desactive.VenteRapide);
+        Assert.DoesNotContain(await RapidesAsync(gerant), v => v.ConditionnementId == carton.Id);
+        Assert.Equal((HttpStatusCode.BadRequest, "Referentiel.ConditionnementInactif"), (refus.StatusCode, (await IdentiteTests.LireProblemeAsync(refus)).Code));
+    }
+
+    [Fact]
+    public async Task Le_caissier_voit_les_articles_rapides_sans_pouvoir_les_choisir()
+    {
+        using var gerant = await api.ClientAvecRoleAsync(Roles.Gerant);
+        using var caissier = await api.ClientAvecRoleAsync(Roles.Caissier);
+        var (_, carton) = await ArticleAvecCartonAsync(gerant, 6);
+
+        var choix = await caissier.PutAsJsonAsync($"/api/referentiel/conditionnements/{carton.Id}/vente-rapide", new { venteRapide = true }, Annulation);
+        var liste = await caissier.GetAsync("/api/referentiel/vendables/rapides", Annulation);
+
+        Assert.Equal(HttpStatusCode.Forbidden, choix.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, liste.StatusCode);
+    }
+
+    [Fact]
     public async Task Le_magasinier_ne_gere_pas_les_codes()
     {
         using var gerant = await api.ClientAvecRoleAsync(Roles.Gerant);
@@ -190,6 +241,15 @@ public sealed class ConditionnementsTests(ApiDeTest api)
         return (article, (await reponse.Content.ReadFromJsonAsync<Conditionnement>(Annulation))!);
     }
 
+    private static async Task<List<Vendable>> RapidesAsync(HttpClient client) =>
+        (await client.GetFromJsonAsync<List<Vendable>>("/api/referentiel/vendables/rapides", Annulation))!;
+
+    private static async Task<T> Lire<T>(HttpResponseMessage reponse)
+    {
+        Assert.True(reponse.IsSuccessStatusCode, await reponse.Content.ReadAsStringAsync(Annulation));
+        return (await reponse.Content.ReadFromJsonAsync<T>(Annulation))!;
+    }
+
     internal static async Task<List<Conditionnement>> ListerAsync(HttpClient client, Guid articleId) =>
         (await client.GetFromJsonAsync<List<Conditionnement>>($"/api/referentiel/articles/{articleId}/conditionnements", Annulation))!;
 
@@ -205,7 +265,7 @@ public sealed class ConditionnementsTests(ApiDeTest api)
 
     internal sealed record Code(Guid Id, string Valeur, string Type, bool Principal, bool Actif);
 
-    internal sealed record Conditionnement(Guid Id, Guid ArticleId, string Libelle, string Niveau, decimal QuantiteUniteStock, bool Actif, List<Code> Codes);
+    internal sealed record Conditionnement(Guid Id, Guid ArticleId, string Libelle, string Niveau, decimal QuantiteUniteStock, bool Actif, List<Code> Codes, bool VenteRapide = false);
 
     internal sealed record Vendable(Guid ArticleId, string CodeArticle, Guid ConditionnementId, string LibelleConditionnement, decimal QuantiteUniteStock, string? CodeScanne);
 }

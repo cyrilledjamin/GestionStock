@@ -171,12 +171,48 @@ a.tuile:hover { border-color: var(--vert); box-shadow: var(--ombre-haute); }
 .entete-caisse { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--e-4); }
 .entete-caisse .actions { margin: 0; }
 .caisse { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: var(--e-5); align-items: start; }
-.scan { display: grid; grid-template-columns: 1fr 1fr; gap: var(--e-3); }
-.scan input { font-size: var(--t-l); min-height: 3.25rem; }
+.champ-scan { position: relative; display: flex; align-items: center; }
+.champ-scan > .icone { position: absolute; left: var(--e-3); color: var(--vert); pointer-events: none; }
+.champ-scan input { width: 100%; font-size: var(--t-l); min-height: 3.5rem; padding-left: 2.75rem; padding-right: 3.5rem; }
+.champ-scan kbd { position: absolute; right: var(--e-3); }
 #scan { border-color: var(--vert); border-width: 2px; }
+kbd { font-family: var(--police-chasse-fixe); font-size: var(--t-xs); font-weight: 600; padding: .05rem .4rem; border: 1px solid var(--bordure-forte); border-bottom-width: 2px; border-radius: 4px; background: var(--fond); color: var(--discret); }
+.principal kbd { background: transparent; color: var(--sur-vert); border-color: var(--sur-vert-trait); }
+.saisie-vente h3 { margin: var(--e-4) 0 var(--e-2); font-size: var(--t-s); color: var(--discret); text-transform: uppercase; letter-spacing: .03em; }
+.grille-articles { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--e-2); }
+.tuile-article { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: var(--e-1); min-height: 4.5rem; padding: var(--e-2) var(--e-3); text-align: left; background: var(--surface); box-shadow: var(--ombre); }
+.tuile-article strong { font-size: var(--t-s); line-height: 1.25; }
+.tuile-article small { color: var(--discret); font-size: var(--t-xs); }
+.tuile-article:active { background: var(--vert-clair); }
+.panier { list-style: none; margin: 0; padding: 0; background: var(--surface); border: 1px solid var(--bordure); border-radius: var(--rayon-grand); box-shadow: var(--ombre); }
+.ligne-panier { display: grid; grid-template-columns: minmax(0, 1fr) auto 6.5rem auto; align-items: center; gap: var(--e-3); padding: var(--e-2) var(--e-3); border-bottom: 1px solid var(--bordure); cursor: pointer; }
+.ligne-panier:last-child { border-bottom: none; }
+.ligne-panier.choisie { background: var(--vert-clair); box-shadow: inset 4px 0 0 var(--vert); }
+.ligne-panier .designation { display: flex; flex-direction: column; min-width: 0; }
+.ligne-panier .designation small { color: var(--discret); }
+.ligne-panier .quantite { display: flex; align-items: center; gap: var(--e-1); }
+.ligne-panier .quantite button { width: var(--cible); padding: 0; font-size: var(--t-l); }
+.ligne-panier .quantite input { width: 5.5rem; text-align: center; }
+.ligne-panier .montant { text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+.ligne-panier .outils-ligne { display: flex; align-items: center; gap: var(--e-2); }
+.ligne-panier .remise { flex-direction: row; align-items: center; }
+.ligne-panier .remise input { width: 6rem; }
+.ligne-panier .retirer { width: var(--cible); padding: 0; color: var(--rouge); }
+.panier .vide { list-style: none; }
+.billets { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--e-2); }
+.billets button { padding: var(--e-2); font-variant-numeric: tabular-nums; }
+.billets .valider { grid-column: span 3; }
+.ligne-recu.a-rendre { color: var(--vert); font-weight: 700; font-size: var(--t-xl); }
+.cibles-pave { display: grid; grid-template-columns: 1fr 1fr; gap: var(--e-2); }
+.cibles-pave button.choisi { border-color: var(--vert); background: var(--vert-clair); font-weight: 600; }
+.pave { display: flex; flex-direction: column; gap: var(--e-2); }
+.pave-ecran { display: flex; justify-content: space-between; align-items: baseline; gap: var(--e-2); padding: var(--e-2) var(--e-3); background: var(--fond); border-radius: var(--rayon); }
+.pave-ecran span { font-size: var(--t-xs); color: var(--discret); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pave-ecran strong { font-size: var(--t-xl); font-variant-numeric: tabular-nums; }
+.pave-touches { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--e-2); }
+.pave-touches button { min-height: 3.25rem; font-size: var(--t-l); }
 .resultats { list-style: none; padding: var(--e-2); margin: var(--e-2) 0; background: var(--surface); border: 1px solid var(--bordure); border-radius: var(--rayon); max-height: 280px; overflow: auto; box-shadow: var(--ombre-haute); }
 .resultats li { padding: var(--e-1) 0; }
-.panier input[type=number] { width: 6.5rem; }
 .encaissement { background: var(--surface); border: 1px solid var(--bordure); border-radius: var(--rayon-grand); padding: var(--e-4); display: flex; flex-direction: column; gap: var(--e-3); position: sticky; top: var(--e-4); box-shadow: var(--ombre); }
 .encaissement h3 { margin: var(--e-1) 0 0; font-size: var(--t-s); color: var(--discret); }
 .total-grand { font-size: var(--t-xxl); font-weight: 700; text-align: right; color: var(--vert); font-variant-numeric: tabular-nums; }
@@ -239,12 +275,32 @@ a.tuile:hover { border-color: var(--vert); box-shadow: var(--ombre-haute); }
     .contenu { padding: var(--e-4) var(--e-3); }
     /* Un tableau trop large défile dans son cadre (sur tablette, il garde toute la largeur disponible). */
     .contenu table { display: block; overflow-x: auto; }
-    .scan { grid-template-columns: 1fr; }
     .barre input[type=search] { width: 100%; }
     .tuiles { grid-template-columns: 1fr; }
     .actions > * { flex: 1 1 auto; }
     h1 { font-size: var(--t-l); }
     .total-grand, .rendu-grand { font-size: var(--t-xl); }
+}
+
+/* Plein comptoir : pendant la vente, le menu passe en tiroir sur toutes les largeurs (mêmes règles que sous 1000 px). */
+@media (min-width: 1000px) {
+    .cadre:has(.vente) { flex-direction: column; }
+    .cadre:has(.vente) .barre-haut { display: flex; position: sticky; top: 0; z-index: 5; align-items: center; justify-content: space-between; gap: var(--e-3); padding: var(--e-2) var(--e-3); background: var(--vert); color: var(--sur-vert); }
+    .cadre:has(.vente) .barre-haut .marque { display: flex; align-items: center; gap: var(--e-2); font-weight: 700; }
+    .cadre:has(.vente) .ouvrir-menu { background: transparent; color: var(--sur-vert); border-color: var(--sur-vert-trait); }
+    .cadre:has(.vente) .menu { position: fixed; z-index: 7; top: 0; bottom: 0; left: 0; width: 280px; overflow-y: auto; transform: translateX(-100%); transition: transform .2s ease; visibility: hidden; }
+    .cadre.menu-ouvert:has(.vente) .menu { transform: none; visibility: visible; box-shadow: var(--ombre-haute); }
+    .cadre.menu-ouvert:has(.vente) .voile { display: block; position: fixed; inset: 0; z-index: 6; background: var(--voile); }
+    .cadre:has(.vente) .contenu { max-width: none; padding: var(--e-4) var(--e-5); }
+    .vente .caisse { grid-template-columns: minmax(0, 1fr) 380px; }
+}
+
+@media (max-width: 760px) {
+    .ligne-panier { grid-template-columns: minmax(0, 1fr) auto; }
+    .ligne-panier .montant { grid-column: 2; grid-row: 1; }
+    .ligne-panier .quantite { grid-column: 1; }
+    .ligne-panier .outils-ligne { grid-column: 2; justify-content: flex-end; }
+    .grille-articles { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (prefers-reduced-motion: reduce) { .menu { transition: none; } }

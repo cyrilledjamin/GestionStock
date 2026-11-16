@@ -23,7 +23,21 @@
             {
                 var prix = _prix.FirstOrDefault(p => p.ConditionnementId == conditionnement.Id);
                 <tr class="@(conditionnement.Actif ? "" : "inactif")">
-                    <td>@conditionnement.Libelle <small class="discret">@L[$"Niveau.{conditionnement.Niveau}"]</small></td>
+                    <td>
+                        @conditionnement.Libelle <small class="discret">@L[$"Niveau.{conditionnement.Niveau}"]</small>
+                        @if (Session.A(Permissions.ArticlesGerer) && conditionnement.Actif)
+                        {
+                            @* Grille d'articles rapides de la caisse : choix du Gérant (articles sans code-barres, au poids…). *@
+                            <label class="case" title="@L["VenteRapideAide"]">
+                                <input type="checkbox" checked="@conditionnement.VenteRapide" @onchange="e => ChoisirVenteRapide(conditionnement.Id, e.Value is true)" />
+                                @L["VenteRapide"]
+                            </label>
+                        }
+                        else if (conditionnement.VenteRapide)
+                        {
+                            <small class="pastille validee">@L["VenteRapide"]</small>
+                        }
+                    </td>
                     <td class="nombre">@Format.Quantite(conditionnement.QuantiteUniteStock) @_article.UniteStock</td>
                     <td>
                         @foreach (var codeBarres in conditionnement.Codes.Where(c => c.Actif))
@@ -149,6 +163,10 @@
             _nouveauxCodes[conditionnement] = null;
         }
     }
+
+    private Task ChoisirVenteRapide(Guid conditionnement, bool venteRapide) =>
+        Executer(Api.PutAsync<Conditionnement>($"api/referentiel/conditionnements/{conditionnement}/vente-rapide", new { VenteRapide = venteRapide }),
+            venteRapide ? L["VenteRapideAjoutee"] : L["VenteRapideRetiree"]);
 
     private Task GenererCode(Guid conditionnement) =>
         Executer(Api.PostAsync<Conditionnement>($"api/referentiel/conditionnements/{conditionnement}/codes/interne"), L["CodeAjoute"]);

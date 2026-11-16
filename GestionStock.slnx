@@ -55,6 +55,7 @@
   <Folder Name="/tests/">
     <Project Path="tests/GestionStock.Api.IntegrationTests/GestionStock.Api.IntegrationTests.csproj" />
     <Project Path="tests/GestionStock.ArchitectureTests/GestionStock.ArchitectureTests.csproj" />
+    <Project Path="tests/GestionStock.Client.Tests/GestionStock.Client.Tests.csproj" />
     <Project Path="tests/GestionStock.Infrastructure.Tests/GestionStock.Infrastructure.Tests.csproj" />
     <Project Path="tests/GestionStock.Stock.Domain.Tests/GestionStock.Stock.Domain.Tests.csproj" />
     <Project Path="tests/GestionStock.Stock.IntegrationTests/GestionStock.Stock.IntegrationTests.csproj" />

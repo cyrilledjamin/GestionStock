@@ -253,7 +253,7 @@ public static class Permissions
 
 public sealed record CodeArticle(Guid Id, string Valeur, string Type, bool Principal, bool Actif);
 
-public sealed record Conditionnement(Guid Id, Guid ArticleId, string Libelle, string Niveau, decimal QuantiteUniteStock, bool Actif, List<CodeArticle> Codes);
+public sealed record Conditionnement(Guid Id, Guid ArticleId, string Libelle, string Niveau, decimal QuantiteUniteStock, bool Actif, bool VenteRapide, List<CodeArticle> Codes);
 
 public sealed record ArticleVendable(
     Guid ArticleId,

@@ -127,9 +127,6 @@
   <data name="EspecesComptees" xml:space="preserve"><value>Cash counted</value></data>
   <data name="EspecesTheoriques" xml:space="preserve"><value>Expected cash</value></data>
   <data name="SessionCloturee" xml:space="preserve"><value>Session closed. Expected cash: {0}; difference: {1}.</value></data>
-  <data name="ScanAide" xml:space="preserve"><value>Scan or type a code, then Enter</value></data>
-  <data name="RechercherArticle" xml:space="preserve"><value>Search for an item</value></data>
-  <data name="Prix" xml:space="preserve"><value>Price</value></data>
   <data name="Remise" xml:space="preserve"><value>Discount</value></data>
   <data name="Montant" xml:space="preserve"><value>Amount</value></data>
   <data name="PanierVide" xml:space="preserve"><value>Scan an item to start.</value></data>
@@ -422,4 +419,23 @@
   <data name="AllerAuContenu" xml:space="preserve"><value>Skip to content</value></data>
   <data name="Menu" xml:space="preserve"><value>Menu</value></data>
   <data name="Chargement" xml:space="preserve"><value>Loading…</value></data>
+  <data name="ScanOuRecherche" xml:space="preserve"><value>Scan a code or search for an item</value></data>
+  <data name="Resultats" xml:space="preserve"><value>Results</value></data>
+  <data name="ArticlesRapides" xml:space="preserve"><value>Quick items</value></data>
+  <data name="Panier" xml:space="preserve"><value>Basket</value></data>
+  <data name="Moins" xml:space="preserve"><value>One unit less</value></data>
+  <data name="Plus" xml:space="preserve"><value>One unit more</value></data>
+  <data name="EspecesRecues" xml:space="preserve"><value>Cash received</value></data>
+  <data name="CompteJuste" xml:space="preserve"><value>Exact amount</value></data>
+  <data name="PaveNumerique" xml:space="preserve"><value>Number pad</value></data>
+  <data name="AnnulerVente" xml:space="preserve"><value>Cancel sale</value></data>
+  <data name="ConfirmerAnnulationVente" xml:space="preserve"><value>Empty the basket and cancel this sale?</value></data>
+  <data name="PaveQuantite" xml:space="preserve"><value>Quantity: {0}</value></data>
+  <data name="Effacer" xml:space="preserve"><value>Delete</value></data>
+  <data name="Ok" xml:space="preserve"><value>OK</value></data>
+  <data name="VenteRapide" xml:space="preserve"><value>Quick sale</value></data>
+  <data name="VenteRapideAide" xml:space="preserve"><value>Shown as a tile at the till (items without a barcode, sold by weight…)</value></data>
+  <data name="VenteRapideAjoutee" xml:space="preserve"><value>Added to the till's quick items.</value></data>
+  <data name="VenteRapideRetiree" xml:space="preserve"><value>Removed from the till's quick items.</value></data>
+  <data name="RechercherArticle" xml:space="preserve"><value>Search for an item</value></data>
 </root>

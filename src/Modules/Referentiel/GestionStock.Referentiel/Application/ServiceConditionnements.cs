@@ -15,6 +15,7 @@ internal sealed record ConditionnementDto(
     NiveauConditionnement Niveau,
     decimal QuantiteUniteStock,
     bool Actif,
+    bool VenteRapide,
     IReadOnlyList<CodeDto> Codes);
 
 internal sealed record NouveauConditionnement(string Libelle, NiveauConditionnement Niveau, decimal QuantiteUniteStock);
@@ -22,6 +23,8 @@ internal sealed record NouveauConditionnement(string Libelle, NiveauConditionnem
 internal sealed record ModificationConditionnement(string Libelle, bool Actif);
 
 internal sealed record NouveauCode(string Valeur);
+
+internal sealed record ChoixVenteRapide(bool VenteRapide);
 
 /// <summary>Article vendable tel qu'identifié par un scan ou une recherche (UC22) : article + conditionnement.</summary>
 internal sealed record ArticleVendable(
@@ -75,6 +78,30 @@ internal sealed class ServiceConditionnements(ReferentielDbContext contexte)
         conditionnement.Modifier(saisie.Libelle, saisie.Actif);
         await contexte.SaveChangesAsync(annulation);
         return await Relire(conditionnement, annulation);
+    }
+
+    /// <summary>Ajoute ou retire un conditionnement de la grille d'articles rapides de la caisse (choix du Gérant).</summary>
+    public async Task<ConditionnementDto> ChoisirVenteRapideAsync(Guid id, ChoixVenteRapide saisie, CancellationToken annulation)
+    {
+        ArgumentNullException.ThrowIfNull(saisie);
+        var conditionnement = await TrouverConditionnement(id, annulation);
+        conditionnement.ChoisirVenteRapide(saisie.VenteRapide);
+        await contexte.SaveChangesAsync(annulation);
+        return await Relire(conditionnement, annulation);
+    }
+
+    /// <summary>Grille d'articles rapides de la caisse : conditionnements actifs et marqués, d'articles actifs.</summary>
+    public async Task<IReadOnlyList<ArticleVendable>> ListerVenteRapideAsync(CancellationToken annulation)
+    {
+        var rapides = await (
+                from article in contexte.Articles
+                join conditionnement in contexte.Conditionnements on article.Id equals conditionnement.ArticleId
+                where article.Actif && conditionnement.Actif && conditionnement.VenteRapide
+                orderby article.Libelle, conditionnement.QuantiteUniteStock
+                select new { article, conditionnement })
+            .AsNoTracking()
+            .ToListAsync(annulation);
+        return [.. rapides.Select(r => VersVendable(r.article, r.conditionnement, null))];
     }
 
     /// <summary>Ajoute un GTIN (EAN-13, EAN-8, UPC-A) après contrôle de sa clé et de son unicité (RG33).</summary>
@@ -212,7 +239,7 @@ internal sealed class ServiceConditionnements(ReferentielDbContext contexte)
     }
 
     private static ConditionnementDto VersDto(Conditionnement c, IEnumerable<CodeArticle> codes) =>
-        new(c.Id, c.ArticleId, c.Libelle, c.Niveau, c.QuantiteUniteStock, c.Actif,
+        new(c.Id, c.ArticleId, c.Libelle, c.Niveau, c.QuantiteUniteStock, c.Actif, c.VenteRapide,
             [.. codes.Select(code => new CodeDto(code.Id, code.Valeur, code.Type, code.Principal, code.Actif))]);
 
     private static ArticleVendable VersVendable(Article a, Conditionnement c, string? codeScanne) =>

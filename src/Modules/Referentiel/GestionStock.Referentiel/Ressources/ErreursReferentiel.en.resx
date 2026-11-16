@@ -20,4 +20,5 @@
   <data name="Referentiel.CodeInvalide" xml:space="preserve"><value>Invalid barcode: EAN-13, EAN-8 or UPC-A with a correct check digit.</value></data>
   <data name="Referentiel.CodeDejaAttribue" xml:space="preserve"><value>This barcode is already assigned to another packaging.</value></data>
   <data name="Referentiel.CodeIntrouvable" xml:space="preserve"><value>Unknown code.</value></data>
+  <data name="Referentiel.ConditionnementInactif" xml:space="preserve"><value>A deactivated packaging cannot be offered as a quick sale item.</value></data>
 </root>
