@@ -247,6 +247,10 @@ Ouvrir http://localhost:8080 (docker-compose) puis se connecter. Le menu dépend
 | Sessions de caisse | Supervision (Gérant, Comptable) : ventes nettes, espèces théoriques et comptées, écart, validation |
 | Clients, fiche client | Clients à crédit, impayés, création (Gérant), plafond (Comptable), ventes non soldées, journal |
 | Utilisateurs | Création des comptes avec leur rôle (Administrateur) |
+| Inventaires | Liste filtrée par statut ; nouvel inventaire complet (tous les articles actifs) ou partiel (démarre vide) |
+| Inventaire | Comptage à la douchette (chaque scan ajoute le contenu du conditionnement) ou saisie par ligne ; freinte sur un écart négatif ; théorique, écart et sa valeur ; filtre « non comptés » ; validation (Comptable) ; annulation |
+| Démarque | Déclaration (article, quantité, motif casse / vol / périmé / freinte, commentaire) par le Magasinier ; validation ou refus motivé (Comptable, Gérant) |
+| Reprise des données | Modèle Excel vide ou avec exemple ; contrôle du fichier (rapport par ligne et colonne) ; import tout ou rien ; lien vers l'inventaire d'ouverture créé |
 
 Le reçu s'imprime par le navigateur du poste (feuille de style d'impression au format 80 mm, seul le reçu est
 imprimé) ou se télécharge en PDF pour l'envoyer par WhatsApp. Le panier affiche les prix lus dans l'application ;
@@ -477,7 +481,7 @@ sur une machine Linux de GitHub qui dispose de Docker :
 | 19 | Architecture, CI, README, démonstration de la caisse | Fait |
 | 20 | Module Inventaire : inventaires, écarts, démarque | Fait |
 | 21 | Module Reprise : import Excel des articles, codes, prix et coûts | Fait |
-| 22 | Client : écrans reprise, inventaire, démarque | À faire |
+| 22 | Client : écrans reprise, inventaire, démarque | Fait |
 | 23 | Architecture, CI, README, démonstration de l'inventaire | À faire |
 
 ## Démonstration

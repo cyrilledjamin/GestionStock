@@ -228,4 +228,72 @@
   <data name="Masquer" xml:space="preserve"><value>Masquer</value></data>
   <data name="AfficherMotDePasse" xml:space="preserve"><value>Afficher le mot de passe en clair</value></data>
   <data name="MasquerMotDePasse" xml:space="preserve"><value>Masquer le mot de passe</value></data>
+  <data name="Inventaires" xml:space="preserve"><value>Inventaires</value></data>
+  <data name="InventairesAide" xml:space="preserve"><value>Compter le stock réel et corriger les écarts.</value></data>
+  <data name="Demarque" xml:space="preserve"><value>Démarque</value></data>
+  <data name="DemarqueAide" xml:space="preserve"><value>Déclarer la casse, le vol, les périmés et la freinte.</value></data>
+  <data name="DemarqueIntro" xml:space="preserve"><value>Le magasinier déclare une perte ; le comptable ou le gérant la valide (sortie de stock au coût moyen) ou la refuse.</value></data>
+  <data name="Reprise" xml:space="preserve"><value>Reprise des données</value></data>
+  <data name="RepriseAide" xml:space="preserve"><value>Importer les articles, codes et prix depuis Excel.</value></data>
+  <data name="RepriseIntro" xml:space="preserve"><value>Une ligne par conditionnement. L'import est tout ou rien et prépare l'inventaire d'ouverture, valorisé au coût d'achat du fichier.</value></data>
+  <data name="RepriseEtape1" xml:space="preserve"><value>Télécharger le modèle</value></data>
+  <data name="RepriseEtape2" xml:space="preserve"><value>Envoyer le fichier rempli</value></data>
+  <data name="ModeleVide" xml:space="preserve"><value>Modèle vide</value></data>
+  <data name="ModeleExemple" xml:space="preserve"><value>Modèle avec exemple</value></data>
+  <data name="Controler" xml:space="preserve"><value>Contrôler</value></data>
+  <data name="Importer" xml:space="preserve"><value>Importer</value></data>
+  <data name="ControleReussi" xml:space="preserve"><value>Contrôle réussi : le fichier peut être importé.</value></data>
+  <data name="ControleErreurs" xml:space="preserve"><value>{0} erreur(s) : corrigez le fichier puis contrôlez-le à nouveau.</value></data>
+  <data name="ImportReussi" xml:space="preserve"><value>Import réussi.</value></data>
+  <data name="OuvertureCreee" xml:space="preserve"><value>Inventaire d'ouverture {0} créé : comptez le stock réel.</value></data>
+  <data name="OuvrirInventaire" xml:space="preserve"><value>Ouvrir l'inventaire</value></data>
+  <data name="FichierIndisponible" xml:space="preserve"><value>Fichier indisponible.</value></data>
+  <data name="FichierTropGros" xml:space="preserve"><value>Fichier trop volumineux (5 Mo au plus).</value></data>
+  <data name="Ligne" xml:space="preserve"><value>Ligne</value></data>
+  <data name="Colonne" xml:space="preserve"><value>Colonne</value></data>
+  <data name="Erreur" xml:space="preserve"><value>Erreur</value></data>
+  <data name="Conditionnements" xml:space="preserve"><value>Conditionnements</value></data>
+  <data name="PrixFixes" xml:space="preserve"><value>Prix fixés</value></data>
+  <data name="Type" xml:space="preserve"><value>Type</value></data>
+  <data name="CreePar" xml:space="preserve"><value>Créé par</value></data>
+  <data name="Comptes" xml:space="preserve"><value>Comptés</value></data>
+  <data name="Compte" xml:space="preserve"><value>Compté</value></data>
+  <data name="Theorique" xml:space="preserve"><value>Théorique</value></data>
+  <data name="ValeurEcart" xml:space="preserve"><value>Valeur</value></data>
+  <data name="ValeurEcarts" xml:space="preserve"><value>Valeur des écarts</value></data>
+  <data name="Freinte" xml:space="preserve"><value>Freinte</value></data>
+  <data name="FreinteAide" xml:space="preserve"><value>Écart négatif dû à la vente au détail (perte de découpe, de pesée)</value></data>
+  <data name="AucunInventaire" xml:space="preserve"><value>Aucun inventaire.</value></data>
+  <data name="AucunArticleACompter" xml:space="preserve"><value>Aucun article : scannez un article pour l'ajouter.</value></data>
+  <data name="NouvelInventaireComplet" xml:space="preserve"><value>Nouvel inventaire complet</value></data>
+  <data name="NouvelInventairePartiel" xml:space="preserve"><value>Nouvel inventaire partiel</value></data>
+  <data name="ScanInventaireAide" xml:space="preserve"><value>Scanner un code-barres puis Entrée</value></data>
+  <data name="SeulementNonComptes" xml:space="preserve"><value>Seulement les articles non comptés</value></data>
+  <data name="InventaireAide" xml:space="preserve"><value>Chaque scan ajoute le contenu du conditionnement à la quantité comptée. Le stock théorique est relevé au moment du comptage de chaque ligne.</value></data>
+  <data name="ValiderInventaire" xml:space="preserve"><value>Valider l'inventaire</value></data>
+  <data name="AnnulerInventaire" xml:space="preserve"><value>Annuler l'inventaire</value></data>
+  <data name="InventaireValide" xml:space="preserve"><value>Inventaire validé : le stock est corrigé.</value></data>
+  <data name="DeclarerDemarque" xml:space="preserve"><value>Déclarer une démarque</value></data>
+  <data name="Declarer" xml:space="preserve"><value>Déclarer</value></data>
+  <data name="DemarqueDeclaree" xml:space="preserve"><value>Démarque {0} déclarée.</value></data>
+  <data name="Motif" xml:space="preserve"><value>Motif</value></data>
+  <data name="Commentaire" xml:space="preserve"><value>Commentaire</value></data>
+  <data name="DeclareePar" xml:space="preserve"><value>Déclarée par</value></data>
+  <data name="MotifRefus" xml:space="preserve"><value>Motif du refus</value></data>
+  <data name="Valider" xml:space="preserve"><value>Valider</value></data>
+  <data name="Refuser" xml:space="preserve"><value>Refuser</value></data>
+  <data name="AucuneDemarque" xml:space="preserve"><value>Aucune démarque.</value></data>
+  <data name="TypeInventaire.Ouverture" xml:space="preserve"><value>Ouverture</value></data>
+  <data name="TypeInventaire.Complet" xml:space="preserve"><value>Complet</value></data>
+  <data name="TypeInventaire.Partiel" xml:space="preserve"><value>Partiel</value></data>
+  <data name="StatutInventaire.EnCours" xml:space="preserve"><value>En cours</value></data>
+  <data name="StatutInventaire.Valide" xml:space="preserve"><value>Validé</value></data>
+  <data name="StatutInventaire.Annule" xml:space="preserve"><value>Annulé</value></data>
+  <data name="StatutDemarque.Declaree" xml:space="preserve"><value>Déclarée</value></data>
+  <data name="StatutDemarque.Validee" xml:space="preserve"><value>Validée</value></data>
+  <data name="StatutDemarque.Refusee" xml:space="preserve"><value>Refusée</value></data>
+  <data name="MotifDemarque.Casse" xml:space="preserve"><value>Casse</value></data>
+  <data name="MotifDemarque.Vol" xml:space="preserve"><value>Vol</value></data>
+  <data name="MotifDemarque.Perime" xml:space="preserve"><value>Périmé</value></data>
+  <data name="MotifDemarque.Freinte" xml:space="preserve"><value>Freinte</value></data>
 </root>

@@ -33,6 +33,15 @@
         {
             <a class="tuile" href="articles"><strong>@L["Articles"]</strong><span>@L["ArticlesAide"]</span></a>
         }
+        @if (Session.A(Permissions.InventaireConsulter))
+        {
+            <a class="tuile" href="inventaires"><strong>@L["Inventaires"]</strong><span>@L["InventairesAide"]</span></a>
+            <a class="tuile" href="demarques"><strong>@L["Demarque"]</strong><span>@L["DemarqueAide"]</span></a>
+        }
+        @if (Session.A(Permissions.RepriseImporter))
+        {
+            <a class="tuile" href="reprise"><strong>@L["Reprise"]</strong><span>@L["RepriseAide"]</span></a>
+        }
         @if (Session.A(Permissions.UtilisateursGerer))
         {
             <a class="tuile" href="utilisateurs"><strong>@L["Utilisateurs"]</strong><span>@L["UtilisateursAide"]</span></a>

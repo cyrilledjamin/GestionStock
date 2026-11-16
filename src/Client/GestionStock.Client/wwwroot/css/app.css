@@ -159,3 +159,9 @@ a.tuile:hover { border-color: var(--vert); }
     .pied-menu { margin: 0; border: none; flex-direction: row; }
     .contenu { padding: 1rem; }
 }
+
+/* Inventaire, démarque, reprise */
+table.saisie input[type=checkbox] { width: auto; }
+.client-choisi { display: flex; justify-content: space-between; align-items: center; padding: .5rem .6rem; background: var(--vert-clair); border-radius: 6px; margin-bottom: .6rem; }
+.actions-ligne { white-space: nowrap; }
+.actions-ligne .motif-refus { width: 10rem; margin: 0 .3rem; }

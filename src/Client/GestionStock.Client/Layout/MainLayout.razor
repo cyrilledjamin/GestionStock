@@ -39,6 +39,15 @@ else
             {
                 <NavLink href="articles">@L["Articles"]</NavLink>
             }
+            @if (Session.A(Permissions.InventaireConsulter))
+            {
+                <NavLink href="inventaires">@L["Inventaires"]</NavLink>
+                <NavLink href="demarques">@L["Demarque"]</NavLink>
+            }
+            @if (Session.A(Permissions.RepriseImporter))
+            {
+                <NavLink href="reprise">@L["Reprise"]</NavLink>
+            }
             @if (Session.A(Permissions.UtilisateursGerer))
             {
                 <NavLink href="utilisateurs">@L["Utilisateurs"]</NavLink>

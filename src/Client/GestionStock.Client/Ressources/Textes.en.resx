@@ -63,7 +63,7 @@
   <data name="Numero" xml:space="preserve"><value>Number</value></data>
   <data name="Date" xml:space="preserve"><value>Date</value></data>
   <data name="BonLivraison" xml:space="preserve"><value>Delivery note</value></data>
-  <data name="Lignes" xml:space="preserve"><value>Lines</value></data>
+  <data name="Lignes" xml:space="preserve"><value>Rows</value></data>
   <data name="Valeur" xml:space="preserve"><value>Value</value></data>
   <data name="Statut" xml:space="preserve"><value>Status</value></data>
   <data name="Statut.Brouillon" xml:space="preserve"><value>Draft</value></data>
@@ -228,4 +228,72 @@
   <data name="Masquer" xml:space="preserve"><value>Hide</value></data>
   <data name="AfficherMotDePasse" xml:space="preserve"><value>Show the password</value></data>
   <data name="MasquerMotDePasse" xml:space="preserve"><value>Hide the password</value></data>
+  <data name="Inventaires" xml:space="preserve"><value>Stock counts</value></data>
+  <data name="InventairesAide" xml:space="preserve"><value>Count actual stock and correct differences.</value></data>
+  <data name="Demarque" xml:space="preserve"><value>Shrinkage</value></data>
+  <data name="DemarqueAide" xml:space="preserve"><value>Report breakage, theft, expired goods and wastage.</value></data>
+  <data name="DemarqueIntro" xml:space="preserve"><value>The storekeeper reports a loss; the accountant or manager approves it (stock issue at average cost) or rejects it.</value></data>
+  <data name="Reprise" xml:space="preserve"><value>Data import</value></data>
+  <data name="RepriseAide" xml:space="preserve"><value>Import items, codes and prices from Excel.</value></data>
+  <data name="RepriseIntro" xml:space="preserve"><value>One row per packaging. The import is all or nothing and prepares the opening count, valued at the purchase cost in the file.</value></data>
+  <data name="RepriseEtape1" xml:space="preserve"><value>Download the template</value></data>
+  <data name="RepriseEtape2" xml:space="preserve"><value>Upload the completed file</value></data>
+  <data name="ModeleVide" xml:space="preserve"><value>Blank template</value></data>
+  <data name="ModeleExemple" xml:space="preserve"><value>Template with sample data</value></data>
+  <data name="Controler" xml:space="preserve"><value>Check</value></data>
+  <data name="Importer" xml:space="preserve"><value>Import</value></data>
+  <data name="ControleReussi" xml:space="preserve"><value>Check passed: the file can be imported.</value></data>
+  <data name="ControleErreurs" xml:space="preserve"><value>{0} error(s): fix the file and check it again.</value></data>
+  <data name="ImportReussi" xml:space="preserve"><value>Import completed.</value></data>
+  <data name="OuvertureCreee" xml:space="preserve"><value>Opening count {0} created: count the actual stock.</value></data>
+  <data name="OuvrirInventaire" xml:space="preserve"><value>Open the count</value></data>
+  <data name="FichierIndisponible" xml:space="preserve"><value>File unavailable.</value></data>
+  <data name="FichierTropGros" xml:space="preserve"><value>File too large (5 MB maximum).</value></data>
+  <data name="Ligne" xml:space="preserve"><value>Row</value></data>
+  <data name="Colonne" xml:space="preserve"><value>Column</value></data>
+  <data name="Erreur" xml:space="preserve"><value>Error</value></data>
+  <data name="Conditionnements" xml:space="preserve"><value>Packagings</value></data>
+  <data name="PrixFixes" xml:space="preserve"><value>Prices set</value></data>
+  <data name="Type" xml:space="preserve"><value>Type</value></data>
+  <data name="CreePar" xml:space="preserve"><value>Created by</value></data>
+  <data name="Comptes" xml:space="preserve"><value>Counted</value></data>
+  <data name="Compte" xml:space="preserve"><value>Counted</value></data>
+  <data name="Theorique" xml:space="preserve"><value>Expected</value></data>
+  <data name="ValeurEcart" xml:space="preserve"><value>Value</value></data>
+  <data name="ValeurEcarts" xml:space="preserve"><value>Value of differences</value></data>
+  <data name="Freinte" xml:space="preserve"><value>Wastage</value></data>
+  <data name="FreinteAide" xml:space="preserve"><value>Negative difference due to retail sales (cutting or weighing loss)</value></data>
+  <data name="AucunInventaire" xml:space="preserve"><value>No stock counts.</value></data>
+  <data name="AucunArticleACompter" xml:space="preserve"><value>No items: scan an item to add it.</value></data>
+  <data name="NouvelInventaireComplet" xml:space="preserve"><value>New full count</value></data>
+  <data name="NouvelInventairePartiel" xml:space="preserve"><value>New partial count</value></data>
+  <data name="ScanInventaireAide" xml:space="preserve"><value>Scan a barcode then Enter</value></data>
+  <data name="SeulementNonComptes" xml:space="preserve"><value>Uncounted items only</value></data>
+  <data name="InventaireAide" xml:space="preserve"><value>Each scan adds the packaging content to the counted quantity. Expected stock is read when each row is counted.</value></data>
+  <data name="ValiderInventaire" xml:space="preserve"><value>Approve the count</value></data>
+  <data name="AnnulerInventaire" xml:space="preserve"><value>Cancel the count</value></data>
+  <data name="InventaireValide" xml:space="preserve"><value>Count approved: stock has been corrected.</value></data>
+  <data name="DeclarerDemarque" xml:space="preserve"><value>Report shrinkage</value></data>
+  <data name="Declarer" xml:space="preserve"><value>Report</value></data>
+  <data name="DemarqueDeclaree" xml:space="preserve"><value>Shrinkage {0} reported.</value></data>
+  <data name="Motif" xml:space="preserve"><value>Reason</value></data>
+  <data name="Commentaire" xml:space="preserve"><value>Comment</value></data>
+  <data name="DeclareePar" xml:space="preserve"><value>Reported by</value></data>
+  <data name="MotifRefus" xml:space="preserve"><value>Reason for rejection</value></data>
+  <data name="Valider" xml:space="preserve"><value>Approve</value></data>
+  <data name="Refuser" xml:space="preserve"><value>Reject</value></data>
+  <data name="AucuneDemarque" xml:space="preserve"><value>No shrinkage.</value></data>
+  <data name="TypeInventaire.Ouverture" xml:space="preserve"><value>Opening</value></data>
+  <data name="TypeInventaire.Complet" xml:space="preserve"><value>Full</value></data>
+  <data name="TypeInventaire.Partiel" xml:space="preserve"><value>Partial</value></data>
+  <data name="StatutInventaire.EnCours" xml:space="preserve"><value>In progress</value></data>
+  <data name="StatutInventaire.Valide" xml:space="preserve"><value>Approved</value></data>
+  <data name="StatutInventaire.Annule" xml:space="preserve"><value>Cancelled</value></data>
+  <data name="StatutDemarque.Declaree" xml:space="preserve"><value>Reported</value></data>
+  <data name="StatutDemarque.Validee" xml:space="preserve"><value>Approved</value></data>
+  <data name="StatutDemarque.Refusee" xml:space="preserve"><value>Rejected</value></data>
+  <data name="MotifDemarque.Casse" xml:space="preserve"><value>Breakage</value></data>
+  <data name="MotifDemarque.Vol" xml:space="preserve"><value>Theft</value></data>
+  <data name="MotifDemarque.Perime" xml:space="preserve"><value>Expired</value></data>
+  <data name="MotifDemarque.Freinte" xml:space="preserve"><value>Wastage</value></data>
 </root>

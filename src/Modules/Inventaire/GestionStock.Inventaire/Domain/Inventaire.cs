@@ -90,7 +90,8 @@ internal sealed class Inventaire
             throw new ExceptionInventaire(CodesErreurInventaire.TypeInvalide);
         }
 
-        if (articles.Count == 0)
+        // Un inventaire partiel peut démarrer vide : les articles s'ajoutent au fil du comptage (scan).
+        if (articles.Count == 0 && type != TypeInventaire.Partiel)
         {
             throw new ExceptionInventaire(CodesErreurInventaire.InventaireSansLigne);
         }
@@ -135,6 +136,11 @@ internal sealed class Inventaire
     public void Valider(string utilisateur, DateTime maintenantUtc)
     {
         ExigerEnCours();
+        if (Lignes.Count == 0)
+        {
+            throw new ExceptionInventaire(CodesErreurInventaire.InventaireSansLigne);
+        }
+
         var nonComptees = Lignes.Where(l => l.QuantiteComptee is null).Select(l => l.CodeArticle).ToList();
         if (nonComptees.Count > 0)
         {

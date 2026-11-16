@@ -27,6 +27,32 @@ public sealed class Api(HttpClient http, Session session, NavigationManager navi
 
     public Task<Resultat<T>> PutAsync<T>(string url, object corps) => EnvoyerAsync<T>(HttpMethod.Put, url, corps);
 
+    /// <summary>Envoie un fichier tel quel dans le corps de la requête (ex. classeur de reprise).</summary>
+    public async Task<Resultat<T>> EnvoyerFichierAsync<T>(string url, byte[] fichier)
+    {
+        using var reponse = await EnvoyerFichierAvecJetonAsync(url, fichier);
+        if (reponse.StatusCode == HttpStatusCode.Unauthorized && await session.RafraichirAsync())
+        {
+            using var nouvelle = await EnvoyerFichierAvecJetonAsync(url, fichier);
+            return await LireAsync<T>(nouvelle);
+        }
+
+        return await LireAsync<T>(reponse);
+    }
+
+    private async Task<HttpResponseMessage> EnvoyerFichierAvecJetonAsync(string url, byte[] fichier)
+    {
+        using var requete = new HttpRequestMessage(HttpMethod.Post, url) { Content = new ByteArrayContent(fichier) };
+        requete.Content.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
+        if (session.JetonAcces is { } jeton)
+        {
+            requete.Headers.Authorization = new AuthenticationHeaderValue("Bearer", jeton);
+        }
+
+        Session.AjouterLangue(requete);
+        return await http.SendAsync(requete);
+    }
+
     /// <summary>Contenu binaire (ex. reçu PDF) ; null en cas d'erreur.</summary>
     public async Task<byte[]?> GetOctetsAsync(string url)
     {
