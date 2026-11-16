@@ -88,6 +88,12 @@ jobs:
           curl -fsS -H "Authorization: Bearer $jeton" http://localhost:8080/api/identite/moi | tee moi.json
           jq -e '.roles == ["Administrateur"]' moi.json
 
+      - name: Le client Blazor est servi
+        run: |
+          curl -fsS http://localhost:8080/ | grep -q '_framework/blazor.webassembly.js'
+          curl -fsS http://localhost:8080/receptions/nouvelle | grep -q '<div id="app">'
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/_framework/blazor.webassembly.js)" = "200"
+
       - name: Journaux des conteneurs
         if: always()
         run: $COMPOSE logs
