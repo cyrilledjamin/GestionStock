@@ -75,6 +75,18 @@ internal sealed partial class ServiceUtilisateurs(
             throw new ExceptionIdentite(CodesErreurIdentite.MatriculeInvalide);
         }
 
+        var nouveau = new Utilisateur
+        {
+            Prenom = prenom,
+            Nom = nom,
+            PhoneNumber = telephone,
+            Langue = langue,
+            MotDePasseProvisoire = motDePasseProvisoire,
+        };
+
+        // Mot de passe contrôlé avant de tirer un numéro : un refus ne consomme pas de matricule (la séquence ne recule pas).
+        await ExigerMotDePasseValide(nouveau, saisie.MotDePasse);
+
         var utilisateur = await uniteDeTravail.ExecuterAsync(
             async jeton =>
             {
@@ -87,15 +99,7 @@ internal sealed partial class ServiceUtilisateurs(
                     throw new ExceptionIdentite(CodesErreurIdentite.IdentifiantDejaUtilise, matricule);
                 }
 
-                var nouveau = new Utilisateur
-                {
-                    UserName = matricule,
-                    Prenom = prenom,
-                    Nom = nom,
-                    PhoneNumber = telephone,
-                    Langue = langue,
-                    MotDePasseProvisoire = motDePasseProvisoire,
-                };
+                nouveau.UserName = matricule;
                 Exiger(await utilisateurs.CreateAsync(nouveau, saisie.MotDePasse ?? ""));
                 Exiger(await utilisateurs.AddToRolesAsync(nouveau, roles));
                 contexte.JournalComptes.Add(JournalCompte.Ecrire(nouveau.Id, ActionCompte.Creation, auteur, horloge.MaintenantUtc, $"{nouveau.NomComplet} ; {string.Join(", ", roles)}"));

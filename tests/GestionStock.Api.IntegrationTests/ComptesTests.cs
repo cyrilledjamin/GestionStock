@@ -1,6 +1,8 @@
 using System.Net;
 using System.Net.Http.Json;
 using GestionStock.Identite.Contracts;
+using GestionStock.Identite.Infrastructure;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace GestionStock.Api.IntegrationTests;
@@ -23,6 +25,25 @@ public sealed class ComptesTests(ApiDeTest api)
         Assert.NotEqual(premier.Compte.Matricule, second.Compte.Matricule);
         Assert.Equal(("Awa Ngono", true, true), (premier.Compte.NomComplet, premier.Compte.Actif, premier.Compte.MotDePasseProvisoire));
         Assert.Equal("Creation", premier.Journal.Single().Action);
+    }
+
+    [Fact]
+    public async Task Une_creation_refusee_ne_consomme_pas_de_matricule()
+    {
+        using var administrateur = await api.ClientAdministrateurAsync();
+
+        // D'autres tests créent des comptes en parallèle : la séquence peut avancer pour eux entre deux lectures.
+        // Avec le défaut, chaque refus la fait avancer ; il suffit donc d'un essai sans avance pour conclure.
+        var sansAvance = false;
+        for (var essai = 0; essai < 5 && !sansAvance; essai++)
+        {
+            var avant = await DernierNumeroMatriculeAsync();
+            var refus = await administrateur.PostAsJsonAsync("/api/identite/utilisateurs", new { prenom = "Awa", nom = "Ngono", roles = new[] { Roles.Caissier }, motDePasse = "abc" }, Annulation);
+            Assert.Equal("Identite.MotDePasseRefuse", (await IdentiteTests.LireProblemeAsync(refus)).Code);
+            sansAvance = await DernierNumeroMatriculeAsync() == avant;
+        }
+
+        Assert.True(sansAvance, "Chaque création refusée a consommé un numéro de matricule.");
     }
 
     [Fact]
@@ -183,6 +204,16 @@ public sealed class ComptesTests(ApiDeTest api)
         await using var portee = api.Services.CreateAsyncScope();
         return await portee.ServiceProvider.GetRequiredService<IValidationResponsable>()
             .VerifierAsync(matricule, ApiDeTest.MotDePasseValide, Permissions.DepassementsValider, Annulation);
+    }
+
+    /// <summary>Dernière valeur tirée de la séquence des matricules (la lire n'en consomme pas).</summary>
+    private async Task<long> DernierNumeroMatriculeAsync()
+    {
+        await using var portee = api.Services.CreateAsyncScope();
+        var contexte = portee.ServiceProvider.GetRequiredService<IdentiteDbContext>();
+        return await contexte.Database
+            .SqlQuery<long>($"SELECT last_value AS \"Value\" FROM identite.numero_matricule")
+            .SingleAsync(Annulation);
     }
 
     private static async Task<T> Lire<T>(HttpResponseMessage reponse)
