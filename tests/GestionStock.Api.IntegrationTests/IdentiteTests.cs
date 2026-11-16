@@ -25,12 +25,16 @@ public sealed class IdentiteTests(ApiDeTest api)
     [Fact]
     public async Task Un_mauvais_mot_de_passe_est_refuse_avec_un_code_et_un_message_traduit()
     {
+        // Compte propre au test : un échec sur le compte admin partagé ferait échouer au hasard les autres tests
+        // (connexions simultanées de l'admin qui remettent son compteur d'échecs à zéro en même temps).
+        using var caissier = await api.ClientAvecRoleAsync(Roles.Caissier);
+        var identifiant = (await caissier.GetFromJsonAsync<Profil>("/api/identite/moi", Annulation))!.Identifiant;
         using var client = api.Client();
         client.DefaultRequestHeaders.AcceptLanguage.Add(new StringWithQualityHeaderValue("en"));
 
         var reponse = await client.PostAsJsonAsync(
             "/api/identite/connexion",
-            new { identifiant = ApiDeTest.Administrateur, motDePasse = "faux" },
+            new { identifiant, motDePasse = "faux" },
             Annulation);
 
         Assert.Equal(HttpStatusCode.Unauthorized, reponse.StatusCode);
