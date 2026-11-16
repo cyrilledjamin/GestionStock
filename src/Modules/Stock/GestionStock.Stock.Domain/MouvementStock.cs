@@ -17,7 +17,6 @@ public sealed class MouvementStock
     [
         TypeMouvement.Blocage,
         TypeMouvement.Deblocage,
-        TypeMouvement.Revalorisation,
     ];
 
     private MouvementStock()
@@ -68,8 +67,12 @@ public sealed class MouvementStock
     {
         (null, not null) => SensMouvement.Entree,
         (not null, null) => SensMouvement.Sortie,
+        (null, null) => SensMouvement.Valorisation,
         _ => SensMouvement.Interne,
     };
+
+    /// <summary>Supplément de valeur d'une revalorisation (quantité revalorisée × supplément unitaire).</summary>
+    public decimal MontantRevalorisation => Type == TypeMouvement.Revalorisation ? Quantite * CoutUnitaire : 0m;
 
     /// <summary>Variation de la quantité physique du site : positive en entrée, négative en sortie, nulle en interne.</summary>
     public decimal VariationSite => Sens switch
@@ -113,7 +116,13 @@ public sealed class MouvementStock
         Exiger(!string.IsNullOrWhiteSpace(utilisateur), CodesErreurStock.UtilisateurObligatoire, "L'utilisateur est obligatoire.");
         Exiger(idIdempotence != Guid.Empty, CodesErreurStock.IdempotenceObligatoire, "L'identifiant d'idempotence est obligatoire.");
         Exiger(dateUtc.Kind == DateTimeKind.Utc, CodesErreurStock.DateNonUtc, "La date doit être en UTC.");
-        Exiger(emplacementSourceId is not null || emplacementDestinationId is not null, CodesErreurStock.SensIncompatible, "Un mouvement a au moins une source ou une destination.");
+        // Une revalorisation (RG30) ne concerne aucun emplacement ; tout autre mouvement en a au moins un.
+        Exiger(
+            (type == TypeMouvement.Revalorisation) == (emplacementSourceId is null && emplacementDestinationId is null),
+            CodesErreurStock.SensIncompatible,
+            type == TypeMouvement.Revalorisation
+                ? "Une revalorisation ne concerne aucun emplacement."
+                : "Un mouvement a au moins une source ou une destination.");
         Exiger(emplacementSourceId is null || emplacementSourceId != emplacementDestinationId, CodesErreurStock.SourceEgaleDestination, "La source et la destination doivent différer.");
 
         var mouvement = new MouvementStock
@@ -153,6 +162,9 @@ public sealed class MouvementStock
 
         // Démarque : sortie du stock, ou transfert vers l'emplacement Démarque du magasin (RG20, RG23).
         TypeMouvement.Demarque => EnsembleSortieOuInterne,
+
+        // Frais d'approche connus après la réception (RG30) : la valeur change, pas la quantité.
+        TypeMouvement.Revalorisation => EnsembleValorisation,
         _ => EnsembleVide,
     };
 
@@ -161,6 +173,7 @@ public sealed class MouvementStock
     private static readonly HashSet<SensMouvement> EnsembleInterne = [SensMouvement.Interne];
     private static readonly HashSet<SensMouvement> EnsembleEntreeOuSortie = [SensMouvement.Entree, SensMouvement.Sortie];
     private static readonly HashSet<SensMouvement> EnsembleSortieOuInterne = [SensMouvement.Sortie, SensMouvement.Interne];
+    private static readonly HashSet<SensMouvement> EnsembleValorisation = [SensMouvement.Valorisation];
     private static readonly HashSet<SensMouvement> EnsembleVide = [];
 
     private static void Exiger(bool condition, string code, string message)

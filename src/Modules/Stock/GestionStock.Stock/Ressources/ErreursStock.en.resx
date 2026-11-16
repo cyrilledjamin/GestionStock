@@ -18,4 +18,5 @@
   <data name="Stock.DateNonUtc" xml:space="preserve"><value>The operation date is invalid.</value></data>
   <data name="Stock.MouvementNonConcerne" xml:space="preserve"><value>This movement does not concern this stock.</value></data>
   <data name="Stock.StockInsuffisant" xml:space="preserve"><value>Insufficient stock at this location.</value></data>
+  <data name="Stock.RevalorisationSansStock" xml:space="preserve"><value>Revaluation not possible: the revalued quantity is no longer in stock.</value></data>
 </root>

@@ -393,6 +393,14 @@ Sans commande fournisseur, lots ni frais d'approche (prévus plus tard) :
    par le module Stock (RG17). Si une ligne est refusée, rien n'est écrit. Une réception validée ne se modifie plus ;
    deux validations simultanées n'écrivent qu'une fois (verrou de la réception, idempotence des mouvements).
 
+## Revalorisation (RG30)
+
+Des frais d'approche connus après la réception donnent un mouvement `Revalorisation` : aucun emplacement, aucune
+variation de quantité. Il porte la quantité revalorisée et le supplément par unité ; le module Stock ajoute ce montant
+à la valeur du stock du site, soit `CUMP += quantité × supplément / stock physique`. La quantité revalorisée ne peut
+pas dépasser le stock physique présent (`Stock.RevalorisationSansStock`). Comme tout mouvement, il est immuable et le
+solde reste recalculable depuis le journal.
+
 ## Comptes, rôles et permissions
 
 Comptes locaux nominatifs (ENF06), stockés dans le schéma `identite`. Mot de passe : 8 caractères au moins,
@@ -483,6 +491,13 @@ sur une machine Linux de GitHub qui dispose de Docker :
 | 21 | Module Reprise : import Excel des articles, codes, prix et coûts | Fait |
 | 22 | Client : écrans reprise, inventaire, démarque | Fait |
 | 23 | Architecture, CI, README, démonstration de l'inventaire | Fait |
+| 24 | Stock : mouvement Revalorisation (RG30) | Fait |
+| 25 | Achats : frais d'approche, répartition, revalorisation des frais tardifs | À faire |
+| 26 | Achats : dettes fournisseurs et paiements | À faire |
+| 27 | Module Rapports : ventes et marge, stock, créances et dettes, caisse et anomalies | À faire |
+| 28 | Exports comptables Excel et CSV | À faire |
+| 29 | Client : écrans frais, dettes, rapports, exports | À faire |
+| 30 | Architecture, CI, README, démonstration de la tranche 4 | À faire |
 
 ## Démonstration
 
@@ -552,7 +567,9 @@ le refus d'une démarque sont couverts par les tests d'intégration.
 - Rôles pour la gestion des articles et des fournisseurs, et validation d'une réception sans commande
   (le processus 6.1 cite l'Acheteur, rôle absent de la V1) : attributions provisoires, à confirmer (voir ci-dessus).
 
-- Effet des mouvements `Blocage`, `Deblocage` et `Revalorisation` : refusés tant qu'il n'est pas défini.
+- Effet des mouvements `Blocage` et `Deblocage` : refusés tant qu'il n'est pas défini.
+- Revalorisation (RG30) : le supplément porte sur la quantité encore en stock ; la part des frais qui concerne de la
+  marchandise déjà vendue n'entre pas dans le CUMP (conservée sur la réception, signalée dans les rapports).
 - Motif de démarque (RG23) : absent du modèle UML ; porté par la déclaration de démarque que le mouvement référence.
 - Statuts d'inventaire EnCours / Valide / Annule (valeurs non listées par le dossier) ; inventaire complet validable
   seulement quand tout est compté.

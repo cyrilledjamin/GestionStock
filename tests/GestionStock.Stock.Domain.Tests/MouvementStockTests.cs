@@ -94,12 +94,40 @@ public sealed class MouvementStockTests
     [Theory]
     [InlineData(TypeMouvement.Blocage)]
     [InlineData(TypeMouvement.Deblocage)]
-    [InlineData(TypeMouvement.Revalorisation)]
     public void Les_types_dont_l_effet_n_est_pas_defini_sont_refuses(TypeMouvement type)
     {
         var erreur = Assert.Throws<ExceptionDomaineStock>(() => Mouvement(type, destination: Reception));
 
         Assert.Equal(CodesErreurStock.TypeNonPrisEnCharge, erreur.Code);
+    }
+
+    [Fact]
+    public void Une_revalorisation_ne_concerne_aucun_emplacement_et_ne_change_pas_la_quantite()
+    {
+        var mouvement = Revalorisation(4m, 12.5m);
+
+        Assert.Equal(SensMouvement.Valorisation, mouvement.Sens);
+        Assert.Equal(0m, mouvement.VariationSite);
+        Assert.Equal(50m, mouvement.MontantRevalorisation);
+    }
+
+    [Theory]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    public void Une_revalorisation_avec_un_emplacement_est_refusee(bool avecSource, bool avecDestination)
+    {
+        var erreur = Assert.Throws<ExceptionDomaineStock>(
+            () => Mouvement(TypeMouvement.Revalorisation, avecSource ? Reception : null, avecDestination ? AutreEmplacement : null));
+
+        Assert.Equal(CodesErreurStock.SensIncompatible, erreur.Code);
+    }
+
+    [Fact]
+    public void Un_autre_mouvement_sans_emplacement_est_refuse()
+    {
+        var erreur = Assert.Throws<ExceptionDomaineStock>(() => Mouvement(TypeMouvement.EntreeReception));
+
+        Assert.Equal(CodesErreurStock.SensIncompatible, erreur.Code);
     }
 
     [Theory]
