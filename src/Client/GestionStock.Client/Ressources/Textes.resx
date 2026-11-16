@@ -296,4 +296,88 @@
   <data name="MotifDemarque.Vol" xml:space="preserve"><value>Vol</value></data>
   <data name="MotifDemarque.Perime" xml:space="preserve"><value>Périmé</value></data>
   <data name="MotifDemarque.Freinte" xml:space="preserve"><value>Freinte</value></data>
+  <data name="FraisApproche" xml:space="preserve"><value>Frais d'approche</value></data>
+  <data name="FraisAide" xml:space="preserve"><value>Transport, transit, douane : répartis sur les lignes au prorata de la valeur (ou des quantités), ils entrent dans le coût de revient à la validation.</value></data>
+  <data name="FraisTardifsAide" xml:space="preserve"><value>Un frais ajouté maintenant revalorise le stock encore présent ; la part de la marchandise déjà vendue reste non incorporée.</value></data>
+  <data name="AjouterFrais" xml:space="preserve"><value>Ajouter le frais</value></data>
+  <data name="FraisAjoute" xml:space="preserve"><value>Frais ajouté.</value></data>
+  <data name="FraisAlloues" xml:space="preserve"><value>Frais</value></data>
+  <data name="CoutRevient" xml:space="preserve"><value>Coût de revient</value></data>
+  <data name="Cle" xml:space="preserve"><value>Répartition</value></data>
+  <data name="Cle.Valeur" xml:space="preserve"><value>Au prorata de la valeur</value></data>
+  <data name="Cle.Quantite" xml:space="preserve"><value>Au prorata des quantités</value></data>
+  <data name="TypeFrais.Transport" xml:space="preserve"><value>Transport</value></data>
+  <data name="TypeFrais.Transit" xml:space="preserve"><value>Transit</value></data>
+  <data name="TypeFrais.Douane" xml:space="preserve"><value>Douane</value></data>
+  <data name="TypeFrais.Autre" xml:space="preserve"><value>Autre</value></data>
+  <data name="Tardif" xml:space="preserve"><value>tardif</value></data>
+  <data name="NonIncorpore" xml:space="preserve"><value>Non incorporé</value></data>
+  <data name="DetteFournisseur" xml:space="preserve"><value>Dette fournisseur</value></data>
+  <data name="DettesFournisseurs" xml:space="preserve"><value>Dettes fournisseurs</value></data>
+  <data name="DettesAide" xml:space="preserve"><value>Montants dus aux fournisseurs, paiements partiels.</value></data>
+  <data name="DettesIntro" xml:space="preserve"><value>Chaque réception validée crée une dette : marchandise et frais d'approche. Les paiements se saisissent sur la réception.</value></data>
+  <data name="SeulementNonSoldees" xml:space="preserve"><value>Seulement les dettes non soldées</value></data>
+  <data name="ParFournisseur" xml:space="preserve"><value>Par fournisseur</value></data>
+  <data name="ParReception" xml:space="preserve"><value>Par réception</value></data>
+  <data name="MontantDu" xml:space="preserve"><value>Montant dû</value></data>
+  <data name="MontantPaye" xml:space="preserve"><value>Payé</value></data>
+  <data name="StatutDette.NonPayee" xml:space="preserve"><value>Non payée</value></data>
+  <data name="StatutDette.PartiellementPayee" xml:space="preserve"><value>Partiellement payée</value></data>
+  <data name="StatutDette.Payee" xml:space="preserve"><value>Payée</value></data>
+  <data name="Mode.Virement" xml:space="preserve"><value>Virement</value></data>
+  <data name="Mode.Cheque" xml:space="preserve"><value>Chèque</value></data>
+  <data name="EnregistrerPaiement" xml:space="preserve"><value>Enregistrer le paiement</value></data>
+  <data name="PaiementEnregistre" xml:space="preserve"><value>Paiement enregistré.</value></data>
+  <data name="MotifAnnulation" xml:space="preserve"><value>Motif de l'annulation</value></data>
+  <data name="AnnulerPaiement" xml:space="preserve"><value>Annuler</value></data>
+  <data name="AnnulationMotif" xml:space="preserve"><value>Annulation : {0}</value></data>
+  <data name="Annule" xml:space="preserve"><value>Annulé</value></data>
+  <data name="Rapports" xml:space="preserve"><value>Rapports</value></data>
+  <data name="RapportsAide" xml:space="preserve"><value>Ventes et marge, stock, créances et dettes, caisse.</value></data>
+  <data name="Rapport.Ventes" xml:space="preserve"><value>Ventes et marge</value></data>
+  <data name="Rapport.Stock" xml:space="preserve"><value>Stock et valeur</value></data>
+  <data name="Rapport.CreancesDettes" xml:space="preserve"><value>Créances et dettes</value></data>
+  <data name="Rapport.Caisse" xml:space="preserve"><value>Caisse et anomalies</value></data>
+  <data name="Du" xml:space="preserve"><value>Du</value></data>
+  <data name="Au" xml:space="preserve"><value>Au</value></data>
+  <data name="ChiffreAffairesTtc" xml:space="preserve"><value>CA TTC</value></data>
+  <data name="ChiffreAffairesHt" xml:space="preserve"><value>CA HT</value></data>
+  <data name="CoutDesVentes" xml:space="preserve"><value>Coût des ventes</value></data>
+  <data name="Marge" xml:space="preserve"><value>Marge</value></data>
+  <data name="Tickets" xml:space="preserve"><value>Tickets</value></data>
+  <data name="Avoirs" xml:space="preserve"><value>Avoirs</value></data>
+  <data name="Remises" xml:space="preserve"><value>Remises</value></data>
+  <data name="ParJour" xml:space="preserve"><value>Par jour</value></data>
+  <data name="ParArticle" xml:space="preserve"><value>Par article</value></data>
+  <data name="ParCaissier" xml:space="preserve"><value>Par caissier</value></data>
+  <data name="AucuneVente" xml:space="preserve"><value>Aucune vente sur la période.</value></data>
+  <data name="ArticlesEnStock" xml:space="preserve"><value>Articles en stock</value></data>
+  <data name="StocksNegatifs" xml:space="preserve"><value>Stocks négatifs</value></data>
+  <data name="Creances" xml:space="preserve"><value>Créances clients</value></data>
+  <data name="AucuneCreance" xml:space="preserve"><value>Aucune créance.</value></data>
+  <data name="PlusAncienneEcheance" xml:space="preserve"><value>Plus ancienne échéance</value></data>
+  <data name="Sessions" xml:space="preserve"><value>Sessions</value></data>
+  <data name="TotalEcarts" xml:space="preserve"><value>Total des écarts</value></data>
+  <data name="TotalTtc" xml:space="preserve"><value>Total TTC</value></data>
+  <data name="TicketOrigine" xml:space="preserve"><value>Ticket d'origine</value></data>
+  <data name="CreditsValides" xml:space="preserve"><value>Crédits validés par un responsable</value></data>
+  <data name="FraisNonIncorpores" xml:space="preserve"><value>Frais non incorporés</value></data>
+  <data name="FraisNonIncorporesAide" xml:space="preserve"><value>Frais d'approche arrivés après la vente de la marchandise : ils n'ont pas pu entrer dans le coût du stock.</value></data>
+  <data name="Aucun" xml:space="preserve"><value>Aucun.</value></data>
+  <data name="Exports" xml:space="preserve"><value>Exports comptables</value></data>
+  <data name="ExportsAide" xml:space="preserve"><value>Journaux pour le comptable, en Excel ou CSV.</value></data>
+  <data name="ExportsIntro" xml:space="preserve"><value>Montants arrondis au franc, dates à l'heure de Douala, en-têtes dans la langue de l'interface.</value></data>
+  <data name="Format" xml:space="preserve"><value>Format</value></data>
+  <data name="Telecharger" xml:space="preserve"><value>Télécharger</value></data>
+  <data name="ExportImpossible" xml:space="preserve"><value>Export impossible.</value></data>
+  <data name="Journal.ventes" xml:space="preserve"><value>Journal des ventes</value></data>
+  <data name="Journal.achats" xml:space="preserve"><value>Journal des achats</value></data>
+  <data name="Journal.encaissements" xml:space="preserve"><value>Journal des encaissements</value></data>
+  <data name="Journal.creances" xml:space="preserve"><value>Journal des créances</value></data>
+  <data name="Journal.valeur-stock" xml:space="preserve"><value>Valeur du stock</value></data>
+  <data name="JournalAide.ventes" xml:space="preserve"><value>Tickets de la période ; les avoirs viennent en négatif.</value></data>
+  <data name="JournalAide.achats" xml:space="preserve"><value>Réceptions validées, frais tardifs, paiements fournisseurs et annulations.</value></data>
+  <data name="JournalAide.encaissements" xml:space="preserve"><value>Argent reçu ou rendu : paiements hors crédit (espèces moins le rendu) et remboursements de crédit.</value></data>
+  <data name="JournalAide.creances" xml:space="preserve"><value>Ventes à crédit, remboursements et annulations, avec l'échéance.</value></data>
+  <data name="JournalAide.valeur-stock" xml:space="preserve"><value>Quantité, coût moyen et valeur de chaque article, au jour de l'export.</value></data>
 </root>

@@ -1,0 +1,222 @@
+@page "/rapports"
+@inject Api Api
+
+<PageTitle>@L["Rapports"] · GestionStock</PageTitle>
+
+<h1>@L["Rapports"]</h1>
+
+<div class="barre">
+    @foreach (var onglet in Onglets)
+    {
+        <button class="@(_onglet == onglet ? "principal" : "")" @onclick="() => Choisir(onglet)">@L[$"Rapport.{onglet}"]</button>
+    }
+</div>
+
+@if (_onglet is "Ventes" or "Caisse")
+{
+    <div class="barre">
+        <label>@L["Du"] <input type="date" @bind="_du" /></label>
+        <label>@L["Au"] <input type="date" @bind="_au" /></label>
+        <button @onclick="Charger">@L["Afficher"]</button>
+    </div>
+}
+
+<Message Texte="@_erreur" />
+
+@if (_onglet == "Ventes" && _ventes is { Totaux: var t })
+{
+    <div class="tuiles">
+        <div class="tuile chiffre"><span>@L["ChiffreAffairesTtc"]</span><strong>@Format.Montant(t.ChiffreAffairesTtc)</strong></div>
+        <div class="tuile chiffre"><span>@L["ChiffreAffairesHt"]</span><strong>@Format.Montant(t.ChiffreAffairesHt)</strong></div>
+        <div class="tuile chiffre"><span>@L["CoutDesVentes"]</span><strong>@Format.Montant(t.CoutDesVentes)</strong></div>
+        <div class="tuile chiffre"><span>@L["Marge"]</span><strong>@Format.Montant(t.Marge) <small>@Taux(t.TauxMarge)</small></strong></div>
+        <div class="tuile chiffre"><span>@L["Tickets"]</span><strong>@t.NombreVentes <small>/ @t.NombreAvoirs @L["Avoirs"]</small></strong></div>
+        <div class="tuile chiffre"><span>@L["Remises"]</span><strong>@Format.Montant(t.Remises)</strong></div>
+    </div>
+
+    <h2>@L["ParJour"]</h2>
+    <table>
+        <thead><tr><th>@L["Date"]</th><th class="nombre">@L["Tickets"]</th><th class="nombre">@L["ChiffreAffairesTtc"]</th><th class="nombre">@L["ChiffreAffairesHt"]</th><th class="nombre">@L["CoutDesVentes"]</th><th class="nombre">@L["Marge"]</th></tr></thead>
+        <tbody>
+            @foreach (var jour in _ventes.ParJour)
+            {
+                <tr><td>@jour.Jour.ToString("d", CultureInfo.CurrentCulture)</td><td class="nombre">@jour.NombreTickets</td><td class="nombre">@Format.Montant(jour.ChiffreAffairesTtc)</td><td class="nombre">@Format.Montant(jour.ChiffreAffairesHt)</td><td class="nombre">@Format.Montant(jour.CoutDesVentes)</td><td class="nombre">@Format.Montant(jour.Marge)</td></tr>
+            }
+            @if (_ventes.ParJour.Count == 0)
+            {
+                <tr><td colspan="6" class="vide">@L["AucuneVente"]</td></tr>
+            }
+        </tbody>
+    </table>
+
+    <h2>@L["ParArticle"]</h2>
+    <table>
+        <thead><tr><th>@L["Article"]</th><th class="nombre">@L["Quantite"]</th><th class="nombre">@L["ChiffreAffairesHt"]</th><th class="nombre">@L["CoutDesVentes"]</th><th class="nombre">@L["Marge"]</th><th class="nombre">%</th></tr></thead>
+        <tbody>
+            @foreach (var article in _ventes.ParArticle)
+            {
+                <tr class="@(article.Marge < 0 ? "negatif" : "")"><td><code>@article.Code</code> @article.Libelle</td><td class="nombre">@Format.Quantite(article.Quantite) @article.UniteStock</td><td class="nombre">@Format.Montant(article.ChiffreAffairesHt)</td><td class="nombre">@Format.Montant(article.CoutDesVentes)</td><td class="nombre">@Format.Montant(article.Marge)</td><td class="nombre">@Taux(article.TauxMarge)</td></tr>
+            }
+        </tbody>
+    </table>
+
+    <h2>@L["ParCaissier"]</h2>
+    <table>
+        <thead><tr><th>@L["Caissier"]</th><th class="nombre">@L["Tickets"]</th><th class="nombre">@L["ChiffreAffairesTtc"]</th></tr></thead>
+        <tbody>
+            @foreach (var caissier in _ventes.ParCaissier)
+            {
+                <tr><td>@caissier.Caissier</td><td class="nombre">@caissier.NombreTickets</td><td class="nombre">@Format.Montant(caissier.ChiffreAffairesTtc)</td></tr>
+            }
+        </tbody>
+    </table>
+}
+
+@if (_onglet == "Stock" && _stock is not null)
+{
+    <div class="tuiles">
+        <div class="tuile chiffre"><span>@L["ValeurStock"]</span><strong>@Format.Montant(_stock.ValeurTotale)</strong></div>
+        <div class="tuile chiffre"><span>@L["ArticlesEnStock"]</span><strong>@_stock.NombreArticles</strong></div>
+        <div class="tuile chiffre"><span>@L["StocksNegatifs"]</span><strong>@_stock.StocksNegatifs.Count</strong></div>
+    </div>
+    <TableStock Lignes="_stock.Articles" />
+}
+
+@if (_onglet == "CreancesDettes" && _creances is not null)
+{
+    <div class="tuiles">
+        <div class="tuile chiffre"><span>@L["Creances"]</span><strong>@Format.Montant(_creances.TotalCreances)</strong></div>
+        <div class="tuile chiffre"><span>@L["EnRetard"]</span><strong>@Format.Montant(_creances.TotalEnRetard)</strong></div>
+        <div class="tuile chiffre"><span>@L["DettesFournisseurs"]</span><strong>@Format.Montant(_creances.TotalDettes)</strong></div>
+    </div>
+
+    <h2>@L["Clients"]</h2>
+    <table>
+        <thead><tr><th>@L["Client"]</th><th>@L["Telephone"]</th><th class="nombre">@L["Plafond"]</th><th class="nombre">@L["SoldeDu"]</th><th class="nombre">@L["EnRetard"]</th><th>@L["PlusAncienneEcheance"]</th></tr></thead>
+        <tbody>
+            @foreach (var client in _creances.Clients)
+            {
+                <tr class="@(client.MontantEnRetard > 0 ? "negatif" : "")">
+                    <td><a href="clients/@client.ClientId">@client.Nom</a></td><td>@client.Telephone</td>
+                    <td class="nombre">@Format.Montant(client.PlafondCredit)</td><td class="nombre">@Format.Montant(client.SoldeDu)</td>
+                    <td class="nombre">@Format.Montant(client.MontantEnRetard)</td>
+                    <td class="court">@(client.PlusAncienneEcheanceUtc is { } e ? Format.Date(e) : "")</td>
+                </tr>
+            }
+            @if (_creances.Clients.Count == 0)
+            {
+                <tr><td colspan="6" class="vide">@L["AucuneCreance"]</td></tr>
+            }
+        </tbody>
+    </table>
+
+    <h2>@L["Fournisseurs"]</h2>
+    <table>
+        <thead><tr><th>@L["Fournisseur"]</th><th class="nombre">@L["Receptions"]</th><th class="nombre">@L["MontantDu"]</th><th class="nombre">@L["MontantPaye"]</th><th class="nombre">@L["ResteDu"]</th></tr></thead>
+        <tbody>
+            @foreach (var fournisseur in _creances.Fournisseurs)
+            {
+                <tr><td>@fournisseur.Fournisseur</td><td class="nombre">@fournisseur.NombreReceptions</td><td class="nombre">@Format.Montant(fournisseur.MontantDu)</td><td class="nombre">@Format.Montant(fournisseur.MontantPaye)</td><td class="nombre">@Format.Montant(fournisseur.ResteDu)</td></tr>
+            }
+            @if (_creances.Fournisseurs.Count == 0)
+            {
+                <tr><td colspan="5" class="vide">@L["AucuneDette"]</td></tr>
+            }
+        </tbody>
+    </table>
+}
+
+@if (_onglet == "Caisse" && _caisse is not null)
+{
+    <div class="tuiles">
+        <div class="tuile chiffre"><span>@L["Sessions"]</span><strong>@_caisse.Sessions.Count</strong></div>
+        <div class="tuile chiffre"><span>@L["TotalEcarts"]</span><strong>@Format.Montant(_caisse.TotalEcarts)</strong></div>
+        <div class="tuile chiffre"><span>@L["Avoirs"]</span><strong>@_caisse.Avoirs.Count</strong></div>
+        <div class="tuile chiffre"><span>@L["Remises"]</span><strong>@_caisse.Remises.Count</strong></div>
+    </div>
+
+    <h2>@L["SessionsCaisse"]</h2>
+    <table>
+        <thead><tr><th>@L["Poste"]</th><th>@L["Caissier"]</th><th>@L["Ouverture"]</th><th>@L["Statut"]</th><th class="nombre">@L["Tickets"]</th><th class="nombre">@L["Ventes"]</th><th class="nombre">@L["Ecart"]</th><th>@L["ValideePar"]</th></tr></thead>
+        <tbody>
+            @foreach (var session in _caisse.Sessions)
+            {
+                <tr class="@(session.Ecart is < 0 ? "negatif" : "")">
+                    <td>@session.NumeroCaisse</td><td>@session.Caissier</td><td class="court">@Format.Date(session.OuvertureUtc)</td>
+                    <td>@L[$"StatutSession.{session.Statut}"]</td><td class="nombre">@session.NombreVentes / @session.NombreAvoirs</td>
+                    <td class="nombre">@Format.Montant(session.VentesNettes)</td><td class="nombre">@(session.Ecart is { } e ? Format.Montant(e) : "")</td><td>@session.ValideePar</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <TableTickets Titre="@L["Remises"]" Tickets="_caisse.Remises" AvecRemise="true" />
+    <TableTickets Titre="@L["Avoirs"]" Tickets="_caisse.Avoirs" AvecOrigine="true" />
+    <TableTickets Titre="@L["CreditsValides"]" Tickets="_caisse.CreditsValides" />
+
+    <h2>@L["StocksNegatifs"]</h2>
+    <TableStock Lignes="_caisse.StocksNegatifs" />
+
+    <h2>@L["FraisNonIncorpores"]</h2>
+    <p class="discret">@L["FraisNonIncorporesAide"]</p>
+    <table>
+        <thead><tr><th>@L["Date"]</th><th>@L["Reception"]</th><th>@L["Type"]</th><th class="nombre">@L["Montant"]</th><th class="nombre">@L["NonIncorpore"]</th></tr></thead>
+        <tbody>
+            @foreach (var frais in _caisse.FraisNonIncorpores)
+            {
+                <tr><td class="court">@Format.Date(frais.SaisiLeUtc)</td><td><a href="receptions/@frais.ReceptionId">@frais.Reception</a></td><td>@L[$"TypeFrais.{frais.Type}"] @frais.Libelle</td><td class="nombre">@Format.Montant(frais.Montant)</td><td class="nombre">@Format.Montant(frais.MontantNonIncorpore)</td></tr>
+            }
+            @if (_caisse.FraisNonIncorpores.Count == 0)
+            {
+                <tr><td colspan="5" class="vide">@L["Aucun"]</td></tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private static readonly string[] Onglets = ["Ventes", "Stock", "CreancesDettes", "Caisse"];
+
+    private string _onglet = "Ventes";
+    private DateOnly _du = DateOnly.FromDateTime(DateTime.UtcNow.AddHours(1));
+    private DateOnly _au = DateOnly.FromDateTime(DateTime.UtcNow.AddHours(1));
+    private RapportVentes? _ventes;
+    private RapportStock? _stock;
+    private RapportCreancesDettes? _creances;
+    private RapportCaisse? _caisse;
+    private string? _erreur;
+
+    protected override Task OnInitializedAsync() => Charger();
+
+    private Task Choisir(string onglet)
+    {
+        _onglet = onglet;
+        return Charger();
+    }
+
+    private async Task Charger()
+    {
+        var periode = $"du={_du:yyyy-MM-dd}&au={_au:yyyy-MM-dd}";
+        switch (_onglet)
+        {
+            case "Ventes":
+                var ventes = await Api.GetAsync<RapportVentes>($"api/rapports/ventes?{periode}");
+                (_ventes, _erreur) = (ventes.Valeur, ventes.Erreur);
+                break;
+            case "Stock":
+                var stock = await Api.GetAsync<RapportStock>("api/rapports/stock");
+                (_stock, _erreur) = (stock.Valeur, stock.Erreur);
+                break;
+            case "CreancesDettes":
+                var creances = await Api.GetAsync<RapportCreancesDettes>("api/rapports/creances-dettes");
+                (_creances, _erreur) = (creances.Valeur, creances.Erreur);
+                break;
+            default:
+                var caisse = await Api.GetAsync<RapportCaisse>($"api/rapports/caisse?{periode}");
+                (_caisse, _erreur) = (caisse.Valeur, caisse.Erreur);
+                break;
+        }
+    }
+
+    private static string Taux(decimal? taux) => taux is { } t ? $"{t.ToString("0.#", CultureInfo.CurrentCulture)} %" : "";
+}

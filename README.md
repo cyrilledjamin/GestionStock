@@ -266,6 +266,10 @@ Ouvrir http://localhost:8080 (docker-compose) puis se connecter. Le menu dépend
 | Inventaires | Liste filtrée par statut ; nouvel inventaire complet (tous les articles actifs) ou partiel (démarre vide) |
 | Inventaire | Comptage à la douchette (chaque scan ajoute le contenu du conditionnement) ou saisie par ligne ; freinte sur un écart négatif ; théorique, écart et sa valeur ; filtre « non comptés » ; validation (Comptable) ; annulation |
 | Démarque | Déclaration (article, quantité, motif casse / vol / périmé / freinte, commentaire) par le Magasinier ; validation ou refus motivé (Comptable, Gérant) |
+| Réception (frais et dette) | Frais d'approche : ajout (type, montant, répartition, libellé), répartition par ligne et coût de revient, retrait sur un brouillon, frais tardifs avec leur part non incorporée ; dette de la réception validée : dû, payé, reste, paiements (mode, référence) et annulation motivée |
+| Dettes fournisseurs | Reste dû par fournisseur et par réception, filtre « non soldées », lien vers la réception |
+| Rapports | Ventes et marge (par jour, article, caissier), stock et valeur, créances et dettes, caisse et anomalies ; choix de la période |
+| Exports comptables | Journal, période et format (Excel ou CSV), puis téléchargement |
 | Reprise des données | Modèle Excel vide ou avec exemple ; contrôle du fichier (rapport par ligne et colonne) ; import tout ou rien ; lien vers l'inventaire d'ouverture créé |
 
 Le reçu s'imprime par le navigateur du poste (feuille de style d'impression au format 80 mm, seul le reçu est
@@ -576,7 +580,7 @@ sur une machine Linux de GitHub qui dispose de Docker :
 | 26 | Achats : dettes fournisseurs et paiements | Fait |
 | 27 | Module Rapports : ventes et marge, stock, créances et dettes, caisse et anomalies | Fait |
 | 28 | Exports comptables Excel et CSV | Fait |
-| 29 | Client : écrans frais, dettes, rapports, exports | À faire |
+| 29 | Client : écrans frais, dettes, rapports, exports | Fait |
 | 30 | Architecture, CI, README, démonstration de la tranche 4 | À faire |
 
 ## Démonstration

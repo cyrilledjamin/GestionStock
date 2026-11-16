@@ -34,6 +34,7 @@ else
             {
                 <NavLink href="receptions">@L["Receptions"]</NavLink>
                 <NavLink href="fournisseurs">@L["Fournisseurs"]</NavLink>
+                <NavLink href="dettes">@L["DettesFournisseurs"]</NavLink>
             }
             @if (Session.A(Permissions.ReferentielConsulter))
             {
@@ -43,6 +44,14 @@ else
             {
                 <NavLink href="inventaires">@L["Inventaires"]</NavLink>
                 <NavLink href="demarques">@L["Demarque"]</NavLink>
+            }
+            @if (Session.A(Permissions.RapportsConsulter))
+            {
+                <NavLink href="rapports">@L["Rapports"]</NavLink>
+            }
+            @if (Session.A(Permissions.ExportsProduire))
+            {
+                <NavLink href="exports">@L["Exports"]</NavLink>
             }
             @if (Session.A(Permissions.RepriseImporter))
             {

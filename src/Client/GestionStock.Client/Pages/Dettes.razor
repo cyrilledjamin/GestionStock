@@ -1,0 +1,81 @@
+@page "/dettes"
+@inject Api Api
+
+<PageTitle>@L["DettesFournisseurs"] · GestionStock</PageTitle>
+
+<h1>@L["DettesFournisseurs"]</h1>
+<p class="discret">@L["DettesIntro"]</p>
+
+<div class="barre">
+    <label class="case"><input type="checkbox" @bind="_nonSoldees" @bind:after="Charger" /> @L["SeulementNonSoldees"]</label>
+</div>
+
+<Message Texte="@_erreur" />
+
+@if (_dettes is not null)
+{
+    <div class="tuiles">
+        <div class="tuile chiffre"><span>@L["ResteDu"]</span><strong>@Format.Montant(_dettes.Fournisseurs.Sum(f => f.ResteDu))</strong></div>
+        <div class="tuile chiffre"><span>@L["Fournisseurs"]</span><strong>@_dettes.Fournisseurs.Count</strong></div>
+    </div>
+
+    <h2>@L["ParFournisseur"]</h2>
+    <table>
+        <thead><tr><th>@L["Fournisseur"]</th><th class="nombre">@L["Receptions"]</th><th class="nombre">@L["MontantDu"]</th><th class="nombre">@L["MontantPaye"]</th><th class="nombre">@L["ResteDu"]</th></tr></thead>
+        <tbody>
+            @foreach (var fournisseur in _dettes.Fournisseurs)
+            {
+                <tr>
+                    <td>@fournisseur.Fournisseur</td>
+                    <td class="nombre">@fournisseur.NombreReceptions</td>
+                    <td class="nombre">@Format.Montant(fournisseur.MontantDu)</td>
+                    <td class="nombre">@Format.Montant(fournisseur.MontantPaye)</td>
+                    <td class="nombre"><strong>@Format.Montant(fournisseur.ResteDu)</strong></td>
+                </tr>
+            }
+            @if (_dettes.Fournisseurs.Count == 0)
+            {
+                <tr><td colspan="5" class="vide">@L["AucuneDette"]</td></tr>
+            }
+        </tbody>
+    </table>
+
+    <h2>@L["ParReception"]</h2>
+    <table>
+        <thead><tr><th>@L["Numero"]</th><th>@L["Date"]</th><th>@L["Fournisseur"]</th><th>@L["BonLivraison"]</th><th class="nombre">@L["MontantDu"]</th><th class="nombre">@L["MontantPaye"]</th><th class="nombre">@L["ResteDu"]</th><th>@L["Statut"]</th></tr></thead>
+        <tbody>
+            @foreach (var dette in _dettes.Receptions)
+            {
+                <tr>
+                    <td class="court"><a href="receptions/@dette.ReceptionId">@dette.Numero</a></td>
+                    <td class="court">@Format.Date(dette.DateValidationUtc)</td>
+                    <td>@dette.Fournisseur</td>
+                    <td>@dette.NumeroBonLivraison</td>
+                    <td class="nombre">@Format.Montant(dette.MontantDu)</td>
+                    <td class="nombre">@Format.Montant(dette.MontantPaye)</td>
+                    <td class="nombre">@Format.Montant(dette.ResteDu)</td>
+                    <td><span class="pastille @(dette.Statut == "Payee" ? "validee" : "brouillon")">@L[$"StatutDette.{dette.Statut}"]</span></td>
+                </tr>
+            }
+            @if (_dettes.Receptions.Count == 0)
+            {
+                <tr><td colspan="8" class="vide">@L["AucuneDette"]</td></tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private ListeDettes? _dettes;
+    private bool _nonSoldees = true;
+    private string? _erreur;
+
+    protected override Task OnInitializedAsync() => Charger();
+
+    private async Task Charger()
+    {
+        var resultat = await Api.GetAsync<ListeDettes>($"api/achats/dettes?nonSoldees={_nonSoldees.ToString().ToLowerInvariant()}");
+        _dettes = resultat.Valeur;
+        _erreur = resultat.Erreur;
+    }
+}
