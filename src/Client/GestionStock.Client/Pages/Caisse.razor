@@ -1,6 +1,8 @@
 @page "/caisse"
 @inject Api Api
 @inject IJSRuntime Js
+@inject CacheCaisse Cache
+@inject StockageLocal Stockage
 @implements IAsyncDisposable
 
 <PageTitle>@L["Caisse"] · GestionStock</PageTitle>
@@ -330,6 +332,10 @@ else
         await ChargerSession();
         await ChargerRapides();
         await ChargerOccupations();
+        // Données gardées sur le poste pour vendre hors ligne (7.8) : rafraîchies à chaque ouverture de la caisse,
+        // relues du poste si le serveur ne répond pas. Le navigateur est prié de ne jamais vider ce stockage.
+        await Cache.RafraichirAsync();
+        await Stockage.PersisterAsync();
         _charge = true;
     }
 

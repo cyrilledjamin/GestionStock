@@ -477,4 +477,6 @@
   <data name="DemarquesEnAttente" xml:space="preserve"><value>Démarques en attente de validation</value></data>
   <data name="Raccourcis" xml:space="preserve"><value>Raccourcis</value></data>
   <data name="Payer" xml:space="preserve"><value>Payer</value></data>
+  <data name="ServeurInjoignable" xml:space="preserve"><value>Serveur injoignable : vérifiez le réseau.</value></data>
+  <data name="HorsLigneBandeau" xml:space="preserve"><value>Hors ligne : le serveur ne répond pas. La caisse continue de vendre ; ses opérations partiront dès le retour du réseau.</value></data>
 </root>

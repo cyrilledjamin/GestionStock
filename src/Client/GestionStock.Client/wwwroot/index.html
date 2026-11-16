@@ -6,6 +6,9 @@
     <title>GestionStock</title>
     <base href="/" />
     <link rel="icon" type="image/svg+xml" href="icone.svg" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="icone-192.png" />
+    <meta name="theme-color" content="#1f5f4a" />
     <link rel="stylesheet" href="css/app.css" />
 </head>
 <body>
@@ -17,6 +20,8 @@
         <a href="" class="reload">Recharger / Reload</a>
     </div>
     <script src="js/outils.js"></script>
+    <script src="js/stockage-local.js"></script>
     <script src="_framework/blazor.webassembly.js"></script>
+    <script>navigator.serviceWorker && navigator.serviceWorker.register('service-worker.js', { updateViaCache: 'none' });</script>
 </body>
 </html>

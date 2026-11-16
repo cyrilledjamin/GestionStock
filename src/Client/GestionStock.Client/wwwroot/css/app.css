@@ -172,6 +172,9 @@ a.tuile:hover { border-color: var(--vert); box-shadow: var(--ombre-haute); }
 @keyframes tourner { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .attente .roue { animation: none; } }
 
+/* Hors ligne (7.8) : bandeau visible sur toutes les pages tant que le serveur ne répond pas */
+.bandeau-hors-ligne { display: flex; align-items: flex-start; gap: var(--e-2); margin: 0 0 var(--e-4); padding: var(--e-3) var(--e-4); background: var(--ambre-clair); color: var(--ambre); border-left: 4px solid var(--ambre); border-radius: var(--rayon); font-weight: 500; }
+
 /* Accueil : tableau de bord par rôle */
 .bloc-accueil { margin: var(--e-5) 0; }
 .bloc-accueil h2 { display: flex; align-items: baseline; gap: var(--e-2); flex-wrap: wrap; }

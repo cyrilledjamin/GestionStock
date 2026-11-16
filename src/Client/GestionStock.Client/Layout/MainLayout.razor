@@ -4,6 +4,7 @@
 @inject NavigationManager Navigation
 @inject IJSRuntime Js
 @inject Api Api
+@inject EtatConnexion Connexion
 
 @if (!Session.EstConnecte)
 {
@@ -78,7 +79,14 @@ else
                 <button class="lien" @onclick="Deconnecter"><Icone Nom="deconnexion" />@L["Deconnexion"]</button>
             </div>
         </nav>
-        <main class="contenu" id="contenu" tabindex="-1">@Body</main>
+        <main class="contenu" id="contenu" tabindex="-1">
+            @if (!Connexion.EnLigne)
+            {
+                @* Serveur injoignable (7.8) : l'application continue ; la caisse garde ses opérations sur le poste. *@
+                <div class="bandeau-hors-ligne" role="status"><Icone Nom="erreur" /><span>@L["HorsLigneBandeau"]</span></div>
+            }
+            @Body
+        </main>
     </div>
 }
 
@@ -86,6 +94,7 @@ else
     protected override void OnInitialized()
     {
         Session.Changement += Rafraichir;
+        Connexion.Changement += Rafraichir;
         Navigation.LocationChanged += SurNavigation;
         ExigerConnexion();
     }
@@ -143,6 +152,7 @@ else
     public void Dispose()
     {
         Session.Changement -= Rafraichir;
+        Connexion.Changement -= Rafraichir;
         Navigation.LocationChanged -= SurNavigation;
     }
 }

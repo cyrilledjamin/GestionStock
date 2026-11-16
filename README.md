@@ -322,7 +322,17 @@ par défaut et ont un bouton « Afficher » / « Masquer » pour vérifier la sa
 
 Les jetons de connexion restent dans le `sessionStorage` de l'onglet : ils disparaissent à sa fermeture (poste partagé).
 Montants arrondis à l'unité en XAF, quantités selon la précision de l'article, libellé traduit quand l'interface est
-en anglais. Hors ligne (PWA, IndexedDB) : tranche ultérieure, avec la caisse.
+en anglais.
+
+**Application installable et hors ligne** (décision 24, 7.8) : manifeste et icônes ; le service worker publié
+(`service-worker.published.js`) garde tous les fichiers du client sur le poste, si bien que l'application se recharge
+même quand le serveur est arrêté (les appels `/api` ne passent jamais par ce cache). Le poste garde aussi, dans
+IndexedDB (`js/stockage-local.js`, stockage persistant demandé au navigateur), le catalogue de la caisse avec ses codes,
+la grille de prix et les clients à crédit avec leur dernier solde, rafraîchis à chaque ouverture de la caisse
+(`CacheCaisse`). Un serveur injoignable fait passer le poste hors ligne (bandeau sur toutes les pages) ; une sonde
+`/health` toutes les 10 secondes détecte son retour. Un rechargement de page pendant la coupure garde le caissier
+connecté (profil de l'onglet) ; un onglet fermé ou un PC redémarré exige le serveur pour se reconnecter (décision 41).
+Vérifié dans Chromium : le navigateur intégré de l'outil de développement refuse les service workers.
 
 ## Référentiel
 
@@ -686,7 +696,7 @@ sur une machine Linux de GitHub qui dispose de Docker :
 | 41 | Vérification, CI, README, démonstration de la tranche 6 | Fait |
 | 42 | Hors ligne : catalogue et grille de prix de la caisse, compression des réponses | Fait |
 | 43 | Hors ligne : tickets du terrain côté serveur, anomalies, clôture gardée | Fait |
-| 44 | Hors ligne : application installable (PWA), stockage du poste, état de connexion | À faire |
+| 44 | Hors ligne : application installable (PWA), stockage du poste, état de connexion | Fait |
 | 45 | Hors ligne : vente, avoir, remboursement en file, synchronisation | À faire |
 | 46 | Anomalies de synchronisation à traiter | À faire |
 | 47 | Vérification, CI, README, démonstration de la tranche 7 | À faire |
