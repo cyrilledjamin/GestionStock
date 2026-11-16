@@ -1,0 +1,73 @@
+@page "/utilisateurs"
+@inject Api Api
+
+<PageTitle>@L["Utilisateurs"] · GestionStock</PageTitle>
+
+<h1>@L["Utilisateurs"]</h1>
+
+<Message Texte="@_erreur" />
+<Message Texte="@_succes" Erreur="false" />
+
+<form class="fiche" @onsubmit="Creer">
+    <h2>@L["NouveauCompte"]</h2>
+    <div class="grille">
+        <label>@L["Identifiant"]
+            <input @bind="_identifiant" required autocomplete="off" />
+        </label>
+        <label>@L["MotDePasse"]
+            <input type="password" @bind="_motDePasse" required autocomplete="new-password" />
+        </label>
+        <label>@L["Role"]
+            <select @bind="_role">
+                @foreach (var role in Roles.Tous)
+                {
+                    <option value="@role">@L[$"Role.{role}"]</option>
+                }
+            </select>
+        </label>
+    </div>
+    <p class="discret">@L["MotDePasseRegle"]</p>
+    <div class="actions"><button type="submit" class="principal">@L["CreerCompte"]</button></div>
+</form>
+
+<table>
+    <thead><tr><th>@L["Identifiant"]</th><th>@L["Role"]</th></tr></thead>
+    <tbody>
+        @foreach (var compte in _comptes)
+        {
+            <tr><td>@compte.Identifiant</td><td>@string.Join(", ", compte.Roles.Select(r => L[$"Role.{r}"].Value))</td></tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    private List<CompteUtilisateur> _comptes = [];
+    private string _identifiant = "";
+    private string _motDePasse = "";
+    private string _role = "Magasinier";
+    private string? _erreur;
+    private string? _succes;
+
+    protected override Task OnInitializedAsync() => Charger();
+
+    private async Task Charger()
+    {
+        var resultat = await Api.GetAsync<List<CompteUtilisateur>>("api/identite/utilisateurs");
+        _comptes = resultat.Valeur ?? [];
+        _erreur = resultat.Erreur;
+    }
+
+    private async Task Creer()
+    {
+        _succes = null;
+        var resultat = await Api.PostAsync<CompteUtilisateur>("api/identite/utilisateurs", new { Identifiant = _identifiant, MotDePasse = _motDePasse, Role = _role });
+        _erreur = resultat.Erreur;
+        if (resultat.Valeur is { } compte)
+        {
+            _succes = L["CompteCree", compte.Identifiant];
+            _identifiant = "";
+            _motDePasse = "";
+            await Charger();
+        }
+    }
+}

@@ -9,6 +9,7 @@ est dans [docs/dossier-analyse.md](docs/dossier-analyse.md).
 ## Stack
 
 - .NET 10, ASP.NET Core Minimal API, EF Core 10 + Npgsql (PostgreSQL)
+- Client Blazor WebAssembly servi par l'API (même origine), sans ressource externe
 - Monolithe modulaire : un projet `.Contracts` public et un projet interne par module, un schéma PostgreSQL par module
 - Tests : xUnit v3 (Microsoft.Testing.Platform), NetArchTest, Testcontainers
 - Déploiement : Docker Compose, conteneur Linux
@@ -17,6 +18,8 @@ est dans [docs/dossier-analyse.md](docs/dossier-analyse.md).
 
 ```
 src/
+  Client/
+    GestionStock.Client              Blazor WebAssembly (back-office), servi par l'hôte ; textes fr / en
   BuildingBlocks/
     GestionStock.SharedKernel        C# pur : IHorloge, IUtilisateurCourant
     GestionStock.Infrastructure      connexion et transaction partagées, stockage de fichiers, santé, erreurs HTTP
@@ -153,6 +156,25 @@ Tout autre endpoint est refusé par défaut (401 sans jeton) : chaque endpoint m
 l'en-tête `Authorization: Bearer <jeton>`. Les erreurs sont des ProblemDetails : titre traduit selon
 `Accept-Language` (fr par défaut, en) et code stable dans l'extension `code` (ex. `Identite.IdentifiantsInvalides`).
 
+## Écrans (client Blazor)
+
+Ouvrir http://localhost:8080 (docker-compose) puis se connecter. Le menu dépend des permissions de l'utilisateur.
+
+| Écran | Contenu |
+| --- | --- |
+| Connexion | Identifiant et mot de passe ; choix de la langue (français / anglais), mémorisé sur le poste |
+| Accueil | Raccourcis selon le rôle |
+| Stock | Soldes de la boutique : physique, disponible, CUMP, valeur ; total valorisé |
+| Journal d'un article | Soldes et mouvements (date à l'heure de Douala, variation, coût, document d'origine, utilisateur) |
+| Réceptions | Liste ; saisie en brouillon (lignes, valeur calculée), enregistrement, validation |
+| Fournisseurs | Liste, création, modification, désactivation |
+| Articles | Recherche, création, modification, désactivation |
+| Utilisateurs | Création des comptes avec leur rôle (Administrateur) |
+
+Les jetons de connexion restent dans le `sessionStorage` de l'onglet : ils disparaissent à sa fermeture (poste partagé).
+Montants arrondis à l'unité en XAF, quantités selon la précision de l'article, libellé traduit quand l'interface est
+en anglais. Hors ligne (PWA, IndexedDB) : tranche ultérieure, avec la caisse.
+
 ## Référentiel
 
 - **Article** (UC01) : code unique, libellé principal obligatoire et traduction facultative (décision 20), unité de
@@ -235,7 +257,7 @@ sur une machine Linux de GitHub qui dispose de Docker :
 | 8 | Module Identite : comptes locaux, rôles, permissions, jetons porteurs | Fait |
 | 9 | Module Referentiel : articles, site et emplacement de vente | Fait |
 | 10 | Module Achats minimal : fournisseurs, réception simple ; lectures du stock | Fait |
-| 11 | Client Blazor WebAssembly : premiers écrans | À faire |
+| 11 | Client Blazor WebAssembly : premiers écrans | Fait |
 | 12 | Tests d'architecture, Docker, démonstration de bout en bout | À faire |
 
 ## Points ouverts

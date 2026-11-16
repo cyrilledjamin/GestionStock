@@ -1,0 +1,103 @@
+@page "/fournisseurs"
+@inject Api Api
+@inject Session Session
+
+<PageTitle>@L["Fournisseurs"] · GestionStock</PageTitle>
+
+<h1>@L["Fournisseurs"]</h1>
+
+<div class="barre">
+    <label class="case"><input type="checkbox" @bind="_inclureInactifs" @bind:after="Charger" /> @L["InclureInactifs"]</label>
+    @if (Session.A(Permissions.FournisseursGerer) && _edition is null)
+    {
+        <button class="principal" @onclick="() => _edition = new Edition()">@L["NouveauFournisseur"]</button>
+    }
+</div>
+
+<Message Texte="@_erreur" />
+
+@if (_edition is not null)
+{
+    <form class="fiche" @onsubmit="Enregistrer">
+        <h2>@(_edition.Id is null ? L["NouveauFournisseur"] : _edition.Nom)</h2>
+        <div class="grille">
+            <label>@L["Nom"]
+                <input @bind="_edition.Nom" required maxlength="200" />
+            </label>
+            <label>@L["Telephone"]
+                <input @bind="_edition.Telephone" maxlength="30" placeholder="+237 6…" />
+            </label>
+            @if (_edition.Id is not null)
+            {
+                <label class="case"><input type="checkbox" @bind="_edition.Actif" /> @L["Actif"]</label>
+            }
+        </div>
+        <div class="actions">
+            <button type="submit" class="principal">@L["Enregistrer"]</button>
+            <button type="button" @onclick="() => _edition = null">@L["Annuler"]</button>
+        </div>
+    </form>
+}
+
+<table>
+    <thead><tr><th>@L["Nom"]</th><th>@L["Telephone"]</th><th>@L["Etat"]</th><th></th></tr></thead>
+    <tbody>
+        @foreach (var fournisseur in _fournisseurs)
+        {
+            <tr class="@(fournisseur.Actif ? "" : "inactif")">
+                <td>@fournisseur.Nom</td>
+                <td>@fournisseur.Telephone</td>
+                <td>@(fournisseur.Actif ? L["Actif"] : L["Inactif"])</td>
+                <td class="actions-ligne">
+                    @if (Session.A(Permissions.FournisseursGerer))
+                    {
+                        <button class="lien" @onclick="() => _edition = new Edition { Id = fournisseur.Id, Nom = fournisseur.Nom, Telephone = fournisseur.Telephone, Actif = fournisseur.Actif }">@L["Modifier"]</button>
+                    }
+                </td>
+            </tr>
+        }
+        @if (_fournisseurs.Count == 0)
+        {
+            <tr><td colspan="4" class="vide">@L["AucunFournisseur"]</td></tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    private List<Fournisseur> _fournisseurs = [];
+    private bool _inclureInactifs;
+    private string? _erreur;
+    private Edition? _edition;
+
+    protected override Task OnInitializedAsync() => Charger();
+
+    private async Task Charger()
+    {
+        var resultat = await Api.GetAsync<List<Fournisseur>>($"api/achats/fournisseurs?inclureInactifs={_inclureInactifs}");
+        _fournisseurs = resultat.Valeur ?? [];
+        _erreur = resultat.Erreur;
+    }
+
+    private async Task Enregistrer()
+    {
+        var edition = _edition!;
+        var corps = new { edition.Nom, edition.Telephone, edition.Actif };
+        var resultat = edition.Id is null
+            ? await Api.PostAsync<Fournisseur>("api/achats/fournisseurs", corps)
+            : await Api.PutAsync<Fournisseur>($"api/achats/fournisseurs/{edition.Id}", corps);
+        _erreur = resultat.Erreur;
+        if (resultat.Reussi)
+        {
+            _edition = null;
+            await Charger();
+        }
+    }
+
+    private sealed class Edition
+    {
+        public Guid? Id { get; init; }
+        public string Nom { get; set; } = "";
+        public string? Telephone { get; set; }
+        public bool Actif { get; set; } = true;
+    }
+}

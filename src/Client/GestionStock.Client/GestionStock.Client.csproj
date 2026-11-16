@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+  <!-- Client Blazor WebAssembly (back-office), servi par l'hôte. Ne référence aucun projet serveur : il dialogue
+       avec l'API par HTTP et a ses propres modèles. PWA et hors ligne : tranche ultérieure (caisse). -->
+  <PropertyGroup>
+    <NeutralLanguage>fr</NeutralLanguage>
+    <BlazorWebAssemblyLoadAllGlobalizationData>true</BlazorWebAssemblyLoadAllGlobalizationData>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" />
+    <PackageReference Include="Microsoft.Extensions.Localization" />
+  </ItemGroup>
+</Project>

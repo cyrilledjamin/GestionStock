@@ -1,0 +1,52 @@
+@page "/receptions"
+@inject Api Api
+@inject Session Session
+
+<PageTitle>@L["Receptions"] · GestionStock</PageTitle>
+
+<h1>@L["Receptions"]</h1>
+
+<div class="barre">
+    @if (Session.A(Permissions.ReceptionsSaisir))
+    {
+        <a class="bouton principal" href="receptions/nouvelle">@L["NouvelleReception"]</a>
+    }
+</div>
+
+<Message Texte="@_erreur" />
+
+<table>
+    <thead>
+        <tr><th>@L["Numero"]</th><th>@L["Date"]</th><th>@L["Fournisseur"]</th><th>@L["BonLivraison"]</th><th class="nombre">@L["Lignes"]</th><th class="nombre">@L["Valeur"]</th><th>@L["Statut"]</th></tr>
+    </thead>
+    <tbody>
+        @foreach (var reception in _receptions)
+        {
+            <tr>
+                <td class="court"><a href="receptions/@reception.Id">@reception.Numero</a></td>
+                <td class="court">@Format.Date(reception.DateValidationUtc ?? reception.DateCreationUtc)</td>
+                <td>@reception.Fournisseur</td>
+                <td class="court">@reception.NumeroBonLivraison</td>
+                <td class="nombre">@reception.NombreLignes</td>
+                <td class="nombre">@Format.Montant(reception.Valeur)</td>
+                <td><span class="pastille @reception.Statut.ToLowerInvariant()">@L[$"Statut.{reception.Statut}"]</span></td>
+            </tr>
+        }
+        @if (_receptions.Count == 0)
+        {
+            <tr><td colspan="7" class="vide">@L["AucuneReception"]</td></tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    private List<ResumeReception> _receptions = [];
+    private string? _erreur;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var resultat = await Api.GetAsync<List<ResumeReception>>("api/achats/receptions");
+        _receptions = resultat.Valeur ?? [];
+        _erreur = resultat.Erreur;
+    }
+}

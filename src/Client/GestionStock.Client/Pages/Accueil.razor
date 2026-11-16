@@ -1,0 +1,29 @@
+@page "/"
+@inject Session Session
+
+<PageTitle>@L["Accueil"] · GestionStock</PageTitle>
+
+@if (Session.Profil is { } profil)
+{
+    <h1>@L["Bonjour", profil.Identifiant]</h1>
+    <p class="discret">@L["AccueilIntro"]</p>
+
+    <div class="tuiles">
+        @if (Session.A(Permissions.ReceptionsSaisir))
+        {
+            <a class="tuile" href="receptions/nouvelle"><strong>@L["NouvelleReception"]</strong><span>@L["NouvelleReceptionAide"]</span></a>
+        }
+        @if (Session.A(Permissions.StockConsulter))
+        {
+            <a class="tuile" href="stock"><strong>@L["Stock"]</strong><span>@L["StockAide"]</span></a>
+        }
+        @if (Session.A(Permissions.ArticlesGerer))
+        {
+            <a class="tuile" href="articles"><strong>@L["Articles"]</strong><span>@L["ArticlesAide"]</span></a>
+        }
+        @if (Session.A(Permissions.UtilisateursGerer))
+        {
+            <a class="tuile" href="utilisateurs"><strong>@L["Utilisateurs"]</strong><span>@L["UtilisateursAide"]</span></a>
+        }
+    </div>
+}

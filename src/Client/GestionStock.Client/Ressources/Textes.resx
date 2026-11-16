@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="PageIntrouvable" xml:space="preserve"><value>Page introuvable.</value></data>
+  <data name="Accueil" xml:space="preserve"><value>Accueil</value></data>
+  <data name="Stock" xml:space="preserve"><value>Stock</value></data>
+  <data name="Receptions" xml:space="preserve"><value>Réceptions</value></data>
+  <data name="Reception" xml:space="preserve"><value>Réception</value></data>
+  <data name="Fournisseurs" xml:space="preserve"><value>Fournisseurs</value></data>
+  <data name="Fournisseur" xml:space="preserve"><value>Fournisseur</value></data>
+  <data name="Articles" xml:space="preserve"><value>Articles</value></data>
+  <data name="Article" xml:space="preserve"><value>Article</value></data>
+  <data name="Utilisateurs" xml:space="preserve"><value>Utilisateurs</value></data>
+  <data name="Utilisateur" xml:space="preserve"><value>Utilisateur</value></data>
+  <data name="AutreLangue" xml:space="preserve"><value>English</value></data>
+  <data name="Deconnexion" xml:space="preserve"><value>Se déconnecter</value></data>
+  <data name="Role" xml:space="preserve"><value>Rôle</value></data>
+  <data name="Role.Administrateur" xml:space="preserve"><value>Administrateur</value></data>
+  <data name="Role.Gerant" xml:space="preserve"><value>Gérant</value></data>
+  <data name="Role.Comptable" xml:space="preserve"><value>Comptable</value></data>
+  <data name="Role.Caissier" xml:space="preserve"><value>Caissier</value></data>
+  <data name="Role.Magasinier" xml:space="preserve"><value>Magasinier</value></data>
+  <data name="Connexion" xml:space="preserve"><value>Connexion</value></data>
+  <data name="ConnexionIntro" xml:space="preserve"><value>Gestion de stock et caisse de la boutique.</value></data>
+  <data name="Identifiant" xml:space="preserve"><value>Identifiant</value></data>
+  <data name="MotDePasse" xml:space="preserve"><value>Mot de passe</value></data>
+  <data name="SeConnecter" xml:space="preserve"><value>Se connecter</value></data>
+  <data name="Bonjour" xml:space="preserve"><value>Bonjour {0}</value></data>
+  <data name="AccueilIntro" xml:space="preserve"><value>Que voulez-vous faire ?</value></data>
+  <data name="NouvelleReception" xml:space="preserve"><value>Nouvelle réception</value></data>
+  <data name="NouvelleReceptionAide" xml:space="preserve"><value>Enregistrer une livraison fournisseur et faire entrer la marchandise en stock.</value></data>
+  <data name="StockAide" xml:space="preserve"><value>Quantités, coût moyen (CUMP) et valeur du stock, journal de chaque article.</value></data>
+  <data name="ArticlesAide" xml:space="preserve"><value>Créer et modifier les articles.</value></data>
+  <data name="UtilisateursAide" xml:space="preserve"><value>Créer les comptes du personnel.</value></data>
+  <data name="Rechercher" xml:space="preserve"><value>Rechercher (code ou libellé)</value></data>
+  <data name="InclureInactifs" xml:space="preserve"><value>Afficher aussi les désactivés</value></data>
+  <data name="NouvelArticle" xml:space="preserve"><value>Nouvel article</value></data>
+  <data name="ModifierArticle" xml:space="preserve"><value>Modifier l'article {0}</value></data>
+  <data name="Code" xml:space="preserve"><value>Code</value></data>
+  <data name="Libelle" xml:space="preserve"><value>Libellé</value></data>
+  <data name="LibelleTraduit" xml:space="preserve"><value>Libellé en anglais (facultatif)</value></data>
+  <data name="UniteStock" xml:space="preserve"><value>Unité de stock</value></data>
+  <data name="UniteExemple" xml:space="preserve"><value>pièce, kg, litre…</value></data>
+  <data name="Precision" xml:space="preserve"><value>Décimales</value></data>
+  <data name="Precision0" xml:space="preserve"><value>0 (à la pièce)</value></data>
+  <data name="Precision3" xml:space="preserve"><value>3 (poids, volume)</value></data>
+  <data name="Actif" xml:space="preserve"><value>Actif</value></data>
+  <data name="Inactif" xml:space="preserve"><value>Désactivé</value></data>
+  <data name="ArticleFige" xml:space="preserve"><value>Le code, l'unité de stock et les décimales ne changent plus après la création.</value></data>
+  <data name="Enregistrer" xml:space="preserve"><value>Enregistrer</value></data>
+  <data name="Annuler" xml:space="preserve"><value>Annuler</value></data>
+  <data name="Etat" xml:space="preserve"><value>État</value></data>
+  <data name="Journal" xml:space="preserve"><value>Journal</value></data>
+  <data name="Modifier" xml:space="preserve"><value>Modifier</value></data>
+  <data name="AucunArticle" xml:space="preserve"><value>Aucun article.</value></data>
+  <data name="NouveauFournisseur" xml:space="preserve"><value>Nouveau fournisseur</value></data>
+  <data name="Nom" xml:space="preserve"><value>Nom</value></data>
+  <data name="Telephone" xml:space="preserve"><value>Téléphone</value></data>
+  <data name="AucunFournisseur" xml:space="preserve"><value>Aucun fournisseur.</value></data>
+  <data name="Numero" xml:space="preserve"><value>Numéro</value></data>
+  <data name="Date" xml:space="preserve"><value>Date</value></data>
+  <data name="BonLivraison" xml:space="preserve"><value>Bon de livraison</value></data>
+  <data name="Lignes" xml:space="preserve"><value>Lignes</value></data>
+  <data name="Valeur" xml:space="preserve"><value>Valeur</value></data>
+  <data name="Statut" xml:space="preserve"><value>Statut</value></data>
+  <data name="Statut.Brouillon" xml:space="preserve"><value>Brouillon</value></data>
+  <data name="Statut.Validee" xml:space="preserve"><value>Validée</value></data>
+  <data name="AucuneReception" xml:space="preserve"><value>Aucune réception.</value></data>
+  <data name="Choisir" xml:space="preserve"><value>— Choisir —</value></data>
+  <data name="Quantite" xml:space="preserve"><value>Quantité</value></data>
+  <data name="CoutUnitaire" xml:space="preserve"><value>Coût unitaire</value></data>
+  <data name="Retirer" xml:space="preserve"><value>Retirer</value></data>
+  <data name="AjouterLigne" xml:space="preserve"><value>Ajouter une ligne</value></data>
+  <data name="Total" xml:space="preserve"><value>Total</value></data>
+  <data name="ReceptionAide" xml:space="preserve"><value>Quantités en unité de stock de l'article ; coût unitaire hors TVA récupérable, en XAF. La validation fait entrer la marchandise en stock et ne peut pas être annulée.</value></data>
+  <data name="EnregistrerBrouillon" xml:space="preserve"><value>Enregistrer le brouillon</value></data>
+  <data name="ValiderReception" xml:space="preserve"><value>Valider la réception</value></data>
+  <data name="SaisiePar" xml:space="preserve"><value>Saisie par</value></data>
+  <data name="ValideePar" xml:space="preserve"><value>Validée par</value></data>
+  <data name="ReceptionNumero" xml:space="preserve"><value>Réception {0}</value></data>
+  <data name="BrouillonEnregistre" xml:space="preserve"><value>Brouillon enregistré.</value></data>
+  <data name="ReceptionValidee" xml:space="preserve"><value>Réception validée : la marchandise est en stock.</value></data>
+  <data name="StockIntro" xml:space="preserve"><value>Stock de la boutique, valorisé au coût unitaire moyen pondéré (CUMP).</value></data>
+  <data name="Physique" xml:space="preserve"><value>Physique</value></data>
+  <data name="Disponible" xml:space="preserve"><value>Disponible</value></data>
+  <data name="Cump" xml:space="preserve"><value>CUMP</value></data>
+  <data name="ValeurStock" xml:space="preserve"><value>Valeur</value></data>
+  <data name="AucunStock" xml:space="preserve"><value>Aucun stock : validez une réception pour commencer.</value></data>
+  <data name="Mouvement" xml:space="preserve"><value>Mouvement</value></data>
+  <data name="Variation" xml:space="preserve"><value>Variation</value></data>
+  <data name="Document" xml:space="preserve"><value>Document</value></data>
+  <data name="AucunMouvement" xml:space="preserve"><value>Aucun mouvement.</value></data>
+  <data name="Mouvement.EntreeReception" xml:space="preserve"><value>Entrée (réception)</value></data>
+  <data name="Mouvement.SortieExpedition" xml:space="preserve"><value>Sortie (expédition)</value></data>
+  <data name="Mouvement.Rangement" xml:space="preserve"><value>Rangement</value></data>
+  <data name="Mouvement.Reassort" xml:space="preserve"><value>Réassort</value></data>
+  <data name="Mouvement.TransfertSortie" xml:space="preserve"><value>Transfert sortant</value></data>
+  <data name="Mouvement.TransfertEntree" xml:space="preserve"><value>Transfert entrant</value></data>
+  <data name="Mouvement.AjustementInventaire" xml:space="preserve"><value>Ajustement d'inventaire</value></data>
+  <data name="Mouvement.VenteCaisse" xml:space="preserve"><value>Vente en caisse</value></data>
+  <data name="Mouvement.AvoirCaisse" xml:space="preserve"><value>Avoir en caisse</value></data>
+  <data name="Mouvement.RetourClient" xml:space="preserve"><value>Retour client</value></data>
+  <data name="Mouvement.RetourFournisseur" xml:space="preserve"><value>Retour fournisseur</value></data>
+  <data name="Mouvement.Demarque" xml:space="preserve"><value>Démarque</value></data>
+  <data name="Mouvement.Rebut" xml:space="preserve"><value>Rebut</value></data>
+  <data name="Mouvement.Blocage" xml:space="preserve"><value>Blocage</value></data>
+  <data name="Mouvement.Deblocage" xml:space="preserve"><value>Déblocage</value></data>
+  <data name="Mouvement.Revalorisation" xml:space="preserve"><value>Revalorisation</value></data>
+  <data name="NouveauCompte" xml:space="preserve"><value>Nouveau compte</value></data>
+  <data name="MotDePasseRegle" xml:space="preserve"><value>Mot de passe : au moins 8 caractères, avec une majuscule, une minuscule, un chiffre et un caractère spécial.</value></data>
+  <data name="CreerCompte" xml:space="preserve"><value>Créer le compte</value></data>
+  <data name="CompteCree" xml:space="preserve"><value>Compte « {0} » créé.</value></data>
+</root>

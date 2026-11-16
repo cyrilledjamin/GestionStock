@@ -59,6 +59,12 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi().AllowAnonymous();
 }
 
+// Client Blazor WebAssembly : fichiers statiques anonymes (la connexion se fait dans le client), et toute
+// adresse qui n'est ni une route d'API ni un fichier renvoie vers l'application.
+app.MapStaticAssets().AllowAnonymous();
+app.MapFallbackToFile("index.html").AllowAnonymous();
+app.MapFallback("/api/{*chemin}", () => Results.NotFound());
+
 // Modules
 app.MapIdentiteEndpoints();
 app.MapReferentielEndpoints();
