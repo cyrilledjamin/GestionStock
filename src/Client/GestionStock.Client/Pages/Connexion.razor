@@ -13,7 +13,7 @@
             <input @bind="_identifiant" autocomplete="username" required autofocus />
         </label>
         <label>@L["MotDePasse"]
-            <input type="password" @bind="_motDePasse" autocomplete="current-password" required />
+            <ChampMotDePasse @bind-Valeur="_motDePasse" Requis="true" />
         </label>
         <Message Texte="@_erreur" />
         <button type="submit" class="principal" disabled="@_enCours">@L["SeConnecter"]</button>

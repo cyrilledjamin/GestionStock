@@ -224,4 +224,8 @@
   <data name="AucuneSession" xml:space="preserve"><value>Aucune session.</value></data>
   <data name="AvoirSur" xml:space="preserve"><value>Sur le ticket</value></data>
   <data name="Client" xml:space="preserve"><value>Client</value></data>
+  <data name="Afficher" xml:space="preserve"><value>Afficher</value></data>
+  <data name="Masquer" xml:space="preserve"><value>Masquer</value></data>
+  <data name="AfficherMotDePasse" xml:space="preserve"><value>Afficher le mot de passe en clair</value></data>
+  <data name="MasquerMotDePasse" xml:space="preserve"><value>Masquer le mot de passe</value></data>
 </root>

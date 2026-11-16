@@ -166,7 +166,7 @@ else
                 <div class="validation">
                     <strong>@L["ValidationResponsable"]</strong>
                     <input placeholder="@L["Identifiant"]" @bind="_validationIdentifiant" autocomplete="off" />
-                    <input type="password" placeholder="@L["MotDePasse"]" @bind="_validationMotDePasse" autocomplete="off" />
+                    <ChampMotDePasse @bind-Valeur="_validationMotDePasse" Placeholder="@L["MotDePasse"]" Autocomplete="off" />
                 </div>
             }
 
