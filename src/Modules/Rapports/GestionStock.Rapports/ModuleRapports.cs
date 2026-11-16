@@ -17,6 +17,7 @@ public static class ModuleRapports
         ArgumentNullException.ThrowIfNull(configuration);
 
         services.AddScoped<ServiceRapports>();
+        services.AddScoped<ServiceExports>();
         return services;
     }
 

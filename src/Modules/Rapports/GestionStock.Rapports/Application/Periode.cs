@@ -9,6 +9,8 @@ internal sealed class ExceptionRapports(string code) : Exception(code)
 internal static class CodesErreurRapports
 {
     public const string PeriodeInvalide = "Rapports.PeriodeInvalide";
+    public const string JournalInconnu = "Rapports.JournalInconnu";
+    public const string FormatInvalide = "Rapports.FormatInvalide";
 }
 
 /// <summary>

@@ -5,4 +5,6 @@
   <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <data name="Rapports.PeriodeInvalide" xml:space="preserve"><value>Période invalide : la date de début doit précéder la date de fin, sur une année au plus.</value></data>
+  <data name="Rapports.JournalInconnu" xml:space="preserve"><value>Journal inconnu : ventes, achats, encaissements, créances ou valeur du stock.</value></data>
+  <data name="Rapports.FormatInvalide" xml:space="preserve"><value>Format inconnu : xlsx ou csv.</value></data>
 </root>

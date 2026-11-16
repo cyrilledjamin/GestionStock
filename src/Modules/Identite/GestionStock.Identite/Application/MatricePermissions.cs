@@ -74,6 +74,9 @@ internal static class MatricePermissions
 
             // 8.3 : le Gérant voit tous les rapports ; le Comptable lit tout.
             [Permissions.RapportsConsulter] = [Roles.Gerant, Roles.Comptable],
+
+            // 8.3 : le Comptable produit les exports. Provisoire : le Gérant aussi (« tous les rapports »).
+            [Permissions.ExportsProduire] = [Roles.Comptable, Roles.Gerant],
         };
 
     /// <summary>Permissions détenues par un utilisateur ayant ces rôles.</summary>

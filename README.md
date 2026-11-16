@@ -235,6 +235,7 @@ Si le port 5432 est déjà pris (PostgreSQL installé sur le poste), choisir un 
 | `GET /api/rapports/creances-dettes` | `Rapports.Consulter` | Clients (dû, en retard RG43, plus ancienne échéance) et fournisseurs (dû, payé, reste) |
 | `GET /api/rapports/caisse?du=&au=` | `Rapports.Consulter` | Sessions et écarts, remises, avoirs, crédits validés par un responsable, stocks négatifs, frais non incorporés |
 | `GET /api/rapports/journaux` | `Rapports.Consulter` | Journaux comptables exportables |
+| `GET /api/exports/{journal}?du=&au=&format=xlsx\|csv` | `Rapports.Exports.Produire` | `ventes`, `achats`, `encaissements`, `creances`, `valeur-stock` (du jour) ; Excel par défaut |
 | `GET /api/stock/soldes` | `Stock.Consulter` | Soldes article × site de la boutique : physique, réservé, bloqué, disponible, CUMP |
 | `GET /api/stock/articles/{id}/mouvements` | `Stock.Consulter` | Journal d'un article, du plus récent au plus ancien (`?limite=`, 100 par défaut, 1000 au plus) |
 
@@ -452,6 +453,22 @@ Période en jours de Douala (`du`, `au` inclus, une année au plus ; aujourd'hui
 déduction ; le coût des ventes est celui des mouvements de stock du ticket (CUMP du moment) ; marge = CA HT − coût.
 Montants calculés à 4 décimales, arrondis à l'unité à l'affichage (RG32).
 
+### Exports comptables (UC16)
+
+Pour le comptable externe, sans ERP (décision 7). En-têtes dans la langue de la requête, montants arrondis à l'unité
+(RG32), dates à l'heure de Douala, ligne de total des montants en Excel.
+
+| Journal | Contenu |
+| --- | --- |
+| `ventes` | Tickets de la période : vente ou avoir (en négatif), caissier, client, ticket d'origine, remise, HT, TVA, TTC |
+| `achats` | Réceptions validées (marchandise et frais saisis avant la validation), frais tardifs, paiements et annulations |
+| `encaissements` | Paiements des tickets hors crédit (espèces moins le rendu, avoirs en négatif) et remboursements de crédit |
+| `creances` | Opérations de crédit (RG43) : vente à crédit (+), remboursement et annulation (−), échéance |
+| `valeur-stock` | Quantité, CUMP et valeur de chaque article en stock, au jour de l'export |
+
+Formats : **Excel** (ClosedXML : une feuille, en-têtes figés, filtre, total) ou **CSV** pour un Excel français
+(séparateur `;`, UTF-8 avec BOM, fins de ligne CRLF, montants entiers, décimales à la virgule).
+
 ## Revalorisation (RG30)
 
 Des frais d'approche connus après la réception donnent un mouvement `Revalorisation` : aucun emplacement, aucune
@@ -489,6 +506,7 @@ Chaque permission est attribuée à des rôles dans
 | `Inventaire.Demarque.Valider` | Comptable, Gerant |
 | `Reprise.Importer` | Administrateur, Gerant *(provisoire)* |
 | `Rapports.Consulter` | Gerant, Comptable |
+| `Rapports.Exports.Produire` | Comptable, Gerant *(Gérant provisoire)* |
 | `Caisse.Vendre` | Caissier |
 | `Caisse.Tickets.Consulter` | Caissier, Gerant, Comptable |
 | `Caisse.Sessions.Consulter`, `Caisse.Sessions.Valider` | Gerant, Comptable |
@@ -557,7 +575,7 @@ sur une machine Linux de GitHub qui dispose de Docker :
 | 25 | Achats : frais d'approche, répartition, revalorisation des frais tardifs | Fait |
 | 26 | Achats : dettes fournisseurs et paiements | Fait |
 | 27 | Module Rapports : ventes et marge, stock, créances et dettes, caisse et anomalies | Fait |
-| 28 | Exports comptables Excel et CSV | À faire |
+| 28 | Exports comptables Excel et CSV | Fait |
 | 29 | Client : écrans frais, dettes, rapports, exports | À faire |
 | 30 | Architecture, CI, README, démonstration de la tranche 4 | À faire |
 
@@ -634,6 +652,7 @@ le refus d'une démarque sont couverts par les tests d'intégration.
   Comptable (8.3) et, provisoirement, par le Gérant ; un frais saisi après la validation ne se retire plus.
 - Dettes fournisseurs : pas d'échéance de paiement (le dossier n'en fixe pas) ; modes de paiement espèces, Mobile
   Money, virement et chèque ; dette = marchandise et frais d'approche (choix validés).
+- Exports : format CSV (`;`, UTF-8 avec BOM) ; production attribuée au Comptable et, provisoirement, au Gérant.
 - Revalorisation (RG30) : le supplément porte sur la quantité encore en stock ; la part des frais qui concerne de la
   marchandise déjà vendue n'entre pas dans le CUMP (conservée sur la réception, signalée dans les rapports).
 - Motif de démarque (RG23) : absent du modèle UML ; porté par la déclaration de démarque que le mouvement référence.

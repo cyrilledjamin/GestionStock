@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Resources;
 using GestionStock.Identite.Contracts;
 using GestionStock.Infrastructure.Http;
@@ -16,6 +17,7 @@ namespace GestionStock.Rapports.Endpoints;
 internal static class EndpointsRapports
 {
     public const string Prefixe = "/api/rapports";
+    public const string PrefixeExports = "/api/exports";
 
     public static ResourceManager Ressources { get; } =
         new("GestionStock.Rapports.Ressources.ErreursRapports", typeof(EndpointsRapports).Assembly);
@@ -39,6 +41,15 @@ internal static class EndpointsRapports
 
         groupe.MapGet("/caisse", (DateOnly? du, DateOnly? au, ServiceRapports service, CancellationToken annulation) =>
             Executer(async () => TypedResults.Ok(await service.CaisseAsync(Periode.Creer(du, au, service.Aujourdhui), annulation))));
+
+        // Exports comptables (UC16) : en-têtes dans la langue de la requête ; valeur-stock ignore la période.
+        routes.MapGroup(PrefixeExports).WithTags("Rapports").RequireAuthorization(Permissions.ExportsProduire)
+            .MapGet("/{journal}", (string journal, DateOnly? du, DateOnly? au, string? format, ServiceExports service, CancellationToken annulation) =>
+                Executer(async () =>
+                {
+                    var fichier = await service.ExporterAsync(journal, Periode.Creer(du, au, service.Aujourdhui), format, CultureInfo.CurrentUICulture, annulation);
+                    return TypedResults.File(fichier.Contenu, fichier.TypeMime, fichier.NomFichier);
+                }));
     }
 
     private static async Task<IResult> Executer(Func<Task<IResult>> action)
@@ -49,7 +60,8 @@ internal static class EndpointsRapports
         }
         catch (ExceptionRapports erreur)
         {
-            return ReponsesErreur.Probleme(StatusCodes.Status400BadRequest, erreur.Code, Ressources);
+            var statut = erreur.Code == CodesErreurRapports.JournalInconnu ? StatusCodes.Status404NotFound : StatusCodes.Status400BadRequest;
+            return ReponsesErreur.Probleme(statut, erreur.Code, Ressources);
         }
     }
 }
