@@ -98,7 +98,7 @@ Uniquement par variables d'environnement ou `appsettings` ; aucun chemin ni adre
 
 | Clé | Variable d'environnement | Rôle |
 | --- | --- | --- |
-| `ConnectionStrings:GestionStock` | `ConnectionStrings__GestionStock` | Chaîne de connexion PostgreSQL (obligatoire) |
+| `ConnectionStrings:GestionStock` | `ConnectionStrings__GestionStock` | Chaîne de connexion PostgreSQL (obligatoire) ; le chiffrement GSS (Kerberos) y est désactivé sauf si `GSS Encryption Mode` est fourni |
 | `Stockage:RepertoireRacine` | `Stockage__RepertoireRacine` | Répertoire des fichiers (reçus, imports) ; `donnees/fichiers` par défaut |
 | `BaseDeDonnees:AppliquerMigrationsAuDemarrage` | `BaseDeDonnees__AppliquerMigrationsAuDemarrage` | Applique les migrations de chaque module au démarrage ; `false` par défaut, `true` en Development et dans docker-compose |
 
@@ -108,6 +108,8 @@ En boutique, le mot de passe est défini uniquement dans `deploy/.env`, qui n'es
 
 Chaque module a son schéma PostgreSQL et sa propre table d'historique des migrations
 (`stock.__ef_migrations_history`). La base n'écoute que sur `127.0.0.1` ; l'API écoute sur le port 8080.
+Si le port 5432 est déjà pris (PostgreSQL installé sur le poste), choisir un autre `POSTGRES_PORT` dans
+`deploy/.env` et, pour `dotnet run`, le reporter dans `ConnectionStrings__GestionStock`.
 
 ## Endpoints techniques
 
@@ -125,7 +127,7 @@ Le schéma d'authentification est provisoire jusqu'au module Identite.
 | Projet | Contenu | Docker |
 | --- | --- | --- |
 | `GestionStock.Stock.Domain.Tests` | Règles du domaine : mouvements, soldes, CUMP, RG03 / RG22 | Non |
-| `GestionStock.Infrastructure.Tests` | Horloge, stockage de fichiers | Non |
+| `GestionStock.Infrastructure.Tests` | Horloge, stockage de fichiers, chaîne de connexion | Non |
 | `GestionStock.ArchitectureTests` | Dépendances entre projets, visibilité, couches, traductions | Non |
 | `GestionStock.Stock.IntegrationTests` | PostgreSQL 17 réelle : migration, transaction partagée, idempotence, journal immuable, mouvements simultanés | Oui |
 
