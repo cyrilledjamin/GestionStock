@@ -38,6 +38,15 @@ public static class Permissions
     /// </summary>
     public const string DepassementsValider = "Caisse.Depassements.Valider";
 
+    /// <summary>Consulter les clients, leur dette et les impayés (RG43).</summary>
+    public const string CreditConsulter = "Credit.Consulter";
+
+    /// <summary>Créer et modifier les clients (UC26).</summary>
+    public const string ClientsGerer = "Credit.Clients.Gerer";
+
+    /// <summary>Fixer les plafonds de crédit (RG40).</summary>
+    public const string PlafondsGerer = "Credit.Plafonds.Gerer";
+
     /// <summary>Consulter les disponibilités et les mouvements (UC14).</summary>
     public const string StockConsulter = "Stock.Consulter";
 }

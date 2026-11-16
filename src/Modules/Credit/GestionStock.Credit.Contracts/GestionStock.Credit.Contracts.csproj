@@ -1,0 +1,3 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Contrat public du module Credit : ventes à crédit, remboursements et annulations, appelés par la Caisse -->
+</Project>

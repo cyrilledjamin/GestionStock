@@ -26,6 +26,12 @@ internal static class MatricePermissions
             // autorisé (provisoire : le Gérant).
             [Permissions.DepassementsValider] = [Roles.Gerant],
 
+            // 8.3 : le Gérant gère les clients, le Comptable les plafonds de crédit ; le Caissier vend à crédit et
+            // encaisse les remboursements, il consulte donc la dette des clients.
+            [Permissions.CreditConsulter] = [Roles.Gerant, Roles.Comptable, Roles.Caissier],
+            [Permissions.ClientsGerer] = [Roles.Gerant],
+            [Permissions.PlafondsGerer] = [Roles.Comptable],
+
             // Provisoire : la gestion des articles n'est attribuée à aucun rôle par la section 8.3.
             [Permissions.ArticlesGerer] = [Roles.Gerant, Roles.Administrateur],
 

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Credit.Inconnu" xml:space="preserve"><value>Erreur du crédit client.</value></data>
+  <data name="Credit.ClientIntrouvable" xml:space="preserve"><value>Client introuvable.</value></data>
+  <data name="Credit.ClientInactif" xml:space="preserve"><value>Ce client est désactivé.</value></data>
+  <data name="Credit.NomObligatoire" xml:space="preserve"><value>Le nom du client est obligatoire.</value></data>
+  <data name="Credit.TelephoneObligatoire" xml:space="preserve"><value>Le téléphone du client est obligatoire pour vendre à crédit.</value></data>
+  <data name="Credit.TexteTropLong" xml:space="preserve"><value>Texte trop long : 200 caractères pour le nom, 30 pour le téléphone.</value></data>
+  <data name="Credit.MontantInvalide" xml:space="preserve"><value>Montant invalide.</value></data>
+  <data name="Credit.PlafondInvalide" xml:space="preserve"><value>Le plafond de crédit ne peut pas être négatif.</value></data>
+  <data name="Credit.DelaiInvalide" xml:space="preserve"><value>Délai de paiement invalide.</value></data>
+  <data name="Credit.PlafondDepasse" xml:space="preserve"><value>Plafond de crédit dépassé : validation d'un responsable nécessaire.</value></data>
+  <data name="Credit.RemboursementSuperieurDette" xml:space="preserve"><value>Le remboursement dépasse la dette du client.</value></data>
+</root>

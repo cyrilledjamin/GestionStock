@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Implémentation interne du module Credit : clients, plafonds, ventes à crédit, remboursements (DDD léger, 7.4) -->
+  <PropertyGroup>
+    <NeutralLanguage>fr</NeutralLanguage>
+  </PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../GestionStock.Credit.Contracts/GestionStock.Credit.Contracts.csproj" />
+    <ProjectReference Include="../../Identite/GestionStock.Identite.Contracts/GestionStock.Identite.Contracts.csproj" />
+    <ProjectReference Include="../../../BuildingBlocks/GestionStock.Infrastructure/GestionStock.Infrastructure.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="GestionStock.ArchitectureTests" />
+    <InternalsVisibleTo Include="GestionStock.Api.IntegrationTests" />
+  </ItemGroup>
+</Project>

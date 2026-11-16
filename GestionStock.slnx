@@ -15,6 +15,10 @@
     <Project Path="src/Modules/Achats/GestionStock.Achats.Contracts/GestionStock.Achats.Contracts.csproj" />
     <Project Path="src/Modules/Achats/GestionStock.Achats/GestionStock.Achats.csproj" />
   </Folder>
+  <Folder Name="/src/Modules/Credit/">
+    <Project Path="src/Modules/Credit/GestionStock.Credit.Contracts/GestionStock.Credit.Contracts.csproj" />
+    <Project Path="src/Modules/Credit/GestionStock.Credit/GestionStock.Credit.csproj" />
+  </Folder>
   <Folder Name="/src/Modules/Identite/">
     <Project Path="src/Modules/Identite/GestionStock.Identite.Contracts/GestionStock.Identite.Contracts.csproj" />
     <Project Path="src/Modules/Identite/GestionStock.Identite/GestionStock.Identite.csproj" />
