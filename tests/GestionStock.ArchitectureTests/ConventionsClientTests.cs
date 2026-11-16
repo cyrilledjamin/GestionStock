@@ -83,6 +83,46 @@ public sealed partial class ConventionsClientTests
         Assert.Equal(francais.Order(), anglais.Order());
     }
 
+    [Fact]
+    public void Les_couleurs_ne_sont_definies_que_dans_les_jetons_de_la_feuille_de_style()
+    {
+        var feuille = File.ReadAllText(Path.Combine(RepertoireClient, "wwwroot", "css", "app.css")).ReplaceLineEndings("\n");
+        var finJetons = feuille.IndexOf("\n}", feuille.IndexOf(":root {", StringComparison.Ordinal), StringComparison.Ordinal);
+        var horsJetons = feuille[finJetons..];
+
+        var dansLaFeuille = Couleur().Matches(horsJetons).Select(m => m.Value);
+        var dansLesComposants = Directory.EnumerateFiles(RepertoireClient, "*.razor", SearchOption.AllDirectories)
+            .Where(f => StyleOuCouleur().IsMatch(File.ReadAllText(f)))
+            .Select(Path.GetFileName);
+
+        Assert.Empty(dansLaFeuille);
+        Assert.Empty(dansLesComposants);
+    }
+
+    [Fact]
+    public void Chaque_icone_utilisee_existe()
+    {
+        var disponibles = NomIcone().Matches(File.ReadAllText(Path.Combine(RepertoireClient, "Composants", "Icone.razor")))
+            .Select(m => m.Groups[1].Value)
+            .ToHashSet(StringComparer.Ordinal);
+
+        var utilisees = Directory.EnumerateFiles(RepertoireClient, "*.razor", SearchOption.AllDirectories)
+            .SelectMany(f => IconeUtilisee().Matches(File.ReadAllText(f)).Select(m => m.Groups[1].Value))
+            .ToHashSet(StringComparer.Ordinal);
+        utilisees.UnionWith(["erreur", "succes"]); // Message : nom choisi à l'exécution.
+
+        Assert.NotEmpty(disponibles);
+        Assert.Empty(utilisees.Except(disponibles));
+    }
+
+    [Fact]
+    public void La_page_s_adapte_a_la_largeur_de_l_ecran()
+    {
+        var page = File.ReadAllText(Path.Combine(RepertoireClient, "wwwroot", "index.html"));
+
+        Assert.Contains("name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"", page, StringComparison.Ordinal);
+    }
+
     /// <summary>Corps d'une classe statique de Services/Modeles.cs, de sa déclaration à son accolade fermante.</summary>
     private static string BlocClasse(string nom)
     {
@@ -116,4 +156,16 @@ public sealed partial class ConventionsClientTests
 
     [GeneratedRegex("L\\[\"([^\"$]+)\"")]
     private static partial Regex CleStatique();
+
+    [GeneratedRegex("#[0-9a-fA-F]{3,8}\\b|rgba?\\(|hsla?\\(")]
+    private static partial Regex Couleur();
+
+    [GeneratedRegex("style=\"|(?<![\\w&])#[0-9a-fA-F]{6}\\b")]
+    private static partial Regex StyleOuCouleur();
+
+    [GeneratedRegex("\\[\"([a-z]+)\"\\] = \\[")]
+    private static partial Regex NomIcone();
+
+    [GeneratedRegex("<Icone Nom=\"([a-z]+)\"")]
+    private static partial Regex IconeUtilisee();
 }

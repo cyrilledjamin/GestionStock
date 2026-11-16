@@ -419,4 +419,7 @@
   <data name="ConfirmerMotDePasse" xml:space="preserve"><value>Confirmer le nouveau mot de passe</value></data>
   <data name="ConfirmationDifferente" xml:space="preserve"><value>La confirmation ne correspond pas au nouveau mot de passe.</value></data>
   <data name="MotDePasseChange" xml:space="preserve"><value>Mot de passe changé.</value></data>
+  <data name="AllerAuContenu" xml:space="preserve"><value>Aller au contenu</value></data>
+  <data name="Menu" xml:space="preserve"><value>Menu</value></data>
+  <data name="Chargement" xml:space="preserve"><value>Chargement…</value></data>
 </root>

@@ -283,6 +283,14 @@ Le reçu s'imprime par le navigateur du poste (feuille de style d'impression au 
 imprimé) ou se télécharge en PDF pour l'envoyer par WhatsApp. Le panier affiche les prix lus dans l'application ;
 le serveur les relit à l'encaissement.
 
+**Interface** ([plan de la tranche 6](docs/plan-tranche-6-design.md)) : une seule feuille de style locale,
+[app.css](src/Client/GestionStock.Client/wwwroot/css/app.css), dont toutes les couleurs, tailles et espacements
+viennent des jetons de `:root` (texte de 16 px, cibles tactiles de 44 px, contrastes AA, focus visible au clavier) ;
+icônes SVG embarquées dans le composant `Icone` (aucune ressource externe, hors ligne). **Responsive** : poste à partir
+de 1 000 px (menu latéral) ; tablette en portrait et téléphone (menu en tiroir ouvert par le bouton « Menu ») ; sous
+760 px, une seule colonne et les tableaux défilent dans leur cadre. Les tests de conventions refusent une couleur en
+dur hors des jetons, un style en ligne, une icône inconnue et l'absence de la balise `viewport`.
+
 Tous les champs de mot de passe (connexion, création de compte, validation par un responsable à la caisse) sont masqués
 par défaut et ont un bouton « Afficher » / « Masquer » pour vérifier la saisie. Un mot de passe enregistré ne peut pas
 être réaffiché : seule son empreinte est conservée.
@@ -619,6 +627,13 @@ sur une machine Linux de GitHub qui dispose de Docker :
 | 32 | Noms complets du personnel dans les rapports et les exports | Fait |
 | 33 | Client : écrans des comptes et « Mon compte » | Fait |
 | 34 | Architecture, CI, README, démonstration de la tranche 5 | Fait |
+| 35 | Design : jetons, composants, icônes, menu en tiroir (responsive), accessibilité | Fait |
+| 36 | Design : caisse, vente (champ unique, articles rapides, pavé numérique, raccourcis) | À faire |
+| 37 | Design : caisse, ouverture, session bloquée (clôture par le Gérant), clôture guidée | À faire |
+| 38 | Accueil en tableau de bord par rôle | À faire |
+| 39 | Téléphone et tablette : listes en cartes, caisse sur tablette | À faire |
+| 40 | Identité et finitions (nom et logo, unités traduites, quantités) | À faire |
+| 41 | Vérification, CI, README, démonstration de la tranche 6 | À faire |
 
 ## Démonstration
 
