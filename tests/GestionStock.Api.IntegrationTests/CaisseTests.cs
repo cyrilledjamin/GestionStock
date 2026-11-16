@@ -217,6 +217,27 @@ public sealed class CaisseTests(ApiDeTest api)
         Assert.Equal(1500m, fiche!.Client.SoldeDu);
     }
 
+    [Fact]
+    public async Task Un_ticket_repartit_son_paiement_entre_les_quatre_modes()
+    {
+        // RG35 : espèces, carte, Mobile Money et le reste à crédit sur le même ticket.
+        var b = await BoutiqueAsync();
+        var client = await ClientAsync(b, plafond: 10000m);
+
+        var vente = await VendreAsync(
+            b,
+            [(b.Unite, 4m)],
+            [Paiement("Especes", 800), Paiement("Carte", 300), Paiement("MobileMoney", 400, "MM-REPARTI"), Paiement("Credit", 500)],
+            client);
+        var fiche = await b.Gerant.GetFromJsonAsync<FicheClient>($"/api/credit/clients/{client}", Annulation);
+
+        Assert.Equal(2000m, vente.TotalTtc);
+        Assert.Equal(
+            ["Carte 300", "Credit 500", "Especes 800", "MobileMoney 400"],
+            vente.Paiements.Select(p => $"{p.Mode} {p.Montant:0}").Order());
+        Assert.Equal(500m, fiche!.Client.SoldeDu);
+    }
+
     // --- Sessions ------------------------------------------------------------------------------------------------
 
     [Fact]

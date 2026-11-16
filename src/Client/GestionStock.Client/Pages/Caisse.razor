@@ -144,7 +144,8 @@ else
             <div class="modes">
                 @foreach (var mode in ModesPaiement.Tous)
                 {
-                    <button type="button" @onclick="() => AjouterPaiement(mode)" disabled="@(mode == ModesPaiement.Credit && _client is null)">@L[$"Mode.{mode}"]</button>
+                    <button type="button" class="@(_paiements.Any(p => p.Mode == mode) ? "choisi" : "")" @onclick="() => AjouterPaiement(mode)"
+                            disabled="@(_lignes.Count == 0 || (mode == ModesPaiement.Credit && _client is null))">@L[$"Mode.{mode}"]</button>
                 }
             </div>
             @foreach (var paiement in _paiements)
@@ -152,11 +153,11 @@ else
                 <div class="paiement">
                     <span>@L[$"Mode.{paiement.Mode}"]</span>
                     <input type="number" min="0" step="1" @bind="paiement.Montant" />
+                    <button class="lien" title="@L["Retirer"]" @onclick="() => _paiements.Remove(paiement)">✕</button>
                     @if (paiement.Mode is ModesPaiement.MobileMoney or ModesPaiement.Carte)
                     {
-                        <input placeholder="@L["Reference"]" @bind="paiement.Reference" />
+                        <input class="reference" placeholder="@L["Reference"]" @bind="paiement.Reference" />
                     }
-                    <button class="lien" @onclick="() => _paiements.Remove(paiement)">✕</button>
                 </div>
             }
             <div class="ligne-recu"><span>@(Reste >= 0 ? L["ResteAPayer"] : L["Rendu"])</span><strong>@Format.Montant(Math.Abs(Reste))</strong></div>
@@ -301,9 +302,22 @@ else
         _lignes.Add(new LignePanier { Vendable = vendable, Prix = prix.Valeur.PrixTtc, Quantite = 1 });
     }
 
+    /// <summary>
+    /// Un seul paiement par mode : un nouveau clic sur un mode déjà choisi lui ajoute le reste à payer au lieu
+    /// de créer une ligne en double ; rien n'est ajouté quand tout est déjà payé.
+    /// </summary>
     private void AjouterPaiement(string mode)
     {
-        _paiements.Add(new PaiementSaisi { Mode = mode, Montant = Math.Max(0, Reste) });
+        var reste = Math.Max(0, Reste);
+        var existant = _paiements.FirstOrDefault(p => p.Mode == mode);
+        if (existant is not null)
+        {
+            existant.Montant += reste;
+        }
+        else if (reste > 0)
+        {
+            _paiements.Add(new PaiementSaisi { Mode = mode, Montant = reste });
+        }
     }
 
     private async Task Encaisser()
