@@ -606,7 +606,9 @@ sur une machine Linux de GitHub qui dispose de Docker :
   l'Administrateur initial se connecte, que le cycle de vie d'un compte du personnel fonctionne
   ([.github/scripts/verifier-comptes.sh](.github/scripts/verifier-comptes.sh) : matricule généré, mot de passe
   provisoire sans aucune permission, changement par l'employé, droits de ses deux rôles, journal, désactivation qui
-  refuse la connexion) et que le client Blazor est servi.
+  refuse la connexion), que seuls le nom et la présence d'un logo de la boutique sont publics (l'en-tête des reçus
+  exige une connexion), que la feuille de style à jetons et les raccourcis de la caisse sont servis, et que le client
+  Blazor est servi. Les tests du client (`GestionStock.Client.Tests`) tournent avec les autres dans le job de build.
 
 ## Avancement du squelette
 
@@ -653,7 +655,7 @@ sur une machine Linux de GitHub qui dispose de Docker :
 | 38 | Accueil en tableau de bord par rôle | Fait |
 | 39 | Téléphone et tablette : listes en cartes, caisse sur tablette | Fait |
 | 40 | Identité et finitions (nom et logo, unités traduites, quantités) | Fait |
-| 41 | Vérification, CI, README, démonstration de la tranche 6 | À faire |
+| 41 | Vérification, CI, README, démonstration de la tranche 6 | Fait |
 
 ## Démonstration
 
@@ -744,6 +746,28 @@ Le dernier Administrateur actif, la fermeture des sessions après un changement 
 remplacé par un provisoire et la validation refusée à un responsable désactivé sont couverts par les tests
 d'intégration.
 
+### Démonstration de l'interface (tranche 6)
+
+Vérifiée dans le navigateur sur http://localhost:8080, sur la base de démonstration (comptes `gerant`, `caissier`,
+`comptable`, mot de passe de test `Secret123!`) :
+
+1. **Caissier**, poste bloqué par une session restée ouverte : l'écran dit qui la tient et depuis quand ; le
+   **Gérant** la clôture à sa place depuis Sessions de caisse (comptage par coupure, « comptée par gerant ») ;
+2. **Caissier**, ouverture avec 5 000 XAF de fond par le bouton « + 5 000 XAF » ; vente au **clavier seul** : trois
+   codes-barres à la douchette (sardines, bougie, eau, 900 XAF), F4 (compte juste), F8 (encaisser), Entrée (vente
+   suivante) ; le reçu indique « Caissier : Paul Etoa (caissier) » ;
+3. vente **au toucher** avec rendu : tuile rapide « Riz parfumé » (choisie par le Gérant), billet de 1 000 XAF, rendu
+   de 350 XAF affiché en grand ;
+4. clôture guidée par coupure (5 000, 1 000, 500 et 50) : 6 550 XAF comptés, écart 0, sans afficher le théorique
+   avant la clôture ;
+5. **Gérant**, accueil : ventes et marge du jour, clôtures à valider, stock négatif, créances, dettes ;
+6. téléphone (375 px) : menu en tiroir, accueil sur deux colonnes, listes en cartes, barre de total à la caisse ;
+   tablette (768 px) : tableaux sur toute la largeur, caisse sur une colonne avec la barre de total ;
+7. en anglais : unités traduites (box, pack, piece, bottle), quantités sans zéros inutiles (« 20 kg »).
+
+Le logo (aucun n'est encore fourni), la clôture par le Gérant, les articles rapides, le comptage par coupure et la
+mise en forme des quantités et des unités sont couverts par les tests d'intégration et les tests du client.
+
 ## Points ouverts
 
 - Validation par un responsable au poste du caissier (ses identifiants), et attribution au Gérant de la validation
@@ -777,3 +801,8 @@ d'intégration.
 - Statuts d'inventaire EnCours / Valide / Annule (valeurs non listées par le dossier) ; inventaire complet validable
   seulement quand tout est compté.
 - CUMP après un stock négatif ou nul : le coût de l'entrée devient le CUMP (choix technique à confirmer).
+- Interface (tranche 6) : comptage de clôture « à l'aveugle » (le théorique n'est pas montré au caissier ; choix de
+  conception, le dossier ne le fixe pas) ; le Gérant qui clôture une session à la place de son titulaire peut aussi en
+  valider l'écart (le dossier ne sépare pas ces deux gestes) ; logo absent du reçu PDF (il figure sur le reçu imprimé
+  par le navigateur) ; liste fixe des unités traduites en anglais.
+

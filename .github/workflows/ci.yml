@@ -114,6 +114,17 @@ jobs:
           test "$(curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $jeton" http://localhost:8080/api/caisse/postes)" = "403"
           curl -fsS -H "Authorization: Bearer $jeton" http://localhost:8080/api/prix/regime | jq -e '.assujetti == false'
 
+      - name: Identité publique de la boutique et interface de la tranche 6
+        run: |
+          source deploy/.env
+          # Seuls le nom et la présence d'un logo sont publics (écran de connexion) ; l'en-tête des reçus ne l'est pas.
+          curl -fsS http://localhost:8080/api/caisse/boutique | jq -e --arg nom "$ENTREPRISE_NOM" '.nom == $nom and .logo == false'
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/api/caisse/boutique/logo)" = "404"
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/api/caisse/entete)" = "401"
+          # Feuille de style à jetons (cibles tactiles) et raccourcis clavier de la caisse servis par l'image.
+          curl -fsS http://localhost:8080/css/app.css | grep -- '--cible:' > /dev/null
+          curl -fsS http://localhost:8080/js/outils.js | grep 'raccourcis' > /dev/null
+
       - name: Le client Blazor est servi
         run: |
           curl -fsS http://localhost:8080/ | grep -q '_framework/blazor.webassembly.js'
