@@ -65,6 +65,9 @@ internal static class MatricePermissions
             // l'Acheteur, rôle absent de la V1) par le Magasinier ou le Gérant.
             [Permissions.ReceptionsSaisir] = [Roles.Magasinier, Roles.Gerant],
             [Permissions.ReceptionsValider] = [Roles.Magasinier, Roles.Gerant],
+
+            // 8.3 : le Comptable saisit les frais d'approche. Provisoire : le Gérant aussi.
+            [Permissions.FraisSaisir] = [Roles.Comptable, Roles.Gerant],
         };
 
     /// <summary>Permissions détenues par un utilisateur ayant ces rôles.</summary>

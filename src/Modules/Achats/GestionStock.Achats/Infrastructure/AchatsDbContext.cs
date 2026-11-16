@@ -43,6 +43,37 @@ internal sealed class AchatsDbContext(DbContextOptions<AchatsDbContext> options)
             reception.HasIndex(r => r.FournisseurId);
             reception.HasMany(r => r.Lignes).WithOne().HasForeignKey(l => l.ReceptionId).OnDelete(DeleteBehavior.Cascade);
             reception.Navigation(r => r.Lignes).AutoInclude();
+            reception.HasMany(r => r.Frais).WithOne().HasForeignKey(f => f.ReceptionId).OnDelete(DeleteBehavior.Cascade);
+            reception.Navigation(r => r.Frais).AutoInclude();
+            reception.Ignore(r => r.ValeurMarchandise);
+            reception.Ignore(r => r.TotalFrais);
+        });
+
+        modelBuilder.Entity<FraisApproche>(frais =>
+        {
+            frais.ToTable("frais_approche");
+            frais.HasKey(f => f.Id);
+            frais.Property(f => f.Id).ValueGeneratedNever();
+            frais.Property(f => f.Type).HasConversion<string>().HasMaxLength(20);
+            frais.Property(f => f.Cle).HasConversion<string>().HasMaxLength(20);
+            frais.Property(f => f.Libelle).HasMaxLength(FraisApproche.LongueurMaxLibelle);
+            frais.Property(f => f.Montant).HasPrecision(19, 4);
+            frais.Property(f => f.SaisiPar).HasMaxLength(256);
+            frais.HasMany(f => f.Allocations).WithOne().HasForeignKey(a => a.FraisApprocheId).OnDelete(DeleteBehavior.Cascade);
+            frais.Navigation(f => f.Allocations).AutoInclude();
+            frais.Ignore(f => f.MontantNonIncorpore);
+        });
+
+        modelBuilder.Entity<AllocationFrais>(allocation =>
+        {
+            allocation.ToTable("allocation_frais");
+            allocation.HasKey(a => a.Id);
+            allocation.Property(a => a.Id).ValueGeneratedNever();
+            allocation.Property(a => a.Montant).HasPrecision(19, 4);
+            allocation.Property(a => a.SupplementUnitaire).HasPrecision(19, 4);
+            allocation.Property(a => a.MontantNonIncorpore).HasPrecision(19, 4);
+            allocation.Property(a => a.QuantiteRevalorisee).HasPrecision(18, 4);
+            allocation.HasOne<LigneReception>().WithMany().HasForeignKey(a => a.LigneReceptionId).OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<LigneReception>(ligne =>
@@ -52,6 +83,8 @@ internal sealed class AchatsDbContext(DbContextOptions<AchatsDbContext> options)
             ligne.Property(l => l.Id).ValueGeneratedNever();
             ligne.Property(l => l.Quantite).HasPrecision(18, 4);
             ligne.Property(l => l.CoutUnitaire).HasPrecision(19, 4);
+            ligne.Property(l => l.FraisApprocheAlloues).HasPrecision(19, 4);
+            ligne.Ignore(l => l.CoutEntree);
             ligne.HasIndex(l => new { l.ReceptionId, l.Ordre }).IsUnique();
         });
     }

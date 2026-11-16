@@ -64,6 +64,15 @@ internal static class EndpointsAchats
         groupe.MapPost("/receptions/{id:guid}/validation", (Guid id, ServiceReceptions service, CancellationToken annulation) =>
             Executer(async () => TypedResults.Ok(await service.ValiderAsync(id, annulation))))
             .RequireAuthorization(Permissions.ReceptionsValider);
+
+        // Frais d'approche (RG30) : avant la validation, ou après (revalorisation du stock présent).
+        groupe.MapPost("/receptions/{id:guid}/frais", (Guid id, SaisieFrais saisie, ServiceReceptions service, CancellationToken annulation) =>
+            Executer(async () => TypedResults.Ok(await service.AjouterFraisAsync(id, saisie, annulation))))
+            .RequireAuthorization(Permissions.FraisSaisir);
+
+        groupe.MapDelete("/receptions/{id:guid}/frais/{fraisId:guid}", (Guid id, Guid fraisId, ServiceReceptions service, CancellationToken annulation) =>
+            Executer(async () => TypedResults.Ok(await service.RetirerFraisAsync(id, fraisId, annulation))))
+            .RequireAuthorization(Permissions.FraisSaisir);
     }
 
     /// <summary>Traduit les règles violées en réponses 400 / 404 / 409.</summary>
@@ -77,7 +86,7 @@ internal static class EndpointsAchats
         {
             var statut = erreur.Code switch
             {
-                CodesErreurAchats.ReceptionIntrouvable => StatusCodes.Status404NotFound,
+                CodesErreurAchats.ReceptionIntrouvable or CodesErreurAchats.FraisIntrouvable => StatusCodes.Status404NotFound,
                 CodesErreurAchats.ReceptionDejaValidee => StatusCodes.Status409Conflict,
                 _ => StatusCodes.Status400BadRequest,
             };

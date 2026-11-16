@@ -27,6 +27,9 @@ public static class Permissions
     /// <summary>Valider une réception : elle écrit les mouvements d'entrée en stock.</summary>
     public const string ReceptionsValider = "Achats.Receptions.Valider";
 
+    /// <summary>Saisir les frais d'approche d'une réception (RG30), avant ou après sa validation.</summary>
+    public const string FraisSaisir = "Achats.Frais.Saisir";
+
     /// <summary>Consulter les prix de vente et le régime de TVA.</summary>
     public const string PrixConsulter = "Prix.Consulter";
 
