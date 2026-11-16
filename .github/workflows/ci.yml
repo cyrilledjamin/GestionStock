@@ -88,6 +88,16 @@ jobs:
           curl -fsS -H "Authorization: Bearer $jeton" http://localhost:8080/api/identite/moi | tee moi.json
           jq -e '.roles == ["Administrateur"]' moi.json
 
+      - name: La caisse répond (postes configurés)
+        run: |
+          source deploy/.env
+          jeton=$(curl -fsS -H 'Content-Type: application/json' \
+            -d "{\"identifiant\":\"$ADMIN_IDENTIFIANT\",\"motDePasse\":\"$ADMIN_MOT_DE_PASSE\"}" \
+            http://localhost:8080/api/identite/connexion | jq -r .accessToken)
+          # L'Administrateur ne vend pas (8.3) : la caisse lui est refusée.
+          test "$(curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $jeton" http://localhost:8080/api/caisse/postes)" = "403"
+          curl -fsS -H "Authorization: Bearer $jeton" http://localhost:8080/api/prix/regime | jq -e '.assujetti == false'
+
       - name: Le client Blazor est servi
         run: |
           curl -fsS http://localhost:8080/ | grep -q '_framework/blazor.webassembly.js'

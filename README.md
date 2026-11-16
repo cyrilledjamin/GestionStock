@@ -135,8 +135,8 @@ Uniquement par variables d'environnement ou `appsettings` ; aucun chemin ni adre
 | `ConnectionStrings:GestionStock` | `ConnectionStrings__GestionStock` | Chaîne de connexion PostgreSQL (obligatoire) ; le chiffrement GSS (Kerberos) y est désactivé sauf si `GSS Encryption Mode` est fourni |
 | `Stockage:RepertoireRacine` | `Stockage__RepertoireRacine` | Répertoire des fichiers (reçus, imports) ; `donnees/fichiers` par défaut. Contient aussi `cles-protection/`, les clés qui signent les jetons de connexion : conservées, elles évitent qu'un redémarrage déconnecte tout le monde (à inclure dans les sauvegardes) |
 | `BaseDeDonnees:AppliquerMigrationsAuDemarrage` | `BaseDeDonnees__AppliquerMigrationsAuDemarrage` | Applique les migrations de chaque module au démarrage ; `false` par défaut, `true` en Development et dans docker-compose |
-| `Entreprise:Nom`, `:Adresse`, `:Telephone`, `:NumeroContribuable` | `Entreprise__Nom`… | Identité imprimée en tête des reçus |
-| `Caisse:Postes` | `Caisse__Postes__0`, `Caisse__Postes__1`… | Postes de caisse de la boutique ; `CAISSE-1` par défaut |
+| `Entreprise:Nom`, `:Adresse`, `:Telephone`, `:NumeroContribuable` | `Entreprise__Nom`… | Identité imprimée en tête des reçus (`ENTREPRISE_NOM`, `ENTREPRISE_ADRESSE`, `ENTREPRISE_TELEPHONE`, `ENTREPRISE_NIU` dans `deploy/.env`) |
+| `Caisse:Postes` | `Caisse__Postes__0`, `Caisse__Postes__1`… | Postes de caisse de la boutique ; `CAISSE-1` par défaut (`CAISSE_POSTE` dans `deploy/.env`) |
 | `Entreprise:AssujettiTva` | `Entreprise__AssujettiTva` | Entreprise assujettie à la TVA (RG37) : reçu HT / TVA / TTC ; `false` par défaut, prix nets (`ENTREPRISE_ASSUJETTIE_TVA` dans `deploy/.env`) |
 | `Entreprise:TauxTva` | `Entreprise__TauxTva` | Taux légal en %, 19,25 par défaut |
 | `Identite:AdministrateurInitial:Identifiant` | `Identite__AdministrateurInitial__Identifiant` | Compte Administrateur créé au démarrage si la base ne contient aucun compte (`ADMIN_IDENTIFIANT` dans `deploy/.env`) |
@@ -401,7 +401,7 @@ sur une machine Linux de GitHub qui dispose de Docker :
 | 16 | Module Credit : clients, plafond, remboursements | Fait |
 | 17 | Module Caisse : sessions, tickets, avoirs, remises, reçu PDF | Fait |
 | 18 | Client : écran de caisse et écrans de gestion | Fait |
-| 19 | Architecture, CI, README, démonstration de la caisse | À faire |
+| 19 | Architecture, CI, README, démonstration de la caisse | Fait |
 
 ## Démonstration
 
@@ -417,10 +417,30 @@ Scénario vérifié dans le navigateur sur http://localhost:8080, base vierge :
 7. passage en anglais : textes, rôles, format des montants et libellé traduit de l'article ;
 8. redémarrage de l'API : la session reste ouverte.
 
+### Démonstration de la caisse (tranche 2)
+
+Vérifiée dans le navigateur sur http://localhost:8080, avec les comptes de démonstration créés par l'Administrateur
+(`gerant`, `caissier`, `comptable`, mot de passe de test `Secret123!`) :
+
+1. **Gérant**, fiche de `LAIT-397` : la boîte reçoit le code `6170000000011` et le prix 450 XAF ; un carton de 48
+   boîtes est créé, avec le code `6170000000004` et le prix 20 000 XAF (RG45) ;
+2. **Gérant**, Clients : création de « Mme Ngo Mballa » ; le **Comptable** fixe son plafond à 30 000 XAF ;
+3. **Caissier**, Caisse : session ouverte sur CAISSE-1 avec 10 000 XAF de fond ; scan du carton puis de deux boîtes
+   (le second scan incrémente la quantité) ; 20 900 XAF payés 5 900 en Mobile Money (référence) et 16 000 en
+   espèces, rendu 1 000 ; ticket `CAISSE-1-000001`, reçu 80 mm et PDF ;
+4. vente à crédit de 2 cartons (40 000 XAF) : refusée au-delà du plafond, puis validée par les identifiants du Gérant
+   saisis sur le poste ; ticket `CAISSE-1-000002` (la tentative refusée n'a pas consommé de numéro) ;
+5. avoir d'une boîte sur le ticket 1 : `CAISSE-1-000003`, 450 XAF rendus, la boîte revient en stock ;
+6. clôture : espèces théoriques 24 550 XAF, comptées 24 500, écart −50 ; le **Comptable** valide l'écart ;
+7. journal de l'article : ventes et avoir au CUMP de 600 XAF ; stock négatif sur l'emplacement de vente, jamais
+   bloquant (RG22) ; la cliente doit 40 000 XAF.
+
 ## Points ouverts
 
 - Validation par un responsable au poste du caissier (ses identifiants), et attribution au Gérant de la validation
   d'un dépassement de crédit (RG40 cite « un utilisateur autorisé ») : choix provisoires.
+- Reçu PDF en Courier (police standard des lecteurs PDF, sans dépendance ni police embarquée) au lieu de
+  PDFsharp-MigraDoc, qui exigerait d'embarquer une police sous Linux.
 - Avoir valorisé au CUMP courant à son retour en stock (le dossier ne précise pas la valorisation d'un retour).
 - Montants de caisse en francs CFA entiers et arrondi de chaque ligne à l'unité (déduits de 1.5 et RG32).
 - Délai de paiement par défaut (30 jours) : non fixé par le dossier, choix provisoire.
