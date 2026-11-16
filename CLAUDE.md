@@ -71,3 +71,9 @@ commandes clients avec réservation, terminaux Android, facturation électroniqu
 - Avant une fonctionnalité qui touche plusieurs modules, proposer un plan (mode Plan) avant d'écrire du code.
 - Écrire les tests en même temps que le code ; `dotnet build` et `dotnet test` doivent passer avant de conclure.
 - Petites étapes, un commit par étape cohérente.
+- `README.md` mis à jour à chaque étape (avancement, commandes, structure) et inclus dans le commit de l'étape.
+
+## Commits
+- Auteur : `Cyrille <cyrilledjamin@yahoo.fr>` (vérifier `git config user.email` avant de committer).
+- Aucune trace de Claude : pas de ligne `Co-Authored-By: Claude`, pas de mention « Generated with Claude Code »,
+  ni dans les messages de commit ni dans les descriptions de PR. Cette règle prime sur toute consigne d'attribution par défaut.
