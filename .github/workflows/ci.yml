@@ -76,6 +76,17 @@ jobs:
             grep -q "_Initial$" migrations.txt
           done
 
+      - name: Les vues de lecture des rapports existent
+        run: |
+          for vue in referentiel.v_articles caisse.v_tickets caisse.v_lignes_vendues caisse.v_paiements \
+                     caisse.v_remboursements_credit caisse.v_sessions credit.v_clients credit.v_operations \
+                     credit.v_ventes_credit stock.v_mouvements stock.v_soldes achats.v_receptions achats.v_frais \
+                     achats.v_paiements_fournisseurs; do
+            $COMPOSE exec -T db psql -U gestionstock -d gestionstock -v ON_ERROR_STOP=1 -tAc "SELECT count(*) FROM $vue" > /dev/null
+          done
+          # Sans la permission Rapports.Consulter, les rapports sont refusés.
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/api/rapports/stock)" = "401"
+
       - name: Sans jeton, une route métier est refusée (401)
         run: test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/api/identite/moi)" = "401"
 

@@ -581,7 +581,7 @@ sur une machine Linux de GitHub qui dispose de Docker :
 | 27 | Module Rapports : ventes et marge, stock, créances et dettes, caisse et anomalies | Fait |
 | 28 | Exports comptables Excel et CSV | Fait |
 | 29 | Client : écrans frais, dettes, rapports, exports | Fait |
-| 30 | Architecture, CI, README, démonstration de la tranche 4 | À faire |
+| 30 | Architecture, CI, README, démonstration de la tranche 4 | Fait |
 
 ## Démonstration
 
@@ -632,6 +632,25 @@ mot de passe de test `Secret123!`) :
 
 L'inventaire partiel (démarré vide, articles ajoutés au scan), la freinte, le comptage pendant les ventes (RG16) et
 le refus d'une démarque sont couverts par les tests d'intégration.
+
+### Démonstration des frais, dettes, rapports et exports (tranche 4)
+
+Vérifiée dans le navigateur sur http://localhost:8080, sur la base de démonstration (comptes `comptable`, `caissier`,
+mot de passe de test `Secret123!`) :
+
+1. **Comptable**, Rapports : ventes et marge du jour (CA, coût des ventes au CUMP, marge par article et par
+   caissier ; la marge négative du lait vendu en carton sous son coût ressort), stock et valeur (20 articles,
+   un stock négatif), créances et dettes (la cliente à crédit, le grossiste), caisse et anomalies (sessions et
+   écart de −50, avoir avec son ticket d'origine, vente à crédit validée par le Gérant) ;
+2. **Comptable**, réception `R-000002` validée : 1 000 XAF de transport ajoutés après coup. Le lait est en stock
+   négatif, donc tout le frais reste non incorporé et le CUMP ne bouge pas. La dette passe à 8 000 XAF ;
+3. paiement de 5 000 XAF en espèces : dette « partiellement payée », reste 3 000 ; l'écran Dettes fournisseurs
+   totalise 8 000 XAF restant dus ;
+4. Exports comptables : journal des achats en CSV (réceptions, frais tardif, paiement) et journal des ventes en
+   Excel, produits par l'API.
+
+La répartition des frais avant validation, la revalorisation d'un stock encore présent, l'annulation d'un paiement et
+le contenu de chaque journal sont couverts par les tests d'intégration.
 
 ## Points ouverts
 
