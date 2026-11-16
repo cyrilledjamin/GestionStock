@@ -99,6 +99,11 @@ jobs:
           curl -fsS -H "Authorization: Bearer $jeton" http://localhost:8080/api/identite/moi | tee moi.json
           jq -e '.roles == ["Administrateur"]' moi.json
 
+      - name: Cycle de vie d'un compte du personnel
+        run: |
+          source deploy/.env
+          bash .github/scripts/verifier-comptes.sh http://localhost:8080 "$ADMIN_IDENTIFIANT" "$ADMIN_MOT_DE_PASSE"
+
       - name: La caisse répond (postes configurés)
         run: |
           source deploy/.env

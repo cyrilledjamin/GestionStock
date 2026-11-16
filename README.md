@@ -501,7 +501,9 @@ langue de l'interface, statut actif ou désactivé. Rien d'autre (loi n° 2024/0
 
 - **Matricule = identifiant de connexion**, tracé dans tous les documents : il ne change plus après la création. Celui
   de l'entreprise est saisi tel quel (lettres, chiffres, `.`, `-`, `_`, 20 caractères au plus, unique) ; sinon il est
-  généré (`S000001`, `S000002`…). Les comptes antérieurs gardent leur identifiant comme matricule.
+  généré (`S000001`, `S000002`…). Les comptes antérieurs gardent leur identifiant comme matricule. Le mot de passe
+  est contrôlé avant de tirer un numéro : une création refusée pour ce motif ne fait pas sauter de matricule (une
+  séquence PostgreSQL ne recule jamais ; un trou reste possible après un autre refus, il est sans conséquence).
 - **Mot de passe provisoire** : à la création comme après un oubli, l'Administrateur fixe un mot de passe provisoire.
   Tant qu'il n'est pas changé, le jeton ne donne **aucune permission** (403 partout sauf `/moi` et le changement de
   mot de passe) ; l'Administrateur ne connaît jamais le mot de passe définitif. Une réinitialisation ferme les
@@ -572,8 +574,11 @@ sur une machine Linux de GitHub qui dispose de Docker :
 - **Build et tests** : build en Release sans avertissement, puis tous les tests, y compris ceux sur PostgreSQL réelle ;
 - **Image et docker-compose** : construit l'image de l'API, démarre `deploy/docker-compose.yml` avec les valeurs de
   `deploy/.env.example`, puis vérifie que `/health/pret` répond, que la migration `Initial` de chaque module est
-  appliquée, qu'une route métier répond 401 sans jeton, que l'Administrateur initial se connecte et que le client
-  Blazor est servi.
+  appliquée, que les vues de lecture des rapports existent, qu'une route métier répond 401 sans jeton, que
+  l'Administrateur initial se connecte, que le cycle de vie d'un compte du personnel fonctionne
+  ([.github/scripts/verifier-comptes.sh](.github/scripts/verifier-comptes.sh) : matricule généré, mot de passe
+  provisoire sans aucune permission, changement par l'employé, droits de ses deux rôles, journal, désactivation qui
+  refuse la connexion) et que le client Blazor est servi.
 
 ## Avancement du squelette
 
@@ -613,7 +618,7 @@ sur une machine Linux de GitHub qui dispose de Docker :
 | 31 | Identité : fiche du personnel, matricule, plusieurs rôles, désactivation, mot de passe provisoire | Fait |
 | 32 | Noms complets du personnel dans les rapports et les exports | Fait |
 | 33 | Client : écrans des comptes et « Mon compte » | Fait |
-| 34 | Architecture, CI, README, démonstration de la tranche 5 | À faire |
+| 34 | Architecture, CI, README, démonstration de la tranche 5 | Fait |
 
 ## Démonstration
 
@@ -683,6 +688,26 @@ mot de passe de test `Secret123!`) :
 
 La répartition des frais avant validation, la revalorisation d'un stock encore présent, l'annulation d'un paiement et
 le contenu de chaque journal sont couverts par les tests d'intégration.
+
+### Démonstration des comptes du personnel (tranche 5)
+
+Vérifiée dans le navigateur sur http://localhost:8080, sur la base de démonstration (Administrateur `admin`,
+comptes `caissier` et `comptable`, mot de passe de test `Secret123!`) :
+
+1. **Administrateur**, Utilisateurs : création d'« Awa Test », Caissier et Magasinier, sans matricule ni téléphone,
+   avec un mot de passe provisoire ; le matricule `S000001` est généré et la fiche s'ouvre, journal compris ;
+2. désactivation puis réactivation du compte : statut, message et deux lignes de journal (date, auteur) ;
+3. connexion d'Awa par son matricule et le mot de passe provisoire : elle arrive sur **Mon compte** ; toute autre
+   page, même ouverte par son adresse, y ramène ; une confirmation différente est refusée ; le mot de passe changé,
+   le menu réunit les droits de ses deux rôles et l'accueil la salue par son prénom ;
+4. passage en anglais, préférence du navigateur effacée, nouvelle connexion : l'interface revient en anglais (langue
+   mémorisée sur le compte) ;
+5. **Administrateur**, fiche de `caissier` : prénom « Paul », nom « Etoa » ; le matricule ne change pas ;
+6. **Comptable**, Rapports, ventes par caissier : le caissier apparaît sous « Paul Etoa (caissier) ».
+
+Le dernier Administrateur actif, la fermeture des sessions après un changement de rôles, le mot de passe oublié
+remplacé par un provisoire et la validation refusée à un responsable désactivé sont couverts par les tests
+d'intégration.
 
 ## Points ouverts
 
