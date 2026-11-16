@@ -3,6 +3,7 @@
 @inject Session Session
 @inject NavigationManager Navigation
 @inject IJSRuntime Js
+@inject Api Api
 
 @if (!Session.EstConnecte)
 {
@@ -62,7 +63,8 @@ else
                 <NavLink href="utilisateurs">@L["Utilisateurs"]</NavLink>
             }
             <div class="pied-menu">
-                <div class="utilisateur">@Session.Profil!.Identifiant<br /><small>@string.Join(", ", Session.Profil.Roles.Select(r => L[$"Role.{r}"].Value))</small></div>
+                <NavLink href="mon-compte">@L["MonCompte"]</NavLink>
+                <div class="utilisateur">@Session.Profil!.NomComplet<br /><small>@Session.Profil.Identifiant · @string.Join(", ", Session.Profil.Roles.Select(r => L[$"Role.{r}"].Value))</small></div>
                 <button class="lien" @onclick="ChangerLangue">@L["AutreLangue"]</button>
                 <button class="lien" @onclick="Deconnecter">@L["Deconnexion"]</button>
             </div>
@@ -89,6 +91,11 @@ else
         {
             Navigation.NavigateTo("connexion");
         }
+        else if (Session.DoitChangerMotDePasse && !page.StartsWith("mon-compte", StringComparison.Ordinal))
+        {
+            // Mot de passe provisoire : rien d'autre n'est possible avant de le changer.
+            Navigation.NavigateTo("mon-compte");
+        }
     }
 
     private void Rafraichir() => InvokeAsync(StateHasChanged);
@@ -97,6 +104,7 @@ else
     {
         var autre = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "en" ? "fr" : "en";
         await Js.InvokeVoidAsync("localStorage.setItem", Langues.Cle, autre);
+        await Api.PutAsync<object>("api/identite/moi/langue", new { Langue = autre });
         Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
     }
 

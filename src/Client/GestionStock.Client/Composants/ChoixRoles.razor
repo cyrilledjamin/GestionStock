@@ -1,0 +1,28 @@
+@* Rôles d'un compte, à cocher : un compte peut en cumuler plusieurs (ses permissions s'additionnent). *@
+<fieldset class="roles">
+    <legend>@L["Roles"]</legend>
+    @foreach (var role in Services.Roles.Tous)
+    {
+        <label class="case">
+            <input type="checkbox" checked="@Roles.Contains(role)" @onchange="e => Basculer(role, (bool)e.Value!)" />
+            @L[$"Role.{role}"]
+        </label>
+    }
+</fieldset>
+
+@code {
+    /// <summary>Rôles cochés, modifiés sur place.</summary>
+    [Parameter, EditorRequired] public HashSet<string> Roles { get; set; } = [];
+
+    private void Basculer(string role, bool coche)
+    {
+        if (coche)
+        {
+            Roles.Add(role);
+        }
+        else
+        {
+            Roles.Remove(role);
+        }
+    }
+}

@@ -17,7 +17,6 @@
   <data name="Utilisateur" xml:space="preserve"><value>Utilisateur</value></data>
   <data name="AutreLangue" xml:space="preserve"><value>English</value></data>
   <data name="Deconnexion" xml:space="preserve"><value>Se déconnecter</value></data>
-  <data name="Role" xml:space="preserve"><value>Rôle</value></data>
   <data name="Role.Administrateur" xml:space="preserve"><value>Administrateur</value></data>
   <data name="Role.Gerant" xml:space="preserve"><value>Gérant</value></data>
   <data name="Role.Comptable" xml:space="preserve"><value>Comptable</value></data>
@@ -25,7 +24,6 @@
   <data name="Role.Magasinier" xml:space="preserve"><value>Magasinier</value></data>
   <data name="Connexion" xml:space="preserve"><value>Connexion</value></data>
   <data name="ConnexionIntro" xml:space="preserve"><value>Gestion de stock et caisse de la boutique.</value></data>
-  <data name="Identifiant" xml:space="preserve"><value>Identifiant</value></data>
   <data name="MotDePasse" xml:space="preserve"><value>Mot de passe</value></data>
   <data name="SeConnecter" xml:space="preserve"><value>Se connecter</value></data>
   <data name="Bonjour" xml:space="preserve"><value>Bonjour {0}</value></data>
@@ -112,7 +110,7 @@
   <data name="NouveauCompte" xml:space="preserve"><value>Nouveau compte</value></data>
   <data name="MotDePasseRegle" xml:space="preserve"><value>Mot de passe : au moins 8 caractères, avec une majuscule, une minuscule, un chiffre et un caractère spécial.</value></data>
   <data name="CreerCompte" xml:space="preserve"><value>Créer le compte</value></data>
-  <data name="CompteCree" xml:space="preserve"><value>Compte « {0} » créé.</value></data>
+  <data name="CompteCree" xml:space="preserve"><value>Compte créé : matricule {0}.</value></data>
   <data name="Caisse" xml:space="preserve"><value>Caisse</value></data>
   <data name="CaisseAide" xml:space="preserve"><value>Vendre au comptoir, encaisser, imprimer le reçu.</value></data>
   <data name="SessionsCaisse" xml:space="preserve"><value>Sessions de caisse</value></data>
@@ -380,4 +378,45 @@
   <data name="JournalAide.encaissements" xml:space="preserve"><value>Argent reçu ou rendu : paiements hors crédit (espèces moins le rendu) et remboursements de crédit.</value></data>
   <data name="JournalAide.creances" xml:space="preserve"><value>Ventes à crédit, remboursements et annulations, avec l'échéance.</value></data>
   <data name="JournalAide.valeur-stock" xml:space="preserve"><value>Quantité, coût moyen et valeur de chaque article, au jour de l'export.</value></data>
+  <data name="Matricule" xml:space="preserve"><value>Matricule</value></data>
+  <data name="MatriculeGenere" xml:space="preserve"><value>Laisser vide pour le générer (S000001…)</value></data>
+  <data name="MatriculeFige" xml:space="preserve"><value>Le matricule sert d'identifiant de connexion et figure dans tous les documents : il ne change pas.</value></data>
+  <data name="Prenom" xml:space="preserve"><value>Prénom</value></data>
+  <data name="Langue" xml:space="preserve"><value>Langue</value></data>
+  <data name="Roles" xml:space="preserve"><value>Rôles</value></data>
+  <data name="MotDePasseProvisoire" xml:space="preserve"><value>Mot de passe provisoire</value></data>
+  <data name="MotDePasseProvisoireAide" xml:space="preserve"><value>L'employé devra le changer à sa première connexion.</value></data>
+  <data name="MotDePasseProvisoireEnAttente" xml:space="preserve"><value>Mot de passe provisoire : l'employé ne l'a pas encore changé.</value></data>
+  <data name="AfficherDesactives" xml:space="preserve"><value>Afficher aussi les comptes désactivés</value></data>
+  <data name="Desactive" xml:space="preserve"><value>Désactivé</value></data>
+  <data name="Desactiver" xml:space="preserve"><value>Désactiver le compte</value></data>
+  <data name="Reactiver" xml:space="preserve"><value>Réactiver le compte</value></data>
+  <data name="DesactivationAide" xml:space="preserve"><value>Départ d'un employé : il ne peut plus se connecter ni valider ; son compte et ses opérations sont conservés.</value></data>
+  <data name="ReactivationAide" xml:space="preserve"><value>Le compte est désactivé. Le réactiver rend l'accès à l'employé.</value></data>
+  <data name="Fiche" xml:space="preserve"><value>Fiche</value></data>
+  <data name="FicheEnregistree" xml:space="preserve"><value>Fiche enregistrée.</value></data>
+  <data name="CompteDesactive" xml:space="preserve"><value>Compte désactivé.</value></data>
+  <data name="CompteReactive" xml:space="preserve"><value>Compte réactivé.</value></data>
+  <data name="MotDePasseOublie" xml:space="preserve"><value>Mot de passe oublié</value></data>
+  <data name="ReinitialisationAide" xml:space="preserve"><value>Fixez un mot de passe provisoire et communiquez-le à l'employé : il devra le changer à sa prochaine connexion. Ses sessions ouvertes sont fermées.</value></data>
+  <data name="Reinitialiser" xml:space="preserve"><value>Réinitialiser le mot de passe</value></data>
+  <data name="MotDePasseReinitialise" xml:space="preserve"><value>Mot de passe provisoire enregistré.</value></data>
+  <data name="JournalCompte" xml:space="preserve"><value>Journal du compte</value></data>
+  <data name="Auteur" xml:space="preserve"><value>Auteur</value></data>
+  <data name="Detail" xml:space="preserve"><value>Détail</value></data>
+  <data name="ActionCompte.Creation" xml:space="preserve"><value>Création</value></data>
+  <data name="ActionCompte.Modification" xml:space="preserve"><value>Modification</value></data>
+  <data name="ActionCompte.Desactivation" xml:space="preserve"><value>Désactivation</value></data>
+  <data name="ActionCompte.Reactivation" xml:space="preserve"><value>Réactivation</value></data>
+  <data name="ActionCompte.ReinitialisationMotDePasse" xml:space="preserve"><value>Mot de passe réinitialisé</value></data>
+  <data name="ActionCompte.ChangementMotDePasse" xml:space="preserve"><value>Mot de passe changé</value></data>
+  <data name="MonCompte" xml:space="preserve"><value>Mon compte</value></data>
+  <data name="FicheParAdministrateur" xml:space="preserve"><value>Pour corriger votre fiche ou vos rôles, adressez-vous à l'administrateur.</value></data>
+  <data name="ChangerMotDePasse" xml:space="preserve"><value>Changer mon mot de passe</value></data>
+  <data name="ChangerMotDePasseObligatoire" xml:space="preserve"><value>Votre mot de passe est provisoire : choisissez-en un nouveau pour continuer.</value></data>
+  <data name="MotDePasseActuel" xml:space="preserve"><value>Mot de passe actuel</value></data>
+  <data name="NouveauMotDePasse" xml:space="preserve"><value>Nouveau mot de passe</value></data>
+  <data name="ConfirmerMotDePasse" xml:space="preserve"><value>Confirmer le nouveau mot de passe</value></data>
+  <data name="ConfirmationDifferente" xml:space="preserve"><value>La confirmation ne correspond pas au nouveau mot de passe.</value></data>
+  <data name="MotDePasseChange" xml:space="preserve"><value>Mot de passe changé.</value></data>
 </root>

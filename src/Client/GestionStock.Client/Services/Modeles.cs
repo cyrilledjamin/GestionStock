@@ -4,9 +4,32 @@ namespace GestionStock.Client.Services;
 
 public sealed record JetonAcces(string TokenType, string AccessToken, long ExpiresIn, string RefreshToken);
 
-public sealed record ProfilUtilisateur(string Identifiant, List<string> Roles, List<string> Permissions);
+/// <summary>Utilisateur connecté ; <c>Identifiant</c> est son matricule. Aucune permission tant que le mot de passe est provisoire.</summary>
+public sealed record ProfilUtilisateur(
+    string Identifiant,
+    string Prenom,
+    string Nom,
+    string NomComplet,
+    string Langue,
+    bool MotDePasseProvisoire,
+    List<string> Roles,
+    List<string> Permissions);
 
-public sealed record CompteUtilisateur(Guid Id, string Identifiant, List<string> Roles);
+public sealed record CompteUtilisateur(
+    Guid Id,
+    string Matricule,
+    string Prenom,
+    string Nom,
+    string NomComplet,
+    string? Telephone,
+    List<string> Roles,
+    string Langue,
+    bool Actif,
+    bool MotDePasseProvisoire);
+
+public sealed record LigneJournalCompte(DateTime DateUtc, string Action, string Auteur, string? Detail);
+
+public sealed record FicheCompte(CompteUtilisateur Compte, List<LigneJournalCompte> Journal);
 
 public sealed record Article(Guid Id, string Code, string Libelle, string? LibelleTraduit, string UniteStock, int PrecisionQuantite, bool Actif);
 

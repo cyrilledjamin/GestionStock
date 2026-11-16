@@ -5,7 +5,7 @@
 
 @if (Session.Profil is { } profil)
 {
-    <h1>@L["Bonjour", profil.Identifiant]</h1>
+    <h1>@L["Bonjour", string.IsNullOrWhiteSpace(profil.Prenom) ? profil.Identifiant : profil.Prenom]</h1>
     <p class="discret">@L["AccueilIntro"]</p>
 
     <div class="tuiles">

@@ -1,0 +1,140 @@
+@page "/utilisateurs/{Id:guid}"
+@inject Api Api
+@inject NavigationManager Navigation
+
+<PageTitle>@(_fiche?.Compte.NomComplet ?? L["Utilisateurs"]) · GestionStock</PageTitle>
+
+<p><a href="utilisateurs">← @L["Utilisateurs"]</a></p>
+<Message Texte="@_erreur" />
+<Message Texte="@_succes" Erreur="false" />
+
+@if (_fiche is { Compte: var compte })
+{
+    <h1>@compte.NomComplet <small class="discret"><code>@compte.Matricule</code></small>
+        <span class="pastille @(compte.Actif ? "validee" : "brouillon")">@(compte.Actif ? L["Actif"] : L["Desactive"])</span>
+    </h1>
+    @if (compte.MotDePasseProvisoire)
+    {
+        <p class="discret">@L["MotDePasseProvisoireEnAttente"]</p>
+    }
+
+    <form class="fiche" @onsubmit="Enregistrer">
+        <h2>@L["Fiche"]</h2>
+        <div class="grille">
+            <label>@L["Prenom"] <input @bind="_prenom" required maxlength="100" /></label>
+            <label>@L["Nom"] <input @bind="_nom" required maxlength="100" /></label>
+            <label>@L["Telephone"] <input @bind="_telephone" maxlength="20" /></label>
+            <label>@L["Langue"]
+                <select @bind="_langue">
+                    <option value="fr">Français</option>
+                    <option value="en">English</option>
+                </select>
+            </label>
+        </div>
+        <ChoixRoles Roles="_roles" />
+        <p class="discret">@L["MatriculeFige"]</p>
+        <div class="actions"><button type="submit" class="principal" disabled="@_enCours">@L["Enregistrer"]</button></div>
+    </form>
+
+    <div class="fiche">
+        <h2>@L["MotDePasseOublie"]</h2>
+        <p class="discret">@L["ReinitialisationAide"]</p>
+        <div class="grille">
+            <label>@L["MotDePasseProvisoire"] <ChampMotDePasse @bind-Valeur="_provisoire" Autocomplete="new-password" /></label>
+        </div>
+        <div class="actions"><button disabled="@(_enCours || string.IsNullOrEmpty(_provisoire))" @onclick="Reinitialiser">@L["Reinitialiser"]</button></div>
+    </div>
+
+    <div class="fiche">
+        <h2>@L["Statut"]</h2>
+        <p class="discret">@(compte.Actif ? L["DesactivationAide"] : L["ReactivationAide"])</p>
+        <div class="actions">
+            @if (compte.Actif)
+            {
+                <button disabled="@_enCours" @onclick="Desactiver">@L["Desactiver"]</button>
+            }
+            else
+            {
+                <button class="valider" disabled="@_enCours" @onclick="Reactiver">@L["Reactiver"]</button>
+            }
+        </div>
+    </div>
+
+    <h2>@L["JournalCompte"]</h2>
+    <table>
+        <thead><tr><th>@L["Date"]</th><th>@L["Operation"]</th><th>@L["Auteur"]</th><th>@L["Detail"]</th></tr></thead>
+        <tbody>
+            @foreach (var ligne in _fiche.Journal)
+            {
+                <tr><td class="court">@Format.Date(ligne.DateUtc)</td><td>@L[$"ActionCompte.{ligne.Action}"]</td><td>@ligne.Auteur</td><td>@ligne.Detail</td></tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+
+    private FicheCompte? _fiche;
+    private string _prenom = "";
+    private string _nom = "";
+    private string? _telephone;
+    private string _langue = "fr";
+    private HashSet<string> _roles = [];
+    private string? _provisoire;
+    private bool _enCours;
+    private string? _erreur;
+    private string? _succes;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var resultat = await Api.GetAsync<FicheCompte>($"api/identite/utilisateurs/{Id}");
+        _erreur = resultat.Erreur;
+        Afficher(resultat.Valeur);
+        if (Navigation.Uri.Contains("cree=1", StringComparison.Ordinal) && _fiche is not null)
+        {
+            _succes = L["CompteCree", _fiche.Compte.Matricule].Value;
+        }
+    }
+
+    private void Afficher(FicheCompte? fiche)
+    {
+        _fiche = fiche ?? _fiche;
+        if (_fiche is { Compte: var c })
+        {
+            (_prenom, _nom, _telephone, _langue, _roles) = (c.Prenom, c.Nom, c.Telephone, c.Langue, [.. c.Roles]);
+        }
+    }
+
+    private Task Enregistrer() => Executer(
+        () => Api.PutAsync<FicheCompte>($"api/identite/utilisateurs/{Id}", new { Prenom = _prenom, Nom = _nom, Telephone = _telephone, Roles = _roles.ToList(), Langue = _langue }),
+        "FicheEnregistree");
+
+    private Task Desactiver() => Executer(() => Api.PostAsync<FicheCompte>($"api/identite/utilisateurs/{Id}/desactivation"), "CompteDesactive");
+
+    private Task Reactiver() => Executer(() => Api.PostAsync<FicheCompte>($"api/identite/utilisateurs/{Id}/reactivation"), "CompteReactive");
+
+    private async Task Reinitialiser()
+    {
+        await Executer(() => Api.PostAsync<FicheCompte>($"api/identite/utilisateurs/{Id}/mot-de-passe", new { MotDePasse = _provisoire }), "MotDePasseReinitialise");
+        if (_erreur is null)
+        {
+            _provisoire = null;
+        }
+    }
+
+    private async Task Executer(Func<Task<Resultat<FicheCompte>>> action, string cleSucces)
+    {
+        _enCours = true;
+        _succes = null;
+        var resultat = await action();
+        _enCours = false;
+        _erreur = resultat.Erreur;
+        if (resultat.Valeur is not null)
+        {
+            _succes = L[cleSucces].Value;
+        }
+
+        Afficher(resultat.Valeur);
+    }
+}

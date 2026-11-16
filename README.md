@@ -255,8 +255,8 @@ Ouvrir http://localhost:8080 (docker-compose) puis se connecter. Le menu dépend
 
 | Écran | Contenu |
 | --- | --- |
-| Connexion | Identifiant et mot de passe (bouton « Afficher » pour vérifier la saisie en clair) ; choix de la langue (français / anglais), mémorisé sur le poste |
-| Accueil | Raccourcis selon le rôle |
+| Connexion | Matricule et mot de passe (bouton « Afficher » pour vérifier la saisie en clair) ; choix de la langue (français / anglais) ; à la connexion, la langue mémorisée sur le compte s'applique ; un mot de passe provisoire mène directement à « Mon compte » |
+| Accueil | Salutation par le prénom, raccourcis selon les rôles |
 | Stock | Soldes de la boutique : physique, disponible, CUMP, valeur ; total valorisé |
 | Journal d'un article | Soldes et mouvements (date à l'heure de Douala, variation, coût, document d'origine, utilisateur) |
 | Réceptions | Liste ; saisie en brouillon (lignes, valeur calculée), enregistrement, validation |
@@ -267,7 +267,9 @@ Ouvrir http://localhost:8080 (docker-compose) puis se connecter. Le menu dépend
 | Tickets de la session, ticket | Recherche par numéro, réimpression, avoir (quantités à rendre, mode de remboursement) |
 | Sessions de caisse | Supervision (Gérant, Comptable) : ventes nettes, espèces théoriques et comptées, écart, validation |
 | Clients, fiche client | Clients à crédit, impayés, création (Gérant), plafond (Comptable), ventes non soldées, journal |
-| Utilisateurs | Création des comptes avec leur rôle (Administrateur) |
+| Utilisateurs | Liste (nom complet, matricule, rôles, téléphone, statut ; comptes désactivés sur demande) ; création : prénom, nom, téléphone, matricule saisi ou généré, langue, rôles à cocher, mot de passe provisoire (Administrateur) |
+| Fiche d'un compte | Modification de la fiche et des rôles (le matricule ne change pas) ; mot de passe oublié (nouveau mot de passe provisoire) ; désactivation et réactivation ; journal du compte (date, opération, auteur, détail) |
+| Mon compte | Fiche en lecture (nom, matricule, rôles, langue) ; changement du mot de passe avec confirmation. Tant que le mot de passe est provisoire, toute autre page renvoie ici |
 | Inventaires | Liste filtrée par statut ; nouvel inventaire complet (tous les articles actifs) ou partiel (démarre vide) |
 | Inventaire | Comptage à la douchette (chaque scan ajoute le contenu du conditionnement) ou saisie par ligne ; freinte sur un écart négatif ; théorique, écart et sa valeur ; filtre « non comptés » ; validation (Comptable) ; annulation |
 | Démarque | Déclaration (article, quantité, motif casse / vol / périmé / freinte, commentaire) par le Magasinier ; validation ou refus motivé (Comptable, Gérant) |
@@ -508,6 +510,8 @@ langue de l'interface, statut actif ou désactivé. Rien d'autre (loi n° 2024/0
   validation par un responsable refusés ; le compte et ses documents restent. Réactivation possible.
 - **Rôles** : un changement de rôles ferme les sessions en cours (elles se reconnectent avec les nouveaux droits).
 - Il reste toujours **un Administrateur actif** (`Identite.DernierAdministrateur`).
+- **Langue** : le choix « English » / « Français » du menu est enregistré sur le compte et retrouvé à la connexion,
+  sur n'importe quel poste (ENF09).
 - **Journal du compte** (ENF03) : création, modification, désactivation, réactivation, réinitialisation et changement
   de mot de passe, avec l'auteur et l'horodatage, sans aucun mot de passe.
 
@@ -608,7 +612,7 @@ sur une machine Linux de GitHub qui dispose de Docker :
 | 30 | Architecture, CI, README, démonstration de la tranche 4 | Fait |
 | 31 | Identité : fiche du personnel, matricule, plusieurs rôles, désactivation, mot de passe provisoire | Fait |
 | 32 | Noms complets du personnel dans les rapports et les exports | Fait |
-| 33 | Client : écrans des comptes et « Mon compte » | À faire |
+| 33 | Client : écrans des comptes et « Mon compte » | Fait |
 | 34 | Architecture, CI, README, démonstration de la tranche 5 | À faire |
 
 ## Démonstration
