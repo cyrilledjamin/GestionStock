@@ -3,6 +3,7 @@ using GestionStock.Infrastructure.Persistance;
 using GestionStock.Infrastructure.Stockage;
 using GestionStock.Infrastructure.Temps;
 using GestionStock.SharedKernel;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -18,6 +19,9 @@ public static class ExtensionsInfrastructure
 
     /// <summary>Étiquette des vérifications de disponibilité (dépendances externes : base de données).</summary>
     public const string EtiquettePret = "pret";
+
+    /// <summary>Sous-répertoire du stockage où sont conservées les clés de protection des données.</summary>
+    public const string RepertoireClesProtection = "cles-protection";
 
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
@@ -52,6 +56,15 @@ public static class ExtensionsInfrastructure
             .Validate(o => !string.IsNullOrWhiteSpace(o.RepertoireRacine), "Stockage:RepertoireRacine est obligatoire.")
             .ValidateOnStart();
         services.TryAddSingleton<IStockageFichiers, StockageFichiersLocal>();
+
+        // Clés de protection des données (signature des jetons de connexion) conservées dans le répertoire de données :
+        // sans elles, chaque redémarrage du serveur invaliderait les jetons et déconnecterait tout le monde.
+        var racine = configuration[$"{OptionsStockage.Section}:{nameof(OptionsStockage.RepertoireRacine)}"];
+        var protection = services.AddDataProtection().SetApplicationName("GestionStock");
+        if (!string.IsNullOrWhiteSpace(racine))
+        {
+            protection.PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(racine, RepertoireClesProtection)));
+        }
 
         return services;
     }

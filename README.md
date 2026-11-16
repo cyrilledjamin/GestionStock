@@ -59,7 +59,9 @@ Règles de dépendance, vérifiées par `tests/GestionStock.ArchitectureTests` :
 - l'hôte n'accède ni aux domaines des modules ni à EF Core ;
 - dans un module, seul `Module<Nom>` est public (hors migrations générées) ; `Endpoints` ne touche pas
   à la persistance, et `Application` / `Infrastructure` ne dépendent pas d'`Endpoints` ;
-- seul le module Stock écrit les mouvements et les soldes (RG01).
+- seul le module Stock écrit les mouvements et les soldes (RG01) ;
+- le client Blazor ne référence aucun projet serveur ; ses permissions et rôles sont ceux de l'API, et chaque texte
+  de l'interface existe en français et en anglais (vérifié sur ses sources).
 
 Les assemblages sont découverts à partir de l'hôte et classés selon leur nom : un nouveau module
 branché sur l'hôte est couvert sans modifier les tests.
@@ -93,11 +95,21 @@ dotnet build
 dotnet test
 ```
 
-Base et API en conteneurs, comme en boutique :
+Base et API en conteneurs, comme en boutique (application sur http://localhost:8080) :
 
 ```bash
 docker compose -f deploy/docker-compose.yml up -d --build
 ```
+
+Sans SDK .NET 10 sur le poste, build et tests peuvent tourner dans le conteneur du SDK, sur une copie du dépôt
+(le socket Docker permet aux tests d'intégration de lancer leur PostgreSQL) :
+
+```bash
+docker run --rm -v "$PWD:/src:ro" -v /var/run/docker.sock:/var/run/docker.sock -e TESTCONTAINERS_HOST_OVERRIDE=host.docker.internal mcr.microsoft.com/dotnet/sdk:10.0 bash -c "cp -r /src /work && cd /work && dotnet test"
+```
+
+Si le port 5432 du poste est déjà pris (PostgreSQL installé sous Windows, par exemple), choisir un autre
+`POSTGRES_PORT` dans `deploy/.env`.
 
 Nouvelle migration d'un module (le code généré va dans `Infrastructure/Migrations`) :
 
@@ -112,7 +124,7 @@ Uniquement par variables d'environnement ou `appsettings` ; aucun chemin ni adre
 | Clé | Variable d'environnement | Rôle |
 | --- | --- | --- |
 | `ConnectionStrings:GestionStock` | `ConnectionStrings__GestionStock` | Chaîne de connexion PostgreSQL (obligatoire) ; le chiffrement GSS (Kerberos) y est désactivé sauf si `GSS Encryption Mode` est fourni |
-| `Stockage:RepertoireRacine` | `Stockage__RepertoireRacine` | Répertoire des fichiers (reçus, imports) ; `donnees/fichiers` par défaut |
+| `Stockage:RepertoireRacine` | `Stockage__RepertoireRacine` | Répertoire des fichiers (reçus, imports) ; `donnees/fichiers` par défaut. Contient aussi `cles-protection/`, les clés qui signent les jetons de connexion : conservées, elles évitent qu'un redémarrage déconnecte tout le monde (à inclure dans les sauvegardes) |
 | `BaseDeDonnees:AppliquerMigrationsAuDemarrage` | `BaseDeDonnees__AppliquerMigrationsAuDemarrage` | Applique les migrations de chaque module au démarrage ; `false` par défaut, `true` en Development et dans docker-compose |
 | `Identite:AdministrateurInitial:Identifiant` | `Identite__AdministrateurInitial__Identifiant` | Compte Administrateur créé au démarrage si la base ne contient aucun compte (`ADMIN_IDENTIFIANT` dans `deploy/.env`) |
 | `Identite:AdministrateurInitial:MotDePasse` | `Identite__AdministrateurInitial__MotDePasse` | Son mot de passe (`ADMIN_MOT_DE_PASSE`) ; à changer en boutique |
@@ -222,7 +234,7 @@ Chaque permission est attribuée à des rôles dans
 | Projet | Contenu | Docker |
 | --- | --- | --- |
 | `GestionStock.Stock.Domain.Tests` | Règles du domaine : mouvements, soldes, CUMP, RG03 / RG22 | Non |
-| `GestionStock.Infrastructure.Tests` | Horloge, stockage de fichiers, chaîne de connexion | Non |
+| `GestionStock.Infrastructure.Tests` | Horloge, stockage de fichiers, chaîne de connexion, clés de protection conservées | Non |
 | `GestionStock.Api.IntegrationTests` | API complète par HTTP : connexion, jetons, 401 / 403, comptes, articles, fournisseurs, réceptions (CUMP, transaction, validation simultanée), soldes et journal | Oui |
 | `GestionStock.ArchitectureTests` | Dépendances entre projets, visibilité, couches, traductions | Non |
 | `GestionStock.Stock.IntegrationTests` | PostgreSQL 17 réelle : migration, transaction partagée, idempotence, journal immuable, mouvements simultanés | Oui |
@@ -240,7 +252,8 @@ sur une machine Linux de GitHub qui dispose de Docker :
 - **Build et tests** : build en Release sans avertissement, puis tous les tests, y compris ceux sur PostgreSQL réelle ;
 - **Image et docker-compose** : construit l'image de l'API, démarre `deploy/docker-compose.yml` avec les valeurs de
   `deploy/.env.example`, puis vérifie que `/health/pret` répond, que la migration `Initial` de chaque module est
-  appliquée, qu'une route métier répond 401 sans jeton et que l'Administrateur initial se connecte.
+  appliquée, qu'une route métier répond 401 sans jeton, que l'Administrateur initial se connecte et que le client
+  Blazor est servi.
 
 ## Avancement du squelette
 
@@ -258,7 +271,21 @@ sur une machine Linux de GitHub qui dispose de Docker :
 | 9 | Module Referentiel : articles, site et emplacement de vente | Fait |
 | 10 | Module Achats minimal : fournisseurs, réception simple ; lectures du stock | Fait |
 | 11 | Client Blazor WebAssembly : premiers écrans | Fait |
-| 12 | Tests d'architecture, Docker, démonstration de bout en bout | À faire |
+| 12 | Tests d'architecture du client, clés de protection conservées, démonstration de bout en bout | Fait |
+
+## Démonstration
+
+Scénario vérifié dans le navigateur sur http://localhost:8080, base vierge :
+
+1. connexion de l'Administrateur initial (`admin`, mot de passe de `deploy/.env`) ;
+2. **Utilisateurs** : création d'un compte `magasinier` (Magasinier) et d'un compte `gerant` (Gérant) ;
+3. **Articles** : création de `LAIT-397` « Lait concentré sucré 397 g », unité « boîte », 0 décimale ;
+4. connexion du Magasinier ; **Fournisseurs** : création d'un grossiste ;
+5. **Réceptions** : `R-000001`, 10 boîtes à 500 XAF, enregistrée puis validée ; `R-000002`, 10 boîtes à 700 XAF ;
+6. **Stock** : 20 boîtes, CUMP 600 XAF, valeur 12 000 XAF ; le journal de l'article montre les deux entrées,
+   avec leur réception et le Magasinier ;
+7. passage en anglais : textes, rôles, format des montants et libellé traduit de l'article ;
+8. redémarrage de l'API : la session reste ouverte.
 
 ## Points ouverts
 
