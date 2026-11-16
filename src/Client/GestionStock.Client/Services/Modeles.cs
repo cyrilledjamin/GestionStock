@@ -97,4 +97,5 @@ public static class Permissions
     public const string StockConsulter = "Stock.Consulter";
     public const string PrixConsulter = "Prix.Consulter";
     public const string PrixGerer = "Prix.Gerer";
+    public const string DepassementsValider = "Caisse.Depassements.Valider";
 }
