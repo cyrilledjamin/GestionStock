@@ -242,7 +242,7 @@ Ouvrir http://localhost:8080 (docker-compose) puis se connecter. Le menu dépend
 | Fournisseurs | Liste, création, modification, désactivation |
 | Articles | Recherche, création, modification, désactivation |
 | Fiche article | Conditionnements, codes-barres (saisis, générés, désactivés) et prix (en vigueur, programmé, nouveau) |
-| Caisse | Ouverture de session (poste, fond) ; scan à la douchette (le curseur revient sur le scan après chaque ajout) ou recherche ; panier ; client et crédit ; paiements combinés avec rendu ; validation d'un responsable si remise ou plafond dépassé ; reçu 80 mm imprimable et PDF ; remboursement de crédit ; clôture avec écart |
+| Caisse | Ouverture de session (poste, fond) ; scan à la douchette (le curseur revient sur le scan après chaque ajout) ou recherche ; panier ; client et crédit ; paiements combinés avec rendu (une ligne par mode, un nouveau clic sur un mode lui ajoute le reste à payer) ; validation d'un responsable si remise ou plafond dépassé ; reçu 80 mm imprimable et PDF ; remboursement de crédit ; clôture avec écart |
 | Tickets de la session, ticket | Recherche par numéro, réimpression, avoir (quantités à rendre, mode de remboursement) |
 | Sessions de caisse | Supervision (Gérant, Comptable) : ventes nettes, espèces théoriques et comptées, écart, validation |
 | Clients, fiche client | Clients à crédit, impayés, création (Gérant), plafond (Comptable), ventes non soldées, journal |
