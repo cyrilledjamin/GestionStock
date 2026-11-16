@@ -47,6 +47,18 @@ public static class Permissions
     /// <summary>Fixer les plafonds de crédit (RG40).</summary>
     public const string PlafondsGerer = "Credit.Plafonds.Gerer";
 
+    /// <summary>Ouvrir et clôturer sa session, vendre, faire un avoir, encaisser un remboursement (UC17, UC18, UC24, UC27).</summary>
+    public const string CaisseVendre = "Caisse.Vendre";
+
+    /// <summary>Consulter les tickets et imprimer un reçu.</summary>
+    public const string TicketsConsulter = "Caisse.Tickets.Consulter";
+
+    /// <summary>Consulter toutes les sessions de caisse.</summary>
+    public const string SessionsConsulter = "Caisse.Sessions.Consulter";
+
+    /// <summary>Valider la clôture d'une session et son écart (RG36).</summary>
+    public const string SessionsValider = "Caisse.Sessions.Valider";
+
     /// <summary>Consulter les disponibilités et les mouvements (UC14).</summary>
     public const string StockConsulter = "Stock.Consulter";
 }

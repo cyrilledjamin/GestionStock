@@ -23,6 +23,10 @@ public sealed class ApiDeTest : IAsyncLifetime
     /// <summary>Mot de passe conforme à la politique, pour les comptes créés par les tests.</summary>
     public const string MotDePasseValide = "Secret123!";
 
+    private const int NombrePostes = 100;
+
+    private static int _postesAttribues = -1;
+
     private PostgreSqlContainer? _conteneur;
     private WebApplicationFactory<Program>? _fabrique;
     private string? _dockerIndisponible;
@@ -45,17 +49,30 @@ public sealed class ApiDeTest : IAsyncLifetime
 
         var chaine = _conteneur.GetConnectionString();
         var repertoire = Path.Combine(Path.GetTempPath(), "gestionstock-tests", Guid.NewGuid().ToString("N"));
-        _fabrique = new WebApplicationFactory<Program>().WithWebHostBuilder(hote => hote
-            .UseEnvironment("Test")
-            .UseSetting("ConnectionStrings:GestionStock", chaine)
-            .UseSetting("BaseDeDonnees:AppliquerMigrationsAuDemarrage", "true")
-            .UseSetting("Stockage:RepertoireRacine", repertoire)
-            .UseSetting("Identite:AdministrateurInitial:Identifiant", Administrateur)
-            .UseSetting("Identite:AdministrateurInitial:MotDePasse", MotDePasseAdministrateur));
+        _fabrique = new WebApplicationFactory<Program>().WithWebHostBuilder(hote =>
+        {
+            // Un poste de caisse par test : une seule session peut être ouverte sur un poste.
+            for (var i = 0; i < NombrePostes; i++)
+            {
+                hote.UseSetting($"Caisse:Postes:{i}", Poste(i));
+            }
+
+            hote.UseEnvironment("Test")
+                .UseSetting("ConnectionStrings:GestionStock", chaine)
+                .UseSetting("BaseDeDonnees:AppliquerMigrationsAuDemarrage", "true")
+                .UseSetting("Stockage:RepertoireRacine", repertoire)
+                .UseSetting("Identite:AdministrateurInitial:Identifiant", Administrateur)
+                .UseSetting("Identite:AdministrateurInitial:MotDePasse", MotDePasseAdministrateur);
+        });
 
         // Démarre l'hôte (migrations, Administrateur initial) avant le premier test.
         _ = _fabrique.Server;
     }
+
+    /// <summary>Poste de caisse réservé au test appelant (T001, T002…).</summary>
+    public static string ProchainPoste() => Poste(Interlocked.Increment(ref _postesAttribues));
+
+    private static string Poste(int index) => $"T{index + 1:D3}";
 
     /// <summary>Services de l'hôte, pour appeler un contrat de module hors HTTP.</summary>
     public IServiceProvider Services

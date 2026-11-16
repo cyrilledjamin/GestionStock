@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Recu.Ticket" xml:space="preserve"><value>Receipt</value></data>
+  <data name="Recu.Avoir" xml:space="preserve"><value>CREDIT NOTE</value></data>
+  <data name="Recu.AvoirSur" xml:space="preserve"><value>For receipt</value></data>
+  <data name="Recu.Caissier" xml:space="preserve"><value>Cashier:</value></data>
+  <data name="Recu.Client" xml:space="preserve"><value>Customer:</value></data>
+  <data name="Recu.Telephone" xml:space="preserve"><value>Tel.</value></data>
+  <data name="Recu.Niu" xml:space="preserve"><value>Tax ID</value></data>
+  <data name="Recu.Remise" xml:space="preserve"><value>Discount</value></data>
+  <data name="Recu.Total" xml:space="preserve"><value>TOTAL</value></data>
+  <data name="Recu.TotalHt" xml:space="preserve"><value>Total excl. VAT</value></data>
+  <data name="Recu.Tva" xml:space="preserve"><value>VAT</value></data>
+  <data name="Recu.PrixNets" xml:space="preserve"><value>Net prices, VAT not applicable</value></data>
+  <data name="Recu.Mode.Especes" xml:space="preserve"><value>Cash</value></data>
+  <data name="Recu.Mode.MobileMoney" xml:space="preserve"><value>Mobile Money</value></data>
+  <data name="Recu.Mode.Carte" xml:space="preserve"><value>Card</value></data>
+  <data name="Recu.Mode.Credit" xml:space="preserve"><value>Credit</value></data>
+  <data name="Recu.Reference" xml:space="preserve"><value>Ref.</value></data>
+  <data name="Recu.Rendu" xml:space="preserve"><value>Change</value></data>
+  <data name="Recu.Merci" xml:space="preserve"><value>Thank you for your visit!</value></data>
+</root>

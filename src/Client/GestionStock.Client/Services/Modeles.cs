@@ -101,4 +101,8 @@ public static class Permissions
     public const string CreditConsulter = "Credit.Consulter";
     public const string ClientsGerer = "Credit.Clients.Gerer";
     public const string PlafondsGerer = "Credit.Plafonds.Gerer";
+    public const string CaisseVendre = "Caisse.Vendre";
+    public const string TicketsConsulter = "Caisse.Tickets.Consulter";
+    public const string SessionsConsulter = "Caisse.Sessions.Consulter";
+    public const string SessionsValider = "Caisse.Sessions.Valider";
 }

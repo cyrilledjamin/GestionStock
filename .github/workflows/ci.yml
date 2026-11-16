@@ -70,7 +70,7 @@ jobs:
 
       - name: La migration Initial de chaque module est appliquée
         run: |
-          for schema in identite referentiel prix stock achats credit; do
+          for schema in identite referentiel prix stock achats credit caisse; do
             $COMPOSE exec -T db psql -U gestionstock -d gestionstock -tAc \
               "SELECT migration_id FROM $schema.__ef_migrations_history" | tee migrations.txt
             grep -q "_Initial$" migrations.txt
