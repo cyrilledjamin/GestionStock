@@ -12,6 +12,7 @@ est dans [docs/dossier-analyse.md](docs/dossier-analyse.md).
 - Client Blazor WebAssembly servi par l'API (même origine), sans ressource externe
 - Monolithe modulaire : un projet `.Contracts` public et un projet interne par module, un schéma PostgreSQL par module
 - Fichiers Excel : ClosedXML (reprise des données)
+- Rapports : Dapper, en lecture seule sur les vues `v_*` publiées par les modules
 - Tests : xUnit v3 (Microsoft.Testing.Platform), NetArchTest, Testcontainers
 - Déploiement : Docker Compose, conteneur Linux
 
@@ -47,6 +48,9 @@ src/
   Modules/Referentiel/
     GestionStock.Referentiel.Contracts  contrat public : IConsultationReferentiel (articles, site de la boutique)
     GestionStock.Referentiel         articles, site et emplacements (style CRUD)
+  Modules/Rapports/
+    GestionStock.Rapports.Contracts  contrat public : JournauxComptables (journaux exportables)
+    GestionStock.Rapports            rapports en lecture seule (Dapper) sur les vues v_* des modules, sans schéma
   Modules/Reprise/
     GestionStock.Reprise.Contracts   contrat public : colonnes du fichier de reprise
     GestionStock.Reprise             import Excel (ClosedXML) : modèle, exemple, contrôle, import tout ou rien
@@ -226,6 +230,11 @@ Si le port 5432 est déjà pris (PostgreSQL installé sur le poste), choisir un 
 | `GET /api/reprise/modele.xlsx` | `Reprise.Importer` | Modèle Excel dans la langue de la requête ; `?exemple=true` : rempli avec le jeu d'exemple |
 | `POST /api/reprise/simulation` | `Reprise.Importer` | Corps : le classeur (`application/octet-stream`, 5 Mo au plus) ; rapport ligne par ligne, rien n'est écrit |
 | `POST /api/reprise/import` | `Reprise.Importer` | Même contrôle, puis import tout ou rien et inventaire d'ouverture ; rapport |
+| `GET /api/rapports/ventes?du=&au=` | `Rapports.Consulter` | Ventes et marge : totaux, par jour, par article, par caissier (avoirs déduits, coût au CUMP) |
+| `GET /api/rapports/stock` | `Rapports.Consulter` | Quantité, CUMP et valeur par article ; total ; stocks négatifs |
+| `GET /api/rapports/creances-dettes` | `Rapports.Consulter` | Clients (dû, en retard RG43, plus ancienne échéance) et fournisseurs (dû, payé, reste) |
+| `GET /api/rapports/caisse?du=&au=` | `Rapports.Consulter` | Sessions et écarts, remises, avoirs, crédits validés par un responsable, stocks négatifs, frais non incorporés |
+| `GET /api/rapports/journaux` | `Rapports.Consulter` | Journaux comptables exportables |
 | `GET /api/stock/soldes` | `Stock.Consulter` | Soldes article × site de la boutique : physique, réservé, bloqué, disponible, CUMP |
 | `GET /api/stock/articles/{id}/mouvements` | `Stock.Consulter` | Journal d'un article, du plus récent au plus ancien (`?limite=`, 100 par défaut, 1000 au plus) |
 
@@ -425,6 +434,24 @@ récupérable, clé de répartition (**valeur** par défaut, ou quantité) et li
 - Un paiement n'est jamais modifié ni supprimé : une erreur se corrige par une **annulation** (paiement opposé, motif
   obligatoire, utilisateur et horodatage), une seule fois par paiement.
 
+## Rapports (décision 33)
+
+Le module Rapports n'a ni schéma ni DbContext. Il lit, avec Dapper et dans une transaction **en lecture seule**, les
+**vues `v_*`** que chaque module publie dans son schéma par une migration (`VuesLecture`) : c'est leur contrat de
+lecture (section 7, CQRS côté lecture). Un test d'architecture vérifie qu'aucune requête ne lit autre chose.
+
+| Module | Vues |
+| --- | --- |
+| Referentiel | `v_articles` |
+| Caisse | `v_tickets`, `v_lignes_vendues`, `v_paiements` (encaissé = espèces moins le rendu), `v_remboursements_credit`, `v_sessions` |
+| Credit | `v_clients`, `v_operations`, `v_ventes_credit` (reste dû par vente) |
+| Stock | `v_mouvements` (variation signée), `v_soldes` (valeur) |
+| Achats | `v_receptions` (marchandise, frais, payé), `v_frais` (part non incorporée), `v_paiements_fournisseurs` |
+
+Période en jours de Douala (`du`, `au` inclus, une année au plus ; aujourd'hui par défaut). Un avoir vient en
+déduction ; le coût des ventes est celui des mouvements de stock du ticket (CUMP du moment) ; marge = CA HT − coût.
+Montants calculés à 4 décimales, arrondis à l'unité à l'affichage (RG32).
+
 ## Revalorisation (RG30)
 
 Des frais d'approche connus après la réception donnent un mouvement `Revalorisation` : aucun emplacement, aucune
@@ -461,6 +488,7 @@ Chaque permission est attribuée à des rôles dans
 | `Inventaire.Valider` | Comptable |
 | `Inventaire.Demarque.Valider` | Comptable, Gerant |
 | `Reprise.Importer` | Administrateur, Gerant *(provisoire)* |
+| `Rapports.Consulter` | Gerant, Comptable |
 | `Caisse.Vendre` | Caissier |
 | `Caisse.Tickets.Consulter` | Caissier, Gerant, Comptable |
 | `Caisse.Sessions.Consulter`, `Caisse.Sessions.Valider` | Gerant, Comptable |
@@ -528,7 +556,7 @@ sur une machine Linux de GitHub qui dispose de Docker :
 | 24 | Stock : mouvement Revalorisation (RG30) | Fait |
 | 25 | Achats : frais d'approche, répartition, revalorisation des frais tardifs | Fait |
 | 26 | Achats : dettes fournisseurs et paiements | Fait |
-| 27 | Module Rapports : ventes et marge, stock, créances et dettes, caisse et anomalies | À faire |
+| 27 | Module Rapports : ventes et marge, stock, créances et dettes, caisse et anomalies | Fait |
 | 28 | Exports comptables Excel et CSV | À faire |
 | 29 | Client : écrans frais, dettes, rapports, exports | À faire |
 | 30 | Architecture, CI, README, démonstration de la tranche 4 | À faire |

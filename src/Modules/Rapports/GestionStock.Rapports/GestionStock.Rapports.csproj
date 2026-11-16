@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Implémentation interne du module Rapports : lecture seule des vues v_* publiées par les modules (Dapper) -->
+  <PropertyGroup>
+    <NeutralLanguage>fr</NeutralLanguage>
+  </PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Dapper" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../GestionStock.Rapports.Contracts/GestionStock.Rapports.Contracts.csproj" />
+    <ProjectReference Include="../../Identite/GestionStock.Identite.Contracts/GestionStock.Identite.Contracts.csproj" />
+    <ProjectReference Include="../../../BuildingBlocks/GestionStock.Infrastructure/GestionStock.Infrastructure.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="GestionStock.ArchitectureTests" />
+    <InternalsVisibleTo Include="GestionStock.Api.IntegrationTests" />
+  </ItemGroup>
+</Project>

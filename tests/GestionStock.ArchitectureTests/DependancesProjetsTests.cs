@@ -34,6 +34,8 @@ public sealed class DependancesProjetsTests
             "GestionStock.Prix.Contracts",
             "GestionStock.Referentiel",
             "GestionStock.Referentiel.Contracts",
+            "GestionStock.Rapports",
+            "GestionStock.Rapports.Contracts",
             "GestionStock.Reprise",
             "GestionStock.Reprise.Contracts",
             "GestionStock.Stock",
