@@ -52,7 +52,7 @@
                             </td>
                             <td class="nombre">
                                 <input type="number" min="0" step="@Pas(article)" @bind="ligne.Quantite" required />
-                                <small class="discret">@article?.UniteStock</small>
+                                <small class="discret">@Format.Unite(article?.UniteStock)</small>
                             </td>
                             <td class="nombre"><input type="number" min="0" step="any" @bind="ligne.CoutUnitaire" required /></td>
                             <td class="nombre">@Format.Montant(ligne.Quantite * ligne.CoutUnitaire)</td>
@@ -104,7 +104,7 @@
                 {
                     <tr>
                         <td><a href="stock/@ligne.ArticleId"><code>@ligne.CodeArticle</code></a> @ligne.LibelleArticle</td>
-                        <td class="nombre">@Format.Quantite(ligne.Quantite) @ligne.UniteStock</td>
+                        <td class="nombre">@Format.Quantite(ligne.Quantite) @Format.Unite(ligne.UniteStock)</td>
                         <td class="nombre">@Format.Montant(ligne.CoutUnitaire)</td>
                         <td class="nombre">@Format.Montant(ligne.Valeur)</td>
                         <td class="nombre">@Format.Montant(ligne.FraisApprocheAlloues)</td>

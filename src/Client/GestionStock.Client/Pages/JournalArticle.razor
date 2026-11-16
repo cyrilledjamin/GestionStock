@@ -12,7 +12,7 @@
     <h1><code>@_article.Code</code> @Format.Libelle(_article)</h1>
 
     <div class="tuiles">
-        <div class="tuile chiffre"><span>@L["Physique"]</span><strong>@Format.Quantite(_solde?.QuantitePhysique ?? 0, _article.PrecisionQuantite) @_article.UniteStock</strong></div>
+        <div class="tuile chiffre"><span>@L["Physique"]</span><strong>@Format.Quantite(_solde?.QuantitePhysique ?? 0, _article.PrecisionQuantite) @Format.Unite(_article.UniteStock)</strong></div>
         <div class="tuile chiffre"><span>@L["Disponible"]</span><strong>@Format.Quantite(_solde?.QuantiteDisponible ?? 0, _article.PrecisionQuantite)</strong></div>
         <div class="tuile chiffre"><span>@L["Cump"]</span><strong>@Format.Montant(_solde?.Cump ?? 0)</strong></div>
         <div class="tuile chiffre"><span>@L["ValeurStock"]</span><strong>@Format.Montant((_solde?.QuantitePhysique ?? 0) * (_solde?.Cump ?? 0))</strong></div>

@@ -1,0 +1,25 @@
+@* Marque de la boutique : son logo (facultatif, sinon l'icône) et son nom ; « GestionStock » en petit s'il diffère. *@
+@inject Boutique Boutique
+
+<span class="marque-boutique">
+    @if (Boutique.AUnLogo)
+    {
+        <img class="logo" src="@Boutique.AdresseLogo" alt="" />
+    }
+    else
+    {
+        <Icone Nom="marque" />
+    }
+    <span class="nom">
+        @Boutique.Nom
+        @if (Boutique.EstPersonnalisee && AvecLogiciel)
+        {
+            <small>@Boutique.Logiciel</small>
+        }
+    </span>
+</span>
+
+@code {
+    /// <summary>Mentionne le nom du logiciel sous celui de la boutique (menu, connexion), pas dans la barre étroite.</summary>
+    [Parameter] public bool AvecLogiciel { get; set; } = true;
+}

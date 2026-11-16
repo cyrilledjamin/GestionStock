@@ -51,6 +51,7 @@ public static class ModuleIdentite
         services.AddScoped<ServiceConnexion>();
         services.AddScoped<ServiceUtilisateurs>();
         services.AddScoped<IValidationResponsable, ServiceValidationResponsable>();
+        services.AddScoped<IAnnuairePersonnel, ServiceAnnuairePersonnel>();
 
         services.AddOptions<OptionsAdministrateurInitial>().Bind(configuration.GetSection(OptionsAdministrateurInitial.Section));
         services.AddHostedService<InitialisationAdministrateur>();

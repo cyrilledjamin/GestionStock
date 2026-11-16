@@ -1,10 +1,14 @@
 using GestionStock.Caisse.Contracts;
 using GestionStock.Caisse.Infrastructure;
 using GestionStock.Credit.Contracts;
+using GestionStock.Identite.Contracts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
 namespace GestionStock.Caisse.Application;
+
+/// <summary>Identité publique de la boutique : nom et présence d'un logo.</summary>
+internal sealed record IdentiteBoutique(string Nom, bool Logo);
 
 /// <summary>Identité de l'entreprise imprimée sur les reçus (section <c>Entreprise</c> de la configuration).</summary>
 internal sealed class OptionsEntrepriseRecu
@@ -19,6 +23,21 @@ internal sealed class OptionsEntrepriseRecu
 
     /// <summary>Numéro d'identifiant unique du contribuable, s'il doit figurer sur le reçu.</summary>
     public string? NumeroContribuable { get; set; }
+
+    /// <summary>
+    /// Logo facultatif : chemin d'une image PNG, JPEG ou WebP dans le stockage de fichiers (ex. <c>identite/logo.png</c>).
+    /// Le SVG est refusé : servi depuis le site même, il pourrait exécuter du script.
+    /// </summary>
+    public string? Logo { get; set; }
+
+    /// <summary>Type MIME du logo d'après son extension, ou null si l'extension n'est pas une image acceptée.</summary>
+    public string? TypeLogo => Path.GetExtension(Logo ?? "").ToLowerInvariant() switch
+    {
+        ".png" => "image/png",
+        ".jpg" or ".jpeg" => "image/jpeg",
+        ".webp" => "image/webp",
+        _ => null,
+    };
 }
 
 /// <summary>Assemble le reçu d'un ticket et le fait générer par <see cref="IGenerateurRecu"/> (décision 17).</summary>
@@ -27,6 +46,7 @@ internal sealed class ServiceRecus(
     ServiceTickets tickets,
     IServiceCredit credit,
     IGenerateurRecu generateur,
+    IAnnuairePersonnel annuaire,
     IOptions<OptionsEntrepriseRecu> entreprise)
 {
     public async Task<(byte[] Pdf, string Numero)> GenererPdfAsync(Guid ticketId, string langue, CancellationToken annulation)
@@ -45,7 +65,7 @@ internal sealed class ServiceRecus(
             options.NumeroContribuable,
             ticket.NumeroComplet,
             ticket.DateUtc,
-            ticket.Caissier,
+            await annuaire.DesignationAsync(ticket.Caissier, annulation),
             ticket.EstAvoir,
             origine,
             client?.Nom,

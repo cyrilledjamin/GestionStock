@@ -50,7 +50,7 @@
             {
                 <tr class="@(ligne.Ecart < 0 ? "negatif" : "")">
                     <td><code>@ligne.CodeArticle</code></td>
-                    <td>@ligne.Libelle <small class="discret">@ligne.UniteStock</small></td>
+                    <td>@ligne.Libelle <small class="discret">@Format.Unite(ligne.UniteStock)</small></td>
                     <td class="nombre">@(ligne.QuantiteTheorique is { } t ? Format.Quantite(t, ligne.PrecisionQuantite) : "—")</td>
                     <td class="nombre">
                         @if (EnCours && Session.A(Permissions.InventaireCompter))
@@ -142,7 +142,7 @@
         {
             var dejaCompte = _detail?.Lignes.FirstOrDefault(l => l.ArticleId == vendable.ArticleId)?.QuantiteComptee ?? 0m;
             await Compter(vendable.ArticleId, dejaCompte + vendable.QuantiteUniteStock, freinte: false);
-            _succes = $"{vendable.CodeArticle} : {Format.Quantite(dejaCompte + vendable.QuantiteUniteStock)} {vendable.UniteStock}";
+            _succes = $"{vendable.CodeArticle} : {Format.Quantite(dejaCompte + vendable.QuantiteUniteStock)} {Format.Unite(vendable.UniteStock)}";
         }
 
         await Js.InvokeVoidAsync("gestionStock.focaliser", "scan");

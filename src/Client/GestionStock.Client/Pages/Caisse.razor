@@ -130,7 +130,7 @@ else
                         {
                             <button type="button" class="tuile-article" @onclick="() => Ajouter(vendable)">
                                 <strong>@Format.Libelle(Article(vendable))</strong>
-                                <small>@vendable.LibelleConditionnement · @vendable.CodeArticle</small>
+                                <small>@Format.Unite(vendable.LibelleConditionnement) · @vendable.CodeArticle</small>
                             </button>
                         }
                     </div>
@@ -143,7 +143,7 @@ else
                         {
                             <button type="button" class="tuile-article" @onclick="() => Ajouter(vendable)">
                                 <strong>@Format.Libelle(Article(vendable))</strong>
-                                <small>@vendable.LibelleConditionnement@(PrixRapide(vendable))</small>
+                                <small>@Format.Unite(vendable.LibelleConditionnement)@(PrixRapide(vendable))</small>
                             </button>
                         }
                     </div>
@@ -156,7 +156,7 @@ else
                         <li class="ligne-panier @(ligne == _ligneChoisie ? "choisie" : "")" @onclick="() => Choisir(ligne)">
                             <div class="designation">
                                 <strong>@Format.Libelle(Article(ligne.Vendable))</strong>
-                                <small>@ligne.Vendable.LibelleConditionnement · @Format.Montant(ligne.Prix)</small>
+                                <small>@Format.Unite(ligne.Vendable.LibelleConditionnement) · @Format.Montant(ligne.Prix)</small>
                             </div>
                             <div class="quantite" @onclick:stopPropagation="true">
                                 <button type="button" title="@L["Moins"]" aria-label="@L["Moins"]" @onclick="() => PuisScanner(() => VenteEnCours.Decrementer(ligne))">−</button>

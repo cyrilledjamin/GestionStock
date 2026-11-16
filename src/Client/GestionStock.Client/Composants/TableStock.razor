@@ -6,7 +6,7 @@
         {
             <tr class="@(ligne.Quantite < 0 ? "negatif" : "")">
                 <td data-label="@L["Article"]"><a href="stock/@ligne.ArticleId"><code>@ligne.Code</code></a> @ligne.Libelle</td>
-                <td data-label="@L["Quantite"]" class="nombre">@Format.Quantite(ligne.Quantite, ligne.PrecisionQuantite) @ligne.UniteStock</td>
+                <td data-label="@L["Quantite"]" class="nombre">@Format.Quantite(ligne.Quantite, ligne.PrecisionQuantite) @Format.Unite(ligne.UniteStock)</td>
                 <td data-label="@L["Cump"]" class="nombre">@Format.Montant(ligne.Cump)</td>
                 <td data-label="@L["Valeur"]" class="nombre">@Format.Montant(ligne.Valeur)</td>
             </tr>

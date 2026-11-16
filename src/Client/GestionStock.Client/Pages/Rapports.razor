@@ -55,7 +55,7 @@
         <tbody>
             @foreach (var article in _ventes.ParArticle)
             {
-                <tr class="@(article.Marge < 0 ? "negatif" : "")"><td><code>@article.Code</code> @article.Libelle</td><td class="nombre">@Format.Quantite(article.Quantite) @article.UniteStock</td><td class="nombre">@Format.Montant(article.ChiffreAffairesHt)</td><td class="nombre">@Format.Montant(article.CoutDesVentes)</td><td class="nombre">@Format.Montant(article.Marge)</td><td class="nombre">@Taux(article.TauxMarge)</td></tr>
+                <tr class="@(article.Marge < 0 ? "negatif" : "")"><td><code>@article.Code</code> @article.Libelle</td><td class="nombre">@Format.Quantite(article.Quantite) @Format.Unite(article.UniteStock)</td><td class="nombre">@Format.Montant(article.ChiffreAffairesHt)</td><td class="nombre">@Format.Montant(article.CoutDesVentes)</td><td class="nombre">@Format.Montant(article.Marge)</td><td class="nombre">@Taux(article.TauxMarge)</td></tr>
             }
         </tbody>
     </table>

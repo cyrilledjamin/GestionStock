@@ -357,6 +357,7 @@ public sealed record TicketCaisse(
     string Numero,
     DateTime DateUtc,
     string Caissier,
+    string CaissierDesignation,
     bool EstAvoir,
     Guid? TicketOrigineId,
     Guid? ClientId,

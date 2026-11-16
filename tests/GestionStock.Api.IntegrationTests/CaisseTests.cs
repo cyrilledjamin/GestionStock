@@ -2,6 +2,8 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text;
 using GestionStock.Identite.Contracts;
+using GestionStock.Infrastructure.Stockage;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace GestionStock.Api.IntegrationTests;
 
@@ -20,6 +22,7 @@ public sealed class CaisseTests(ApiDeTest api)
         var journal = await b.Gerant.GetFromJsonAsync<List<Mouvement>>($"/api/stock/articles/{b.ArticleId}/mouvements", Annulation);
 
         Assert.Equal($"{b.Poste}-000001", ticket.Numero);
+        Assert.Equal($"Test Caissier ({b.IdentifiantCaissier})", ticket.CaissierDesignation);
         Assert.Equal(6500m, ticket.TotalTtc);
         Assert.Equal(3500m, ticket.Rendu);
         Assert.Equal(0m, ticket.TauxTva);
@@ -314,6 +317,35 @@ public sealed class CaisseTests(ApiDeTest api)
         Assert.Equal("Validee", validee.Statut);
     }
 
+    // --- Identité de la boutique ---------------------------------------------------------------------------------
+
+    [Fact]
+    public async Task Le_nom_et_le_logo_de_la_boutique_sont_publics_et_rien_d_autre()
+    {
+        using var anonyme = api.Client();
+        var stockage = api.Services.GetRequiredService<IStockageFichiers>();
+        // PNG d'un pixel : signature et en-tête suffisent au navigateur ; le serveur ne fait que le transmettre.
+        byte[] png = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0, 0, 0, 0x0D, 0x49, 0x48, 0x44, 0x52];
+
+        var sansLogo = await anonyme.GetFromJsonAsync<IdentiteBoutique>("/api/caisse/boutique", Annulation);
+        var logoAbsent = await anonyme.GetAsync("/api/caisse/boutique/logo", Annulation);
+        await using (var contenu = new MemoryStream(png))
+        {
+            await stockage.EnregistrerAsync(ApiDeTest.CheminLogo, contenu, Annulation);
+        }
+
+        var avecLogo = await anonyme.GetFromJsonAsync<IdentiteBoutique>("/api/caisse/boutique", Annulation);
+        var logo = await anonyme.GetAsync("/api/caisse/boutique/logo", Annulation);
+        var entete = await anonyme.GetAsync("/api/caisse/entete", Annulation);
+
+        Assert.Equal(("Boutique de test", false), (sansLogo!.Nom, sansLogo.Logo));
+        Assert.Equal(HttpStatusCode.NotFound, logoAbsent.StatusCode);
+        Assert.True(avecLogo!.Logo);
+        Assert.Equal("image/png", logo.Content.Headers.ContentType?.MediaType);
+        Assert.Equal(png, await logo.Content.ReadAsByteArrayAsync(Annulation));
+        Assert.Equal(HttpStatusCode.Unauthorized, entete.StatusCode);
+    }
+
     // --- Reçu ----------------------------------------------------------------------------------------------------
 
     [Fact]
@@ -429,6 +461,7 @@ public sealed class CaisseTests(ApiDeTest api)
     private sealed record Ticket(
         Guid Id,
         string Numero,
+        string CaissierDesignation,
         bool EstAvoir,
         Guid? TicketOrigineId,
         decimal TotalTtc,
@@ -440,6 +473,8 @@ public sealed class CaisseTests(ApiDeTest api)
         List<PaiementLu> Paiements);
 
     private sealed record Totaux(int NombreAvoirs, decimal Credit, decimal EspecesTheoriques);
+
+    private sealed record IdentiteBoutique(string Nom, bool Logo);
 
     private sealed record Session(Guid Id, string Statut, decimal? Ecart, string? ClotureePar, Totaux Totaux);
 

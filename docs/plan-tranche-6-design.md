@@ -44,7 +44,8 @@ Chaque étape garde `dotnet build` et `dotnet test` au vert et fait l'objet d'un
 2. **Session restée ouverte sur un poste** : le Gérant peut la clôturer à la place de son titulaire, avec les espèces
    comptées. Nouvelle règle, à reporter dans le dossier d'analyse : l'opération est journalisée (Gérant, horodatage,
    titulaire) et l'écart reste à valider comme pour toute clôture (étape 37, module Caisse).
-3. **Identité** : à décider à l'étape 40 (nom seul ou logo fourni).
+3. **Identité** : nom de la boutique et logo facultatif (configuration `ENTREPRISE_LOGO`, PNG, JPEG ou WebP) ; pas encore
+   de logo : l'icône de l'application s'affiche en attendant.
 4. **Unités** : liste fixe d'unités courantes traduites côté client (boîte → box, pièce → piece…) ; une unité absente
    de la liste s'affiche telle quelle.
 5. **Matériel au comptoir** : prévoir les deux cas. Boutons de 44 px au moins, pavé numérique à l'écran toujours

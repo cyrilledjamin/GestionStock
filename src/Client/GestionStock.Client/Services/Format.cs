@@ -11,9 +11,64 @@ public static class Format
     public static string Montant(decimal montant) =>
         $"{decimal.Round(montant, 0, MidpointRounding.AwayFromZero).ToString("N0", CultureInfo.CurrentCulture)} XAF";
 
-    /// <summary>Quantité avec exactement <paramref name="precision"/> décimales (RG46), ou sans zéros inutiles si elle est inconnue.</summary>
-    public static string Quantite(decimal quantite, int? precision = null) =>
-        quantite.ToString(precision is { } p ? $"N{p}" : "#,##0.###", CultureInfo.CurrentCulture);
+    /// <summary>
+    /// Quantité sans zéros inutiles (« 20 kg », « 2,5 kg »), au plus <paramref name="precision"/> décimales (RG46) :
+    /// « 20,000 kg » se lisait « vingt mille » pour un anglophone et « 20.000 » pour un francophone.
+    /// </summary>
+    public static string Quantite(decimal quantite, int? precision = null)
+    {
+        var decimales = Math.Clamp(precision ?? 3, 0, 4);
+        return quantite.ToString(decimales == 0 ? "#,##0" : $"#,##0.{new string('#', decimales)}", CultureInfo.CurrentCulture);
+    }
+
+    /// <summary>
+    /// Unité ou conditionnement dans la langue de l'interface : les unités courantes saisies en français sont traduites
+    /// en anglais (décision du 16/11/2026) ; une unité absente de la liste s'affiche telle quelle.
+    /// </summary>
+    public static string Unite(string? unite)
+    {
+        if (string.IsNullOrWhiteSpace(unite) || CultureInfo.CurrentUICulture.TwoLetterISOLanguageName != "en")
+        {
+            return unite ?? "";
+        }
+
+        return UnitesEnAnglais.TryGetValue(SansAccents(unite.Trim()), out var traduite) ? traduite : unite;
+    }
+
+    /// <summary>Unités courantes du commerce de détail, en minuscules et sans accents, vers l'anglais.</summary>
+    private static readonly Dictionary<string, string> UnitesEnAnglais = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["boite"] = "box",
+        ["boite de conserve"] = "can",
+        ["canette"] = "can",
+        ["piece"] = "piece",
+        ["unite"] = "unit",
+        ["paquet"] = "pack",
+        ["sachet"] = "sachet",
+        ["bouteille"] = "bottle",
+        ["flacon"] = "bottle",
+        ["bidon"] = "jerrycan",
+        ["litre"] = "litre",
+        ["carton"] = "carton",
+        ["sac"] = "bag",
+        ["rouleau"] = "roll",
+        ["tablette"] = "bar",
+        ["barre"] = "bar",
+        ["plaquette"] = "pack",
+        ["douzaine"] = "dozen",
+        ["pot"] = "jar",
+        ["seau"] = "bucket",
+        ["tube"] = "tube",
+        ["metre"] = "metre",
+        ["botte"] = "bunch",
+        ["regime"] = "bunch",
+        ["tas"] = "heap",
+        ["kilo"] = "kilo",
+    };
+
+    private static string SansAccents(string texte) =>
+        string.Concat(texte.Normalize(System.Text.NormalizationForm.FormD)
+            .Where(c => CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark));
 
     /// <summary>Retire les zéros de fin d'une valeur lue dans l'API (« 10.0000 » → « 10 »), pour la saisie.</summary>
     public static decimal SansZeros(decimal valeur) => valeur / 1.000000000000000000000000000000000m;

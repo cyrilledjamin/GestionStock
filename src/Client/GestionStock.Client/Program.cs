@@ -13,6 +13,7 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 builder.Services.AddScoped(_ => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 builder.Services.AddScoped<Session>();
 builder.Services.AddScoped<Api>();
+builder.Services.AddScoped<Boutique>();
 builder.Services.AddLocalization(options => options.ResourcesPath = "Ressources");
 
 var hote = builder.Build();
@@ -25,4 +26,5 @@ CultureInfo.DefaultThreadCurrentCulture = culture;
 CultureInfo.DefaultThreadCurrentUICulture = culture;
 
 await hote.Services.GetRequiredService<Session>().InitialiserAsync();
+await hote.Services.GetRequiredService<Boutique>().ChargerAsync();
 await hote.RunAsync();
