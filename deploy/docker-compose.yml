@@ -35,6 +35,11 @@ services:
       BaseDeDonnees__AppliquerMigrationsAuDemarrage: "true"
       Stockage__RepertoireRacine: /donnees/fichiers
       Entreprise__AssujettiTva: ${ENTREPRISE_ASSUJETTIE_TVA:-false}
+      Entreprise__Nom: ${ENTREPRISE_NOM:-GestionStock}
+      Entreprise__Adresse: ${ENTREPRISE_ADRESSE:-}
+      Entreprise__Telephone: ${ENTREPRISE_TELEPHONE:-}
+      Entreprise__NumeroContribuable: ${ENTREPRISE_NIU:-}
+      Caisse__Postes__0: ${CAISSE_POSTE:-CAISSE-1}
       Identite__AdministrateurInitial__Identifiant: ${ADMIN_IDENTIFIANT:-admin}
       Identite__AdministrateurInitial__MotDePasse: ${ADMIN_MOT_DE_PASSE:?Définir ADMIN_MOT_DE_PASSE dans deploy/.env}
     ports:
