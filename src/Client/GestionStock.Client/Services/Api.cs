@@ -27,6 +27,8 @@ public sealed class Api(HttpClient http, Session session, NavigationManager navi
 
     public Task<Resultat<T>> PutAsync<T>(string url, object corps) => EnvoyerAsync<T>(HttpMethod.Put, url, corps);
 
+    public Task<Resultat<T>> DeleteAsync<T>(string url) => EnvoyerAsync<T>(HttpMethod.Delete, url, null);
+
     /// <summary>Envoie un fichier tel quel dans le corps de la requête (ex. classeur de reprise).</summary>
     public async Task<Resultat<T>> EnvoyerFichierAsync<T>(string url, byte[] fichier)
     {

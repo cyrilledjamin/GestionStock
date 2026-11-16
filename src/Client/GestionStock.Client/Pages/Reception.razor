@@ -97,7 +97,7 @@
         </div>
         <table>
             <thead>
-                <tr><th>@L["Article"]</th><th class="nombre">@L["Quantite"]</th><th class="nombre">@L["CoutUnitaire"]</th><th class="nombre">@L["Valeur"]</th></tr>
+                <tr><th>@L["Article"]</th><th class="nombre">@L["Quantite"]</th><th class="nombre">@L["CoutUnitaire"]</th><th class="nombre">@L["Valeur"]</th><th class="nombre">@L["FraisAlloues"]</th><th class="nombre">@L["CoutRevient"]</th></tr>
             </thead>
             <tbody>
                 @foreach (var ligne in _reception.Lignes)
@@ -107,13 +107,142 @@
                         <td class="nombre">@Format.Quantite(ligne.Quantite) @ligne.UniteStock</td>
                         <td class="nombre">@Format.Montant(ligne.CoutUnitaire)</td>
                         <td class="nombre">@Format.Montant(ligne.Valeur)</td>
+                        <td class="nombre">@Format.Montant(ligne.FraisApprocheAlloues)</td>
+                        <td class="nombre">@Format.Montant(ligne.CoutEntree)</td>
                     </tr>
                 }
             </tbody>
             <tfoot>
-                <tr><td colspan="3" class="nombre">@L["Total"]</td><th class="nombre">@Format.Montant(_reception.Valeur)</th></tr>
+                <tr><td colspan="3" class="nombre">@L["Total"]</td><th class="nombre">@Format.Montant(_reception.Valeur)</th><th class="nombre">@Format.Montant(_reception.TotalFrais)</th><th></th></tr>
             </tfoot>
         </table>
+    }
+
+    @if (_reception is not null)
+    {
+        <section class="fiche">
+            <h2>@L["FraisApproche"]</h2>
+            <p class="discret">@(EstValidee ? L["FraisTardifsAide"] : L["FraisAide"])</p>
+            @if (_reception.Frais.Count > 0)
+            {
+                <table>
+                    <thead><tr><th>@L["Type"]</th><th>@L["Libelle"]</th><th>@L["Cle"]</th><th class="nombre">@L["Montant"]</th><th>@L["SaisiePar"]</th><th class="nombre">@L["NonIncorpore"]</th><th></th></tr></thead>
+                    <tbody>
+                        @foreach (var frais in _reception.Frais)
+                        {
+                            <tr>
+                                <td>@L[$"TypeFrais.{frais.Type}"] @if (frais.ApresValidation) { <small class="pastille brouillon">@L["Tardif"]</small> }</td>
+                                <td>@frais.Libelle</td>
+                                <td>@L[$"Cle.{frais.Cle}"]</td>
+                                <td class="nombre">@Format.Montant(frais.Montant)</td>
+                                <td>@frais.SaisiPar, @Format.Date(frais.SaisiLeUtc)</td>
+                                <td class="nombre">@(frais.MontantNonIncorpore > 0 ? Format.Montant(frais.MontantNonIncorpore) : "")</td>
+                                <td>
+                                    @if (!EstValidee && Session.A(Permissions.FraisSaisir))
+                                    {
+                                        <button class="lien" @onclick="() => RetirerFrais(frais.Id)">@L["Retirer"]</button>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot><tr><td colspan="3" class="nombre">@L["Total"]</td><th class="nombre">@Format.Montant(_reception.TotalFrais)</th><td colspan="3"></td></tr></tfoot>
+                </table>
+            }
+            @if (Session.A(Permissions.FraisSaisir))
+            {
+                <form class="grille" @onsubmit="AjouterFrais">
+                    <label>@L["Type"]
+                        <select @bind="_fraisType">
+                            @foreach (var type in TypesFrais.Tous)
+                            {
+                                <option value="@type">@L[$"TypeFrais.{type}"]</option>
+                            }
+                        </select>
+                    </label>
+                    <label>@L["Montant"] <input type="number" min="0" step="1" @bind="_fraisMontant" required /></label>
+                    <label>@L["Cle"]
+                        <select @bind="_fraisCle">
+                            @foreach (var cle in ClesRepartition.Toutes)
+                            {
+                                <option value="@cle">@L[$"Cle.{cle}"]</option>
+                            }
+                        </select>
+                    </label>
+                    <label>@L["Libelle"] <input @bind="_fraisLibelle" maxlength="100" /></label>
+                    <div class="actions"><button type="submit" class="principal" disabled="@_enCours">@L["AjouterFrais"]</button></div>
+                </form>
+            }
+            @if (!EstValidee && _reception.Frais.Count > 0)
+            {
+                <table>
+                    <thead><tr><th>@L["Article"]</th><th class="nombre">@L["FraisAlloues"]</th><th class="nombre">@L["CoutRevient"]</th></tr></thead>
+                    <tbody>
+                        @foreach (var ligne in _reception.Lignes)
+                        {
+                            <tr><td><code>@ligne.CodeArticle</code> @ligne.LibelleArticle</td><td class="nombre">@Format.Montant(ligne.FraisApprocheAlloues)</td><td class="nombre">@Format.Montant(ligne.CoutEntree)</td></tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </section>
+    }
+
+    @if (_dette is { Dette: var dette })
+    {
+        <section class="fiche">
+            <h2>@L["DetteFournisseur"] <span class="pastille @(dette.Statut == "Payee" ? "validee" : "brouillon")">@L[$"StatutDette.{dette.Statut}"]</span></h2>
+            <div class="tuiles">
+                <div class="tuile chiffre"><span>@L["MontantDu"]</span><strong>@Format.Montant(dette.MontantDu)</strong></div>
+                <div class="tuile chiffre"><span>@L["MontantPaye"]</span><strong>@Format.Montant(dette.MontantPaye)</strong></div>
+                <div class="tuile chiffre"><span>@L["ResteDu"]</span><strong>@Format.Montant(dette.ResteDu)</strong></div>
+            </div>
+            @if (_dette.Paiements.Count > 0)
+            {
+                <table>
+                    <thead><tr><th>@L["Date"]</th><th>@L["Mode"]</th><th>@L["Reference"]</th><th class="nombre">@L["Montant"]</th><th>@L["SaisiePar"]</th><th></th></tr></thead>
+                    <tbody>
+                        @foreach (var paiement in _dette.Paiements)
+                        {
+                            <tr class="@(paiement.Montant < 0 ? "negatif" : "")">
+                                <td class="court">@Format.Date(paiement.DateUtc)</td>
+                                <td>@L[$"Mode.{paiement.Mode}"]</td>
+                                <td>@paiement.Reference @if (paiement.Motif is not null) { <br /><small class="discret">@L["AnnulationMotif", paiement.Motif]</small> }</td>
+                                <td class="nombre">@Format.Montant(paiement.Montant)</td>
+                                <td>@paiement.SaisiPar</td>
+                                <td class="actions-ligne">
+                                    @if (paiement.PaiementAnnuleId is null && !paiement.EstAnnule && Session.A(Permissions.PaiementsFournisseursSaisir))
+                                    {
+                                        <input class="motif-refus" placeholder="@L["MotifAnnulation"]" @bind="_motifsAnnulation[paiement.Id]" />
+                                        <button class="lien" @onclick="() => AnnulerPaiement(paiement.Id)">@L["AnnulerPaiement"]</button>
+                                    }
+                                    else if (paiement.EstAnnule)
+                                    {
+                                        <small class="discret">@L["Annule"]</small>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            @if (dette.ResteDu > 0 && Session.A(Permissions.PaiementsFournisseursSaisir))
+            {
+                <form class="grille" @onsubmit="Payer">
+                    <label>@L["Montant"] <input type="number" min="0" step="1" @bind="_paiementMontant" required /></label>
+                    <label>@L["Mode"]
+                        <select @bind="_paiementMode">
+                            @foreach (var mode in ModesPaiementFournisseur.Tous)
+                            {
+                                <option value="@mode">@L[$"Mode.{mode}"]</option>
+                            }
+                        </select>
+                    </label>
+                    <label>@L["Reference"] <input @bind="_paiementReference" maxlength="50" required="@(_paiementMode != "Especes")" /></label>
+                    <div class="actions"><button type="submit" class="valider" disabled="@_enCours">@L["EnregistrerPaiement"]</button></div>
+                </form>
+            }
+        </section>
     }
 }
 
@@ -131,6 +260,18 @@
     private bool _chargee;
     private bool _enCours;
 
+    private DetailDette? _dette;
+    private string _fraisType = "Transport";
+    private decimal _fraisMontant;
+    private string _fraisCle = "Valeur";
+    private string? _fraisLibelle;
+    private decimal _paiementMontant;
+    private string _paiementMode = "Especes";
+    private string? _paiementReference;
+    private Dictionary<Guid, string?> _motifsAnnulation = [];
+
+    private bool EstValidee => _reception?.Statut == StatutsReception.Validee;
+
     private string Titre => _reception?.Numero is { } numero ? L["ReceptionNumero", numero] : L["NouvelleReception"];
 
     private bool Modifiable =>
@@ -144,6 +285,11 @@
             var resultat = await Api.GetAsync<DetailReception>($"api/achats/receptions/{id}");
             _erreur = resultat.Erreur;
             Afficher(resultat.Valeur);
+        }
+
+        if (EstValidee)
+        {
+            AfficherDette((await Api.GetAsync<DetailDette>($"api/achats/receptions/{_reception!.Id}/dette")).Valeur);
         }
 
         if (Modifiable)
@@ -213,7 +359,71 @@
         {
             Afficher(reception);
             _succes = L["ReceptionValidee"];
+            AfficherDette((await Api.GetAsync<DetailDette>($"api/achats/receptions/{reception.Id}/dette")).Valeur);
         }
+    }
+
+    private void AfficherDette(DetailDette? dette)
+    {
+        _dette = dette ?? _dette;
+        _paiementMontant = Math.Max(0m, decimal.Round(_dette?.Dette.ResteDu ?? 0m, 0, MidpointRounding.AwayFromZero));
+        foreach (var paiement in _dette?.Paiements ?? [])
+        {
+            _motifsAnnulation.TryAdd(paiement.Id, null);
+        }
+    }
+
+    private async Task AjouterFrais()
+    {
+        _enCours = true;
+        var resultat = await Api.PostAsync<DetailReception>(
+            $"api/achats/receptions/{_reception!.Id}/frais",
+            new { Type = _fraisType, Montant = _fraisMontant, Cle = _fraisCle, Libelle = _fraisLibelle });
+        _enCours = false;
+        _erreur = resultat.Erreur;
+        _succes = null;
+        if (resultat.Valeur is { } reception)
+        {
+            _succes = L["FraisAjoute"].Value;
+            _fraisMontant = 0;
+            _fraisLibelle = null;
+            Afficher(reception);
+            if (EstValidee)
+            {
+                AfficherDette((await Api.GetAsync<DetailDette>($"api/achats/receptions/{reception.Id}/dette")).Valeur);
+            }
+        }
+    }
+
+    private async Task RetirerFrais(Guid frais)
+    {
+        var resultat = await Api.DeleteAsync<DetailReception>($"api/achats/receptions/{_reception!.Id}/frais/{frais}");
+        _erreur = resultat.Erreur;
+        Afficher(resultat.Valeur ?? _reception);
+    }
+
+    private async Task Payer()
+    {
+        _enCours = true;
+        var resultat = await Api.PostAsync<DetailDette>(
+            $"api/achats/receptions/{_reception!.Id}/paiements",
+            new { Montant = _paiementMontant, Mode = _paiementMode, Reference = _paiementReference });
+        _enCours = false;
+        _erreur = resultat.Erreur;
+        _succes = null;
+        if (resultat.Valeur is { } dette)
+        {
+            _succes = L["PaiementEnregistre"].Value;
+            _paiementReference = null;
+            AfficherDette(dette);
+        }
+    }
+
+    private async Task AnnulerPaiement(Guid paiement)
+    {
+        var resultat = await Api.PostAsync<DetailDette>($"api/achats/paiements/{paiement}/annulation", new { Motif = _motifsAnnulation.GetValueOrDefault(paiement) ?? "" });
+        _erreur = resultat.Erreur;
+        AfficherDette(resultat.Valeur);
     }
 
     private static string Pas(Article? article) => article?.PrecisionQuantite switch

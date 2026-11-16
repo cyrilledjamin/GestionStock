@@ -1,0 +1,36 @@
+@* Tickets signalés par le rapport de caisse : remises, avoirs, crédits validés par un responsable. *@
+<h2>@Titre</h2>
+<table>
+    <thead>
+        <tr>
+            <th>@L["Numero"]</th><th>@L["Date"]</th><th>@L["Caissier"]</th><th class="nombre">@L["TotalTtc"]</th>
+            @if (AvecRemise) { <th class="nombre">@L["Remise"]</th> }
+            @if (AvecOrigine) { <th>@L["TicketOrigine"]</th> } else { <th>@L["ValideePar"]</th> }
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var ticket in Tickets)
+        {
+            <tr>
+                <td class="court">@ticket.Numero</td><td class="court">@Format.Date(ticket.DateUtc)</td><td>@ticket.Caissier</td>
+                <td class="nombre">@Format.Montant(ticket.TotalTtc)</td>
+                @if (AvecRemise) { <td class="nombre">@Format.Montant(ticket.Remise)</td> }
+                @if (AvecOrigine) { <td>@ticket.TicketOrigine</td> } else { <td>@ticket.ValidePar</td> }
+            </tr>
+        }
+        @if (Tickets.Count == 0)
+        {
+            <tr><td colspan="6" class="vide">@L["Aucun"]</td></tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    [Parameter, EditorRequired] public string Titre { get; set; } = "";
+
+    [Parameter, EditorRequired] public List<TicketSignale> Tickets { get; set; } = [];
+
+    [Parameter] public bool AvecRemise { get; set; }
+
+    [Parameter] public bool AvecOrigine { get; set; }
+}

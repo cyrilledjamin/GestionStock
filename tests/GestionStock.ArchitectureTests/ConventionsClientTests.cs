@@ -2,6 +2,7 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using GestionStock.Identite.Contracts;
+using GestionStock.Rapports.Contracts;
 using GestionStock.Stock.Contracts;
 
 namespace GestionStock.ArchitectureTests;
@@ -57,7 +58,7 @@ public sealed partial class ConventionsClientTests
             .ToHashSet(StringComparer.Ordinal);
 
         // Clés construites à l'exécution : rôles, statuts, types de mouvement, modes de paiement, opérations, niveaux,
-        // types et statuts d'inventaire, statuts et motifs de démarque.
+        // types et statuts d'inventaire, statuts et motifs de démarque, frais, dettes, rapports et journaux.
         utilisees.UnionWith(Roles.Tous.Select(r => $"Role.{r}"));
         utilisees.UnionWith(["Statut.Brouillon", "Statut.Validee"]);
         utilisees.UnionWith(Enum.GetNames<TypeMouvementStock>().Select(t => $"Mouvement.{t}"));
@@ -69,6 +70,10 @@ public sealed partial class ConventionsClientTests
         utilisees.UnionWith(["StatutInventaire.EnCours", "StatutInventaire.Valide", "StatutInventaire.Annule"]);
         utilisees.UnionWith(["StatutDemarque.Declaree", "StatutDemarque.Validee", "StatutDemarque.Refusee"]);
         utilisees.UnionWith(["MotifDemarque.Casse", "MotifDemarque.Vol", "MotifDemarque.Perime", "MotifDemarque.Freinte"]);
+        utilisees.UnionWith(["TypeFrais.Transport", "TypeFrais.Transit", "TypeFrais.Douane", "TypeFrais.Autre", "Cle.Valeur", "Cle.Quantite"]);
+        utilisees.UnionWith(["Mode.Virement", "Mode.Cheque", "StatutDette.NonPayee", "StatutDette.PartiellementPayee", "StatutDette.Payee"]);
+        utilisees.UnionWith(["Rapport.Ventes", "Rapport.Stock", "Rapport.CreancesDettes", "Rapport.Caisse"]);
+        utilisees.UnionWith(JournauxComptables.Tous.SelectMany(j => new[] { $"Journal.{j}", $"JournalAide.{j}" }));
 
         Assert.Empty(utilisees.Except(francais));
         Assert.Empty(utilisees.Except(anglais));

@@ -24,7 +24,8 @@ public sealed record ResumeReception(
     DateTime DateCreationUtc,
     DateTime? DateValidationUtc,
     int NombreLignes,
-    decimal Valeur);
+    decimal Valeur,
+    decimal TotalFrais);
 
 public sealed record DetailReception(
     Guid Id,
@@ -38,7 +39,10 @@ public sealed record DetailReception(
     DateTime? DateValidationUtc,
     string? ValideePar,
     decimal Valeur,
-    List<DetailLigneReception> Lignes);
+    decimal TotalFrais,
+    decimal MontantTotal,
+    List<DetailLigneReception> Lignes,
+    List<FraisApproche> Frais);
 
 public sealed record DetailLigneReception(
     Guid Id,
@@ -49,7 +53,112 @@ public sealed record DetailLigneReception(
     string UniteStock,
     decimal Quantite,
     decimal CoutUnitaire,
-    decimal Valeur);
+    decimal Valeur,
+    decimal FraisApprocheAlloues,
+    decimal CoutEntree);
+
+/// <summary>Frais d'approche d'une réception (RG30) ; non incorporé : part d'un frais tardif sur du stock déjà sorti.</summary>
+public sealed record FraisApproche(
+    Guid Id,
+    string Type,
+    string? Libelle,
+    decimal Montant,
+    string Cle,
+    bool ApresValidation,
+    string SaisiPar,
+    DateTime SaisiLeUtc,
+    decimal MontantNonIncorpore);
+
+public static class TypesFrais
+{
+    public static IReadOnlyList<string> Tous { get; } = ["Transport", "Transit", "Douane", "Autre"];
+}
+
+public static class ClesRepartition
+{
+    public static IReadOnlyList<string> Toutes { get; } = ["Valeur", "Quantite"];
+}
+
+// --- Dettes fournisseurs ------------------------------------------------------------------------------------------
+
+public sealed record DetteReception(
+    Guid ReceptionId,
+    string Numero,
+    Guid FournisseurId,
+    string Fournisseur,
+    string? NumeroBonLivraison,
+    DateTime DateValidationUtc,
+    decimal MontantDu,
+    decimal MontantPaye,
+    decimal ResteDu,
+    string Statut);
+
+public sealed record DetteFournisseur(Guid FournisseurId, string Fournisseur, int NombreReceptions, decimal MontantDu, decimal MontantPaye, decimal ResteDu);
+
+public sealed record ListeDettes(List<DetteFournisseur> Fournisseurs, List<DetteReception> Receptions);
+
+public sealed record PaiementFournisseur(
+    Guid Id,
+    DateTime DateUtc,
+    decimal Montant,
+    string Mode,
+    string? Reference,
+    string SaisiPar,
+    Guid? PaiementAnnuleId,
+    string? Motif,
+    bool EstAnnule);
+
+public sealed record DetailDette(DetteReception Dette, List<PaiementFournisseur> Paiements);
+
+public static class ModesPaiementFournisseur
+{
+    public static IReadOnlyList<string> Tous { get; } = ["Especes", "MobileMoney", "Virement", "Cheque"];
+}
+
+// --- Rapports -----------------------------------------------------------------------------------------------------
+
+public sealed record TotauxVentes(int NombreVentes, int NombreAvoirs, decimal ChiffreAffairesTtc, decimal ChiffreAffairesHt, decimal CoutDesVentes, decimal Marge, decimal? TauxMarge, decimal Remises);
+
+public sealed record VentesDuJour(DateOnly Jour, int NombreTickets, decimal ChiffreAffairesTtc, decimal ChiffreAffairesHt, decimal CoutDesVentes, decimal Marge);
+
+public sealed record VentesArticle(Guid ArticleId, string Code, string Libelle, string UniteStock, decimal Quantite, decimal ChiffreAffairesHt, decimal CoutDesVentes, decimal Marge, decimal? TauxMarge);
+
+public sealed record VentesCaissier(string Caissier, int NombreTickets, decimal ChiffreAffairesTtc);
+
+public sealed record RapportVentes(DateOnly Du, DateOnly Au, TotauxVentes Totaux, List<VentesDuJour> ParJour, List<VentesArticle> ParArticle, List<VentesCaissier> ParCaissier);
+
+public sealed record LigneStockRapport(Guid ArticleId, string Code, string Libelle, string UniteStock, int PrecisionQuantite, decimal Quantite, decimal Cump, decimal Valeur);
+
+public sealed record RapportStock(decimal ValeurTotale, int NombreArticles, List<LigneStockRapport> Articles, List<LigneStockRapport> StocksNegatifs);
+
+public sealed record CreanceClient(Guid ClientId, string Nom, string Telephone, decimal PlafondCredit, decimal SoldeDu, decimal MontantEnRetard, DateTime? PlusAncienneEcheanceUtc);
+
+public sealed record DetteFournisseurRapport(Guid FournisseurId, string Fournisseur, int NombreReceptions, decimal MontantDu, decimal MontantPaye, decimal ResteDu);
+
+public sealed record RapportCreancesDettes(decimal TotalCreances, decimal TotalEnRetard, decimal TotalDettes, List<CreanceClient> Clients, List<DetteFournisseurRapport> Fournisseurs);
+
+public sealed record SessionRapport(Guid SessionId, string NumeroCaisse, string Caissier, DateTime OuvertureUtc, DateTime? ClotureUtc, string Statut, int NombreVentes, int NombreAvoirs, decimal VentesNettes, decimal? EspecesTheoriques, decimal? EspecesComptees, decimal? Ecart, string? ValideePar);
+
+public sealed record TicketSignale(Guid TicketId, string Numero, DateTime DateUtc, string Caissier, decimal TotalTtc, decimal Remise, string? ValidePar, string? TicketOrigine);
+
+public sealed record FraisNonIncorpore(Guid FraisId, Guid ReceptionId, string Reception, string Type, string? Libelle, decimal Montant, decimal MontantNonIncorpore, DateTime SaisiLeUtc);
+
+public sealed record RapportCaisse(
+    DateOnly Du,
+    DateOnly Au,
+    decimal TotalEcarts,
+    List<SessionRapport> Sessions,
+    List<TicketSignale> Remises,
+    List<TicketSignale> Avoirs,
+    List<TicketSignale> CreditsValides,
+    List<LigneStockRapport> StocksNegatifs,
+    List<FraisNonIncorpore> FraisNonIncorpores);
+
+/// <summary>Journaux exportables (mêmes noms que l'API, <c>JournauxComptables</c>).</summary>
+public static class JournauxComptables
+{
+    public static IReadOnlyList<string> Tous { get; } = ["ventes", "achats", "encaissements", "creances", "valeur-stock"];
+}
 
 public sealed record SoldeStock(
     Guid ArticleId,
