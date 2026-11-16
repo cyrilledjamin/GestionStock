@@ -171,3 +171,8 @@ table.saisie input[type=checkbox] { width: auto; }
 /* Frais, dettes, rapports */
 td small.pastille { margin-left: .4rem; }
 .barre label { display: inline-flex; align-items: center; gap: .4rem; }
+
+/* Comptes du personnel */
+tr.inactif td { color: var(--discret, #777); }
+fieldset.roles { border: 1px solid var(--bordure); border-radius: 6px; padding: .5rem .8rem; margin: .6rem 0; display: flex; flex-wrap: wrap; gap: .4rem 1.2rem; }
+fieldset.roles legend { padding: 0 .3rem; font-size: .9rem; }

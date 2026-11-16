@@ -74,6 +74,9 @@ public sealed partial class ConventionsClientTests
         utilisees.UnionWith(["Mode.Virement", "Mode.Cheque", "StatutDette.NonPayee", "StatutDette.PartiellementPayee", "StatutDette.Payee"]);
         utilisees.UnionWith(["Rapport.Ventes", "Rapport.Stock", "Rapport.CreancesDettes", "Rapport.Caisse"]);
         utilisees.UnionWith(JournauxComptables.Tous.SelectMany(j => new[] { $"Journal.{j}", $"JournalAide.{j}" }));
+        utilisees.UnionWith(["ActionCompte.Creation", "ActionCompte.Modification", "ActionCompte.Desactivation", "ActionCompte.Reactivation"]);
+        utilisees.UnionWith(["ActionCompte.ReinitialisationMotDePasse", "ActionCompte.ChangementMotDePasse"]);
+        utilisees.UnionWith(["FicheEnregistree", "CompteDesactive", "CompteReactive", "MotDePasseReinitialise"]);
 
         Assert.Empty(utilisees.Except(francais));
         Assert.Empty(utilisees.Except(anglais));

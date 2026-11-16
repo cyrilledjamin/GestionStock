@@ -17,7 +17,6 @@
   <data name="Utilisateur" xml:space="preserve"><value>User</value></data>
   <data name="AutreLangue" xml:space="preserve"><value>Français</value></data>
   <data name="Deconnexion" xml:space="preserve"><value>Sign out</value></data>
-  <data name="Role" xml:space="preserve"><value>Role</value></data>
   <data name="Role.Administrateur" xml:space="preserve"><value>Administrator</value></data>
   <data name="Role.Gerant" xml:space="preserve"><value>Manager</value></data>
   <data name="Role.Comptable" xml:space="preserve"><value>Accountant</value></data>
@@ -25,7 +24,6 @@
   <data name="Role.Magasinier" xml:space="preserve"><value>Storekeeper</value></data>
   <data name="Connexion" xml:space="preserve"><value>Sign in</value></data>
   <data name="ConnexionIntro" xml:space="preserve"><value>Shop stock and till management.</value></data>
-  <data name="Identifiant" xml:space="preserve"><value>Username</value></data>
   <data name="MotDePasse" xml:space="preserve"><value>Password</value></data>
   <data name="SeConnecter" xml:space="preserve"><value>Sign in</value></data>
   <data name="Bonjour" xml:space="preserve"><value>Hello {0}</value></data>
@@ -112,7 +110,7 @@
   <data name="NouveauCompte" xml:space="preserve"><value>New account</value></data>
   <data name="MotDePasseRegle" xml:space="preserve"><value>Password: at least 8 characters, with an uppercase letter, a lowercase letter, a digit and a special character.</value></data>
   <data name="CreerCompte" xml:space="preserve"><value>Create account</value></data>
-  <data name="CompteCree" xml:space="preserve"><value>Account “{0}” created.</value></data>
+  <data name="CompteCree" xml:space="preserve"><value>Account created: employee number {0}.</value></data>
   <data name="Caisse" xml:space="preserve"><value>Till</value></data>
   <data name="CaisseAide" xml:space="preserve"><value>Sell at the counter, take payment, print the receipt.</value></data>
   <data name="SessionsCaisse" xml:space="preserve"><value>Till sessions</value></data>
@@ -380,4 +378,45 @@
   <data name="JournalAide.encaissements" xml:space="preserve"><value>Money received or refunded: non-credit payments (cash less change) and credit repayments.</value></data>
   <data name="JournalAide.creances" xml:space="preserve"><value>Credit sales, repayments and cancellations, with due date.</value></data>
   <data name="JournalAide.valeur-stock" xml:space="preserve"><value>Quantity, average cost and value of each item, on the export date.</value></data>
+  <data name="Matricule" xml:space="preserve"><value>Employee number</value></data>
+  <data name="MatriculeGenere" xml:space="preserve"><value>Leave empty to generate it (S000001…)</value></data>
+  <data name="MatriculeFige" xml:space="preserve"><value>The employee number is the sign-in name and appears on every document: it cannot change.</value></data>
+  <data name="Prenom" xml:space="preserve"><value>First name</value></data>
+  <data name="Langue" xml:space="preserve"><value>Language</value></data>
+  <data name="Roles" xml:space="preserve"><value>Roles</value></data>
+  <data name="MotDePasseProvisoire" xml:space="preserve"><value>Temporary password</value></data>
+  <data name="MotDePasseProvisoireAide" xml:space="preserve"><value>The employee must change it when first signing in.</value></data>
+  <data name="MotDePasseProvisoireEnAttente" xml:space="preserve"><value>Temporary password: the employee has not changed it yet.</value></data>
+  <data name="AfficherDesactives" xml:space="preserve"><value>Also show deactivated accounts</value></data>
+  <data name="Desactive" xml:space="preserve"><value>Deactivated</value></data>
+  <data name="Desactiver" xml:space="preserve"><value>Deactivate account</value></data>
+  <data name="Reactiver" xml:space="preserve"><value>Reactivate account</value></data>
+  <data name="DesactivationAide" xml:space="preserve"><value>An employee leaves: they can no longer sign in or approve; their account and records are kept.</value></data>
+  <data name="ReactivationAide" xml:space="preserve"><value>The account is deactivated. Reactivating it restores the employee's access.</value></data>
+  <data name="Fiche" xml:space="preserve"><value>Details</value></data>
+  <data name="FicheEnregistree" xml:space="preserve"><value>Details saved.</value></data>
+  <data name="CompteDesactive" xml:space="preserve"><value>Account deactivated.</value></data>
+  <data name="CompteReactive" xml:space="preserve"><value>Account reactivated.</value></data>
+  <data name="MotDePasseOublie" xml:space="preserve"><value>Forgotten password</value></data>
+  <data name="ReinitialisationAide" xml:space="preserve"><value>Set a temporary password and give it to the employee: they must change it at the next sign-in. Their open sessions are closed.</value></data>
+  <data name="Reinitialiser" xml:space="preserve"><value>Reset password</value></data>
+  <data name="MotDePasseReinitialise" xml:space="preserve"><value>Temporary password set.</value></data>
+  <data name="JournalCompte" xml:space="preserve"><value>Account log</value></data>
+  <data name="Auteur" xml:space="preserve"><value>By</value></data>
+  <data name="Detail" xml:space="preserve"><value>Details</value></data>
+  <data name="ActionCompte.Creation" xml:space="preserve"><value>Creation</value></data>
+  <data name="ActionCompte.Modification" xml:space="preserve"><value>Update</value></data>
+  <data name="ActionCompte.Desactivation" xml:space="preserve"><value>Deactivation</value></data>
+  <data name="ActionCompte.Reactivation" xml:space="preserve"><value>Reactivation</value></data>
+  <data name="ActionCompte.ReinitialisationMotDePasse" xml:space="preserve"><value>Password reset</value></data>
+  <data name="ActionCompte.ChangementMotDePasse" xml:space="preserve"><value>Password changed</value></data>
+  <data name="MonCompte" xml:space="preserve"><value>My account</value></data>
+  <data name="FicheParAdministrateur" xml:space="preserve"><value>To correct your details or roles, contact the administrator.</value></data>
+  <data name="ChangerMotDePasse" xml:space="preserve"><value>Change my password</value></data>
+  <data name="ChangerMotDePasseObligatoire" xml:space="preserve"><value>Your password is temporary: choose a new one to continue.</value></data>
+  <data name="MotDePasseActuel" xml:space="preserve"><value>Current password</value></data>
+  <data name="NouveauMotDePasse" xml:space="preserve"><value>New password</value></data>
+  <data name="ConfirmerMotDePasse" xml:space="preserve"><value>Confirm new password</value></data>
+  <data name="ConfirmationDifferente" xml:space="preserve"><value>The confirmation does not match the new password.</value></data>
+  <data name="MotDePasseChange" xml:space="preserve"><value>Password changed.</value></data>
 </root>

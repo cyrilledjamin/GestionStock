@@ -9,7 +9,7 @@
     <h1>GestionStock</h1>
     <p class="discret">@L["ConnexionIntro"]</p>
     <form @onsubmit="Connecter">
-        <label>@L["Identifiant"]
+        <label>@L["Matricule"]
             <input @bind="_identifiant" autocomplete="username" required autofocus />
         </label>
         <label>@L["MotDePasse"]
@@ -42,7 +42,16 @@
         _enCours = false;
         if (_erreur is null)
         {
-            Navigation.NavigateTo("");
+            var cible = Session.DoitChangerMotDePasse ? "mon-compte" : "";
+            if (Session.Profil!.Langue != CultureInfo.CurrentUICulture.TwoLetterISOLanguageName)
+            {
+                // Langue mémorisée sur le compte (ENF09) : elle s'applique dès la connexion, sur tout poste.
+                await Js.InvokeVoidAsync("localStorage.setItem", Langues.Cle, Session.Profil.Langue);
+                Navigation.NavigateTo(cible, forceLoad: true);
+                return;
+            }
+
+            Navigation.NavigateTo(cible);
         }
     }
 

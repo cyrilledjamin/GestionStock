@@ -1,0 +1,73 @@
+@page "/mon-compte"
+@inject Session Session
+@inject NavigationManager Navigation
+
+<PageTitle>@L["MonCompte"] · GestionStock</PageTitle>
+
+<h1>@L["MonCompte"]</h1>
+
+@if (Session.DoitChangerMotDePasse)
+{
+    <Message Texte="@L["ChangerMotDePasseObligatoire"]" />
+}
+<Message Texte="@_erreur" />
+<Message Texte="@_succes" Erreur="false" />
+
+@if (Session.Profil is { } profil)
+{
+    <div class="fiche">
+        <dl class="grille">
+            <div><dt>@L["Nom"]</dt><dd>@profil.NomComplet</dd></div>
+            <div><dt>@L["Matricule"]</dt><dd><code>@profil.Identifiant</code></dd></div>
+            <div><dt>@L["Roles"]</dt><dd>@string.Join(", ", profil.Roles.Select(r => L[$"Role.{r}"].Value))</dd></div>
+            <div><dt>@L["Langue"]</dt><dd>@(profil.Langue == "en" ? "English" : "Français")</dd></div>
+        </dl>
+        <p class="discret">@L["FicheParAdministrateur"]</p>
+    </div>
+
+    <form class="fiche" @onsubmit="Changer">
+        <h2>@L["ChangerMotDePasse"]</h2>
+        <div class="grille">
+            <label>@L["MotDePasseActuel"] <ChampMotDePasse @bind-Valeur="_actuel" Requis="true" Autocomplete="current-password" /></label>
+            <label>@L["NouveauMotDePasse"] <ChampMotDePasse @bind-Valeur="_nouveau" Requis="true" Autocomplete="new-password" /></label>
+            <label>@L["ConfirmerMotDePasse"] <ChampMotDePasse @bind-Valeur="_confirmation" Requis="true" Autocomplete="new-password" /></label>
+        </div>
+        <p class="discret">@L["MotDePasseRegle"]</p>
+        <div class="actions"><button type="submit" class="principal" disabled="@_enCours">@L["ChangerMotDePasse"]</button></div>
+    </form>
+}
+
+@code {
+    private string _actuel = "";
+    private string _nouveau = "";
+    private string _confirmation = "";
+    private bool _enCours;
+    private string? _erreur;
+    private string? _succes;
+
+    private async Task Changer()
+    {
+        _succes = null;
+        if (_nouveau != _confirmation)
+        {
+            _erreur = L["ConfirmationDifferente"].Value;
+            return;
+        }
+
+        var etaitProvisoire = Session.DoitChangerMotDePasse;
+        _enCours = true;
+        _erreur = await Session.ChangerMotDePasseAsync(_actuel, _nouveau);
+        _enCours = false;
+        if (_erreur is null)
+        {
+            (_actuel, _nouveau, _confirmation) = ("", "", "");
+            if (etaitProvisoire)
+            {
+                Navigation.NavigateTo("");
+                return;
+            }
+
+            _succes = L["MotDePasseChange"].Value;
+        }
+    }
+}

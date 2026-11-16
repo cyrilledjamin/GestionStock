@@ -28,6 +28,30 @@ public sealed class Session(IJSRuntime js, HttpClient brut)
 
     public bool A(string permission) => Profil?.Permissions.Contains(permission) == true;
 
+    /// <summary>Mot de passe provisoire : l'utilisateur doit le changer avant toute autre action.</summary>
+    public bool DoitChangerMotDePasse => Profil?.MotDePasseProvisoire == true;
+
+    /// <summary>
+    /// Change le mot de passe de l'utilisateur connecté, puis se reconnecte avec le nouveau (l'API ferme les sessions
+    /// ouvertes avec l'ancien). Renvoie le message d'erreur traduit, ou null en cas de succès.
+    /// </summary>
+    public async Task<string?> ChangerMotDePasseAsync(string actuel, string nouveau)
+    {
+        using var requete = new HttpRequestMessage(HttpMethod.Post, "api/identite/moi/mot-de-passe")
+        {
+            Content = JsonContent.Create(new { actuel, nouveau }),
+        };
+        requete.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _jetons?.AccessToken);
+        AjouterLangue(requete);
+        using var reponse = await brut.SendAsync(requete);
+        if (!reponse.IsSuccessStatusCode)
+        {
+            return await Api.LireErreurAsync(reponse);
+        }
+
+        return await ConnecterAsync(Profil!.Identifiant, nouveau);
+    }
+
     /// <summary>Reprend la session de l'onglet après un rechargement de page.</summary>
     public async Task InitialiserAsync()
     {
