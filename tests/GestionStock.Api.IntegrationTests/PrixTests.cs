@@ -49,6 +49,26 @@ public sealed class PrixTests(ApiDeTest api)
     }
 
     [Fact]
+    public async Task La_grille_de_la_caisse_donne_le_prix_du_jour_et_le_prochain_prix_programme()
+    {
+        using var gerant = await api.ClientAvecRoleAsync(Roles.Gerant);
+        using var caissier = await api.ClientAvecRoleAsync(Roles.Caissier);
+        var (article, carton) = await ConditionnementsTests.ArticleAvecCartonAsync(gerant, 6);
+        var unite = (await ConditionnementsTests.ListerAsync(gerant, article.Id)).Single(c => c.QuantiteUniteStock == 1m);
+        var dans3Jours = AujourdhuiDouala.AddDays(3);
+
+        await FixerAsync(gerant, carton.Id, 1200m);
+        await FixerAsync(gerant, carton.Id, 1250m, dans3Jours);
+        await FixerAsync(gerant, unite.Id, 220m, dans3Jours); // pas encore en vigueur
+        var grille = await caissier.GetFromJsonAsync<Grille>("/api/prix/grille", Annulation);
+
+        var duCarton = grille!.Prix.Single(p => p.ConditionnementId == carton.Id);
+        Assert.Equal(AujourdhuiDouala, grille.Date);
+        Assert.Equal((1200m, 1250m, dans3Jours), (duCarton.PrixTtc, duCarton.ProchainPrixTtc, duCarton.ProchaineValidite));
+        Assert.DoesNotContain(grille.Prix, p => p.ConditionnementId == unite.Id);
+    }
+
+    [Fact]
     public async Task Un_nouveau_prix_le_meme_jour_remplace_le_precedent_sans_effacer_l_historique()
     {
         using var gerant = await api.ClientAvecRoleAsync(Roles.Gerant);
@@ -127,6 +147,10 @@ public sealed class PrixTests(ApiDeTest api)
     private sealed record PrixConditionnement(Guid ConditionnementId, decimal? PrixTtc, decimal? ProchainPrixTtc, DateOnly? ProchaineValidite);
 
     private sealed record PrixApplicable(Guid ConditionnementId, decimal PrixTtc, DateOnly DebutValidite);
+
+    private sealed record PrixGrille(Guid ConditionnementId, decimal PrixTtc, DateOnly DebutValidite, decimal? ProchainPrixTtc, DateOnly? ProchaineValidite);
+
+    private sealed record Grille(DateOnly Date, bool Assujetti, decimal TauxTva, List<PrixGrille> Prix);
 
     private sealed record Historique(decimal PrixTtc, DateOnly DebutValidite, string SaisiPar);
 

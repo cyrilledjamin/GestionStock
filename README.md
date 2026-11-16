@@ -194,10 +194,12 @@ Si le port 5432 est déjà pris (PostgreSQL installé sur le poste), choisir un 
 | `POST /api/referentiel/codes/{id}/desactivation` | `Referentiel.Articles.Gerer` | Désactive un code (il reste dans l'historique) |
 | `GET /api/referentiel/scan/{valeur}` | `Referentiel.Consulter` | Article + conditionnement d'un code scanné ou du code article (404 si inconnu) |
 | `PUT /api/referentiel/conditionnements/{id}/vente-rapide` | `Referentiel.Articles.Gerer` | `{ venteRapide }` : tuile à la caisse (articles sans code-barres) ; refusé sur un conditionnement désactivé, et retiré à sa désactivation |
+| `GET /api/referentiel/catalogue-caisse` | `Referentiel.Consulter` | Catalogue de la caisse gardé sur le poste pour vendre hors ligne : conditionnements actifs d'articles actifs, leurs codes actifs, unité, articles rapides |
 | `GET /api/referentiel/vendables/rapides` | `Referentiel.Consulter` | Articles rapides de la caisse : conditionnements actifs marqués, d'articles actifs |
 | `GET /api/referentiel/vendables?recherche=` | `Referentiel.Consulter` | Articles actifs (code ou libellé) avec chacun de leurs conditionnements actifs |
 | `GET /api/prix/regime` | `Prix.Consulter` | Régime de TVA : `{ assujetti, tauxPourcent, tauxApplique }` |
 | `GET /api/prix/articles/{id}` | `Prix.Consulter` | Conditionnements de l'article avec prix en vigueur et prochain prix programmé |
+| `GET /api/prix/grille` | `Prix.Consulter` | Grille de la caisse : prix en vigueur aujourd'hui (Douala) et prochain prix programmé de chaque conditionnement, régime de TVA |
 | `GET /api/prix/conditionnements/{id}` | `Prix.Consulter` | Prix applicable aujourd'hui (204 s'il n'y en a pas) |
 | `GET /api/prix/conditionnements/{id}/historique` | `Prix.Consulter` | Tous les prix du conditionnement, du plus récent au plus ancien |
 | `POST /api/prix/conditionnements/{id}` | `Prix.Gerer` | `{ prixTtc, debutValidite? }` : nouveau prix, dès aujourd'hui ou à une date future |
@@ -302,6 +304,9 @@ tickets) passent en cartes, chaque valeur gardant l'intitulé de sa colonne, les
 cadre. À la caisse, sur tablette et téléphone, une barre fixée en bas garde le total, le reste ou le rendu et le bouton
 « Payer » (vers l'encaissement) puis « Encaisser » ; l'en-tête de caisse tient sur une ligne. Les tests de conventions refusent une couleur en
 dur hors des jetons, un style en ligne, une icône inconnue et l'absence de la balise `viewport`.
+
+**Faible bande passante** (ENF10) : réponses de l'API compressées (gzip ou Brotli selon le navigateur), surtout utile
+pour le catalogue et la grille de prix que le poste de caisse garde pour vendre hors ligne ; pas sur HTTPS (BREACH).
 
 **Identité et finitions** : nom de la boutique (et logo s'il est configuré) dans le menu, à la connexion et sur le
 reçu ; quantités sans zéros inutiles (« 20 kg », « 2,5 kg ») ; unités courantes traduites en anglais (boîte → box,
@@ -656,6 +661,12 @@ sur une machine Linux de GitHub qui dispose de Docker :
 | 39 | Téléphone et tablette : listes en cartes, caisse sur tablette | Fait |
 | 40 | Identité et finitions (nom et logo, unités traduites, quantités) | Fait |
 | 41 | Vérification, CI, README, démonstration de la tranche 6 | Fait |
+| 42 | Hors ligne : catalogue et grille de prix de la caisse, compression des réponses | Fait |
+| 43 | Hors ligne : tickets du terrain côté serveur, anomalies, clôture gardée | À faire |
+| 44 | Hors ligne : application installable (PWA), stockage du poste, état de connexion | À faire |
+| 45 | Hors ligne : vente, avoir, remboursement en file, synchronisation | À faire |
+| 46 | Anomalies de synchronisation à traiter | À faire |
+| 47 | Vérification, CI, README, démonstration de la tranche 7 | À faire |
 
 ## Démonstration
 

@@ -4,6 +4,7 @@ using GestionStock.Infrastructure.Http;
 using GestionStock.Referentiel.Application;
 using GestionStock.Referentiel.Contracts;
 using GestionStock.Referentiel.Domain;
+using GestionStock.SharedKernel;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -82,6 +83,11 @@ internal static class EndpointsReferentiel
             await service.ResoudreAsync(valeur, annulation) is { } article
                 ? Results.Ok(article)
                 : ReponsesErreur.Probleme(StatusCodes.Status404NotFound, CodesErreurReferentiel.CodeIntrouvable, Ressources, valeur))
+            .RequireAuthorization(Permissions.ReferentielConsulter);
+
+        // Catalogue complet de la caisse, gardé sur le poste pour vendre hors ligne (7.8).
+        groupe.MapGet("/catalogue-caisse", async (ServiceConditionnements service, IHorloge horloge, CancellationToken annulation) =>
+            TypedResults.Ok(await service.CatalogueCaisseAsync(horloge.MaintenantUtc, annulation)))
             .RequireAuthorization(Permissions.ReferentielConsulter);
 
         groupe.MapGet("/vendables/rapides", async (ServiceConditionnements service, CancellationToken annulation) =>
