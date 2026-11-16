@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Identite.IdentifiantsInvalides" xml:space="preserve"><value>Identifiant ou mot de passe incorrect.</value></data>
+  <data name="Identite.CompteVerrouille" xml:space="preserve"><value>Compte verrouillé après plusieurs essais : réessayez dans quelques minutes.</value></data>
+  <data name="Identite.SessionExpiree" xml:space="preserve"><value>Session expirée : reconnectez-vous.</value></data>
+  <data name="Identite.IdentifiantObligatoire" xml:space="preserve"><value>L'identifiant est obligatoire.</value></data>
+  <data name="Identite.IdentifiantDejaUtilise" xml:space="preserve"><value>Cet identifiant est déjà utilisé.</value></data>
+  <data name="Identite.RoleInconnu" xml:space="preserve"><value>Rôle inconnu.</value></data>
+  <data name="Identite.MotDePasseRefuse" xml:space="preserve"><value>Mot de passe refusé : au moins 8 caractères, avec une majuscule, une minuscule, un chiffre et un caractère spécial.</value></data>
+</root>

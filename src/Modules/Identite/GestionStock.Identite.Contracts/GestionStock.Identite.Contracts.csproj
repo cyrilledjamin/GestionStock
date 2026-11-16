@@ -1,0 +1,3 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Contrat public du module Identite : rôles et permissions, référencés par les endpoints des autres modules -->
+</Project>

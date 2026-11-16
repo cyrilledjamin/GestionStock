@@ -19,14 +19,18 @@ est dans [docs/dossier-analyse.md](docs/dossier-analyse.md).
 src/
   BuildingBlocks/
     GestionStock.SharedKernel        C# pur : IHorloge, IUtilisateurCourant
-    GestionStock.Infrastructure      connexion et transaction partagées, stockage de fichiers, santé
+    GestionStock.Infrastructure      connexion et transaction partagées, stockage de fichiers, santé, erreurs HTTP
   Host/
     GestionStock.Api                 assemble les modules (AddXxxModule / MapXxxEndpoints)
+  Modules/Identite/
+    GestionStock.Identite.Contracts  contrat public : Roles, Permissions
+    GestionStock.Identite            comptes locaux (ASP.NET Core Identity), jetons porteurs, matrice des permissions
   Modules/Stock/
     GestionStock.Stock.Contracts     contrat public : IServiceMouvementsStock, IConsultationStock
     GestionStock.Stock.Domain        C# pur : MouvementStock, StockSite, StockEmplacement
     GestionStock.Stock               implémentation : Application / Infrastructure / Endpoints
 tests/
+  GestionStock.Api.IntegrationTests  API complète par HTTP sur PostgreSQL réelle (Testcontainers)
   GestionStock.ArchitectureTests     règles de dépendance et conventions
   GestionStock.Infrastructure.Tests  briques transverses
   GestionStock.Stock.Domain.Tests    règles du domaine Stock
@@ -89,7 +93,7 @@ docker compose -f deploy/docker-compose.yml up -d --build
 Nouvelle migration d'un module (le code généré va dans `Infrastructure/Migrations`) :
 
 ```bash
-dotnet ef migrations add <Nom> -p src/Modules/<Module>/GestionStock.<Module> -s src/Host/GestionStock.Api -o Infrastructure/Migrations
+dotnet ef migrations add <Nom> -p src/Modules/<Module>/GestionStock.<Module> -s src/Host/GestionStock.Api -c <Module>DbContext -o Infrastructure/Migrations
 ```
 
 ## Configuration
@@ -101,6 +105,8 @@ Uniquement par variables d'environnement ou `appsettings` ; aucun chemin ni adre
 | `ConnectionStrings:GestionStock` | `ConnectionStrings__GestionStock` | Chaîne de connexion PostgreSQL (obligatoire) ; le chiffrement GSS (Kerberos) y est désactivé sauf si `GSS Encryption Mode` est fourni |
 | `Stockage:RepertoireRacine` | `Stockage__RepertoireRacine` | Répertoire des fichiers (reçus, imports) ; `donnees/fichiers` par défaut |
 | `BaseDeDonnees:AppliquerMigrationsAuDemarrage` | `BaseDeDonnees__AppliquerMigrationsAuDemarrage` | Applique les migrations de chaque module au démarrage ; `false` par défaut, `true` en Development et dans docker-compose |
+| `Identite:AdministrateurInitial:Identifiant` | `Identite__AdministrateurInitial__Identifiant` | Compte Administrateur créé au démarrage si la base ne contient aucun compte (`ADMIN_IDENTIFIANT` dans `deploy/.env`) |
+| `Identite:AdministrateurInitial:MotDePasse` | `Identite__AdministrateurInitial__MotDePasse` | Son mot de passe (`ADMIN_MOT_DE_PASSE`) ; à changer en boutique |
 
 En Development, [appsettings.Development.json](src/Host/GestionStock.Api/appsettings.Development.json) pointe vers
 la base de docker-compose avec le mot de passe de développement de [deploy/.env.example](deploy/.env.example).
@@ -111,16 +117,42 @@ Chaque module a son schéma PostgreSQL et sa propre table d'historique des migra
 Si le port 5432 est déjà pris (PostgreSQL installé sur le poste), choisir un autre `POSTGRES_PORT` dans
 `deploy/.env` et, pour `dotnet run`, le reporter dans `ConnectionStrings__GestionStock`.
 
-## Endpoints techniques
+## Endpoints
 
-| Route | Rôle |
+| Route | Accès | Rôle |
+| --- | --- | --- |
+| `GET /health` | anonyme | Le processus répond (200) |
+| `GET /health/pret` | anonyme | La base de données répond (200), sinon 503 |
+| `GET /openapi/v1.json` | anonyme | Description OpenAPI, en Development uniquement |
+| `POST /api/identite/connexion` | anonyme | `{ identifiant, motDePasse }` → jeton d'accès (1 h) et jeton de renouvellement |
+| `POST /api/identite/rafraichir` | anonyme | `{ jetonRenouvellement }` → nouveau jeton d'accès |
+| `GET /api/identite/moi` | connecté | Identifiant, rôles et permissions de l'utilisateur |
+| `GET /api/identite/utilisateurs` | `Identite.Utilisateurs.Gerer` | Liste des comptes et de leurs rôles |
+| `POST /api/identite/utilisateurs` | `Identite.Utilisateurs.Gerer` | `{ identifiant, motDePasse, role }` → crée un compte |
+
+Tout autre endpoint est refusé par défaut (401 sans jeton) : chaque endpoint métier déclare sa permission
+(`RequireAuthorization(Permissions.X)`), 403 si l'utilisateur ne la détient pas. Les jetons s'envoient dans
+l'en-tête `Authorization: Bearer <jeton>`. Les erreurs sont des ProblemDetails : titre traduit selon
+`Accept-Language` (fr par défaut, en) et code stable dans l'extension `code` (ex. `Identite.IdentifiantsInvalides`).
+
+## Comptes, rôles et permissions
+
+Comptes locaux nominatifs (ENF06), stockés dans le schéma `identite`. Mot de passe : 8 caractères au moins,
+avec majuscule, minuscule, chiffre et caractère spécial ; compte verrouillé 5 minutes après 5 échecs.
+Au premier démarrage, l'Administrateur initial est créé depuis la configuration ; il crée ensuite les autres comptes.
+
+Les cinq rôles de la section 8.3 du dossier : Administrateur, Gerant, Comptable, Caissier, Magasinier.
+Chaque permission est attribuée à des rôles dans
+[MatricePermissions.cs](src/Modules/Identite/GestionStock.Identite/Application/MatricePermissions.cs) :
+
+| Permission | Rôles |
 | --- | --- |
-| `GET /health` | Le processus répond (200) |
-| `GET /health/pret` | La base de données répond (200), sinon 503 |
-| `GET /openapi/v1.json` | Description OpenAPI, en Development uniquement |
-
-Tout autre endpoint est refusé par défaut (401) : chaque endpoint métier devra déclarer sa permission.
-Le schéma d'authentification est provisoire jusqu'au module Identite.
+| `Identite.Utilisateurs.Gerer` | Administrateur |
+| `Referentiel.Consulter`, `Stock.Consulter` | tous |
+| `Referentiel.Articles.Gerer` | Gerant, Administrateur *(provisoire)* |
+| `Achats.Consulter` | Gerant, Comptable, Magasinier |
+| `Achats.Fournisseurs.Gerer` | Gerant, Magasinier *(provisoire)* |
+| `Achats.Receptions.Saisir`, `Achats.Receptions.Valider` | Magasinier, Gerant *(validation provisoire)* |
 
 ## Tests
 
@@ -128,6 +160,7 @@ Le schéma d'authentification est provisoire jusqu'au module Identite.
 | --- | --- | --- |
 | `GestionStock.Stock.Domain.Tests` | Règles du domaine : mouvements, soldes, CUMP, RG03 / RG22 | Non |
 | `GestionStock.Infrastructure.Tests` | Horloge, stockage de fichiers, chaîne de connexion | Non |
+| `GestionStock.Api.IntegrationTests` | API complète par HTTP : connexion, jetons, 401 / 403, comptes, messages traduits | Oui |
 | `GestionStock.ArchitectureTests` | Dépendances entre projets, visibilité, couches, traductions | Non |
 | `GestionStock.Stock.IntegrationTests` | PostgreSQL 17 réelle : migration, transaction partagée, idempotence, journal immuable, mouvements simultanés | Oui |
 
@@ -143,8 +176,8 @@ sur une machine Linux de GitHub qui dispose de Docker :
 
 - **Build et tests** : build en Release sans avertissement, puis tous les tests, y compris ceux sur PostgreSQL réelle ;
 - **Image et docker-compose** : construit l'image de l'API, démarre `deploy/docker-compose.yml` avec les valeurs de
-  `deploy/.env.example`, puis vérifie que `/health/pret` répond, que la migration `Initial` est appliquée et que
-  `/api/stock` répond 401.
+  `deploy/.env.example`, puis vérifie que `/health/pret` répond, que la migration `Initial` de chaque module est
+  appliquée, qu'une route métier répond 401 sans jeton et que l'Administrateur initial se connecte.
 
 ## Avancement du squelette
 
@@ -158,8 +191,16 @@ sur une machine Linux de GitHub qui dispose de Docker :
 | 5 | docker-compose PostgreSQL et migration `Initial` | Fait (vérifié en CI) |
 | 6 | Tests d'architecture | Fait |
 | 7 | Tests d'intégration (Testcontainers) | Fait (exécutés en CI) |
+| 8 | Module Identite : comptes locaux, rôles, permissions, jetons porteurs | Fait |
+| 9 | Module Referentiel : articles, site et emplacement de vente | À faire |
+| 10 | Module Achats minimal : fournisseurs, réception simple ; lectures du stock | À faire |
+| 11 | Client Blazor WebAssembly : premiers écrans | À faire |
+| 12 | Tests d'architecture, Docker, démonstration de bout en bout | À faire |
 
 ## Points ouverts
+
+- Rôles pour la gestion des articles et des fournisseurs, et validation d'une réception sans commande
+  (le processus 6.1 cite l'Acheteur, rôle absent de la V1) : attributions provisoires, à confirmer (voir ci-dessus).
 
 - Effet des mouvements `Blocage`, `Deblocage` et `Revalorisation` : refusés tant qu'il n'est pas défini.
 - Motif de démarque (RG23) : absent du modèle UML, à ajouter au mouvement.

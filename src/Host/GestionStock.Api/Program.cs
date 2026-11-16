@@ -1,8 +1,7 @@
-using GestionStock.Api.Securite;
+using GestionStock.Identite;
 using GestionStock.Infrastructure;
 using GestionStock.Infrastructure.Persistance;
 using GestionStock.Stock;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 
@@ -14,15 +13,14 @@ builder.Services.AddOpenApi();
 builder.Services.AddLocalization();
 
 // Sécurité : tout endpoint est refusé par défaut. Chaque endpoint métier déclare sa permission ;
-// seuls les endpoints techniques sont explicitement anonymes. Le schéma d'authentification
-// (comptes locaux / OIDC, ENF06) arrivera avec le module Identite.
-builder.Services.AddAuthentication(AuthentificationProvisoire.Schema)
-    .AddScheme<AuthenticationSchemeOptions, AuthentificationProvisoire>(AuthentificationProvisoire.Schema, null);
+// seuls la connexion et les endpoints techniques sont explicitement anonymes.
+// L'authentification (comptes locaux, jetons porteurs) et les permissions viennent du module Identite.
 builder.Services.AddAuthorizationBuilder()
     .SetFallbackPolicy(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build());
 
 // Modules
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddIdentiteModule(builder.Configuration);
 builder.Services.AddStockModule(builder.Configuration);
 
 var app = builder.Build();
@@ -58,6 +56,7 @@ if (app.Environment.IsDevelopment())
 }
 
 // Modules
+app.MapIdentiteEndpoints();
 app.MapStockEndpoints();
 
 await app.RunAsync();

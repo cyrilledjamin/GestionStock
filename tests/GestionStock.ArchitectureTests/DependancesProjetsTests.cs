@@ -13,13 +13,15 @@ public sealed class DependancesProjetsTests
     public static TheoryData<string> Implementations() => Noms(RoleAssemblage.ImplementationModule);
 
     [Fact]
-    public void La_decouverte_trouve_les_briques_et_le_module_Stock()
+    public void La_decouverte_trouve_les_briques_et_les_modules()
     {
         string[] attendus =
         [
             Assemblages.NomHote,
             Assemblages.NomSharedKernel,
             Assemblages.NomInfrastructure,
+            "GestionStock.Identite",
+            "GestionStock.Identite.Contracts",
             "GestionStock.Stock",
             "GestionStock.Stock.Contracts",
             "GestionStock.Stock.Domain",

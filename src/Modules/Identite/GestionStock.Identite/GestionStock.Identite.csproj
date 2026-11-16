@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Implémentation interne du module Identite : comptes locaux (ASP.NET Core Identity), rôles, permissions -->
+  <PropertyGroup>
+    <NeutralLanguage>fr</NeutralLanguage>
+  </PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../GestionStock.Identite.Contracts/GestionStock.Identite.Contracts.csproj" />
+    <ProjectReference Include="../../../BuildingBlocks/GestionStock.Infrastructure/GestionStock.Infrastructure.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="GestionStock.ArchitectureTests" />
+    <InternalsVisibleTo Include="GestionStock.Api.IntegrationTests" />
+  </ItemGroup>
+</Project>
