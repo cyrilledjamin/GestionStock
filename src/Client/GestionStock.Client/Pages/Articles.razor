@@ -1,0 +1,147 @@
+@page "/articles"
+@inject Api Api
+@inject Session Session
+
+<PageTitle>@L["Articles"] · GestionStock</PageTitle>
+
+<h1>@L["Articles"]</h1>
+
+<div class="barre">
+    <input type="search" placeholder="@L["Rechercher"]" @bind="_recherche" @bind:event="oninput" @bind:after="Charger" />
+    <label class="case"><input type="checkbox" @bind="_inclureInactifs" @bind:after="Charger" /> @L["InclureInactifs"]</label>
+    @if (Session.A(Permissions.ArticlesGerer) && _edition is null)
+    {
+        <button class="principal" @onclick="Nouveau">@L["NouvelArticle"]</button>
+    }
+</div>
+
+<Message Texte="@_erreur" />
+
+@if (_edition is not null)
+{
+    <form class="fiche" @onsubmit="Enregistrer">
+        <h2>@(_edition.Id is null ? L["NouvelArticle"] : L["ModifierArticle", _edition.Code])</h2>
+        <div class="grille">
+            <label>@L["Code"]
+                <input @bind="_edition.Code" disabled="@(_edition.Id is not null)" required maxlength="50" />
+            </label>
+            <label>@L["Libelle"]
+                <input @bind="_edition.Libelle" required maxlength="200" />
+            </label>
+            <label>@L["LibelleTraduit"]
+                <input @bind="_edition.LibelleTraduit" maxlength="200" />
+            </label>
+            <label>@L["UniteStock"]
+                <input @bind="_edition.UniteStock" disabled="@(_edition.Id is not null)" required maxlength="20" placeholder="@L["UniteExemple"]" />
+            </label>
+            <label>@L["Precision"]
+                <select @bind="_edition.PrecisionQuantite" disabled="@(_edition.Id is not null)">
+                    <option value="0">@L["Precision0"]</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">@L["Precision3"]</option>
+                </select>
+            </label>
+            @if (_edition.Id is not null)
+            {
+                <label class="case"><input type="checkbox" @bind="_edition.Actif" /> @L["Actif"]</label>
+            }
+        </div>
+        @if (_edition.Id is not null)
+        {
+            <p class="discret">@L["ArticleFige"]</p>
+        }
+        <div class="actions">
+            <button type="submit" class="principal">@L["Enregistrer"]</button>
+            <button type="button" @onclick="() => _edition = null">@L["Annuler"]</button>
+        </div>
+    </form>
+}
+
+<table>
+    <thead>
+        <tr><th>@L["Code"]</th><th>@L["Libelle"]</th><th>@L["UniteStock"]</th><th class="nombre">@L["Precision"]</th><th>@L["Etat"]</th><th></th></tr>
+    </thead>
+    <tbody>
+        @foreach (var article in _articles)
+        {
+            <tr class="@(article.Actif ? "" : "inactif")">
+                <td><code>@article.Code</code></td>
+                <td>@article.Libelle @if (article.LibelleTraduit is not null) { <small class="discret"> · @article.LibelleTraduit</small> }</td>
+                <td>@article.UniteStock</td>
+                <td class="nombre">@article.PrecisionQuantite</td>
+                <td>@(article.Actif ? L["Actif"] : L["Inactif"])</td>
+                <td class="actions-ligne">
+                    @if (Session.A(Permissions.StockConsulter))
+                    {
+                        <a href="stock/@article.Id">@L["Journal"]</a>
+                    }
+                    @if (Session.A(Permissions.ArticlesGerer))
+                    {
+                        <button class="lien" @onclick="() => Modifier(article)">@L["Modifier"]</button>
+                    }
+                </td>
+            </tr>
+        }
+        @if (_articles.Count == 0)
+        {
+            <tr><td colspan="6" class="vide">@L["AucunArticle"]</td></tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    private List<Article> _articles = [];
+    private string _recherche = "";
+    private bool _inclureInactifs;
+    private string? _erreur;
+    private Edition? _edition;
+
+    protected override Task OnInitializedAsync() => Charger();
+
+    private async Task Charger()
+    {
+        var url = $"api/referentiel/articles?recherche={Uri.EscapeDataString(_recherche)}&inclureInactifs={_inclureInactifs}";
+        var resultat = await Api.GetAsync<List<Article>>(url);
+        _articles = resultat.Valeur ?? [];
+        _erreur = resultat.Erreur;
+    }
+
+    private void Nouveau() => _edition = new Edition();
+
+    private void Modifier(Article article) => _edition = new Edition
+    {
+        Id = article.Id,
+        Code = article.Code,
+        Libelle = article.Libelle,
+        LibelleTraduit = article.LibelleTraduit,
+        UniteStock = article.UniteStock,
+        PrecisionQuantite = article.PrecisionQuantite,
+        Actif = article.Actif,
+    };
+
+    private async Task Enregistrer()
+    {
+        var edition = _edition!;
+        var resultat = edition.Id is null
+            ? await Api.PostAsync<Article>("api/referentiel/articles", new { edition.Code, edition.Libelle, edition.LibelleTraduit, edition.UniteStock, edition.PrecisionQuantite })
+            : await Api.PutAsync<Article>($"api/referentiel/articles/{edition.Id}", new { edition.Libelle, edition.LibelleTraduit, edition.Actif });
+        _erreur = resultat.Erreur;
+        if (resultat.Reussi)
+        {
+            _edition = null;
+            await Charger();
+        }
+    }
+
+    private sealed class Edition
+    {
+        public Guid? Id { get; init; }
+        public string Code { get; set; } = "";
+        public string Libelle { get; set; } = "";
+        public string? LibelleTraduit { get; set; }
+        public string UniteStock { get; set; } = "";
+        public int PrecisionQuantite { get; set; }
+        public bool Actif { get; set; } = true;
+    }
+}

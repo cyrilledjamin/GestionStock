@@ -1,0 +1,55 @@
+@page "/connexion"
+@inject Session Session
+@inject NavigationManager Navigation
+@inject IJSRuntime Js
+
+<PageTitle>@L["Connexion"] · GestionStock</PageTitle>
+
+<div class="connexion">
+    <h1>GestionStock</h1>
+    <p class="discret">@L["ConnexionIntro"]</p>
+    <form @onsubmit="Connecter">
+        <label>@L["Identifiant"]
+            <input @bind="_identifiant" autocomplete="username" required autofocus />
+        </label>
+        <label>@L["MotDePasse"]
+            <input type="password" @bind="_motDePasse" autocomplete="current-password" required />
+        </label>
+        <Message Texte="@_erreur" />
+        <button type="submit" class="principal" disabled="@_enCours">@L["SeConnecter"]</button>
+    </form>
+    <button class="lien" @onclick="ChangerLangue">@L["AutreLangue"]</button>
+</div>
+
+@code {
+    private string _identifiant = "";
+    private string _motDePasse = "";
+    private string? _erreur;
+    private bool _enCours;
+
+    protected override void OnInitialized()
+    {
+        if (Session.EstConnecte)
+        {
+            Navigation.NavigateTo("");
+        }
+    }
+
+    private async Task Connecter()
+    {
+        _enCours = true;
+        _erreur = await Session.ConnecterAsync(_identifiant.Trim(), _motDePasse);
+        _enCours = false;
+        if (_erreur is null)
+        {
+            Navigation.NavigateTo("");
+        }
+    }
+
+    private async Task ChangerLangue()
+    {
+        var autre = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "en" ? "fr" : "en";
+        await Js.InvokeVoidAsync("localStorage.setItem", Langues.Cle, autre);
+        Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
+    }
+}

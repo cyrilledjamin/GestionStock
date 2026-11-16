@@ -1,0 +1,84 @@
+@inherits LayoutComponentBase
+@implements IDisposable
+@inject Session Session
+@inject NavigationManager Navigation
+@inject IJSRuntime Js
+
+@if (!Session.EstConnecte)
+{
+    <main class="seul">@Body</main>
+}
+else
+{
+    <div class="cadre">
+        <nav class="menu">
+            <div class="marque">GestionStock</div>
+            <NavLink href="" Match="NavLinkMatch.All">@L["Accueil"]</NavLink>
+            @if (Session.A(Permissions.StockConsulter))
+            {
+                <NavLink href="stock">@L["Stock"]</NavLink>
+            }
+            @if (Session.A(Permissions.AchatsConsulter))
+            {
+                <NavLink href="receptions">@L["Receptions"]</NavLink>
+                <NavLink href="fournisseurs">@L["Fournisseurs"]</NavLink>
+            }
+            @if (Session.A(Permissions.ReferentielConsulter))
+            {
+                <NavLink href="articles">@L["Articles"]</NavLink>
+            }
+            @if (Session.A(Permissions.UtilisateursGerer))
+            {
+                <NavLink href="utilisateurs">@L["Utilisateurs"]</NavLink>
+            }
+            <div class="pied-menu">
+                <div class="utilisateur">@Session.Profil!.Identifiant<br /><small>@string.Join(", ", Session.Profil.Roles.Select(r => L[$"Role.{r}"].Value))</small></div>
+                <button class="lien" @onclick="ChangerLangue">@L["AutreLangue"]</button>
+                <button class="lien" @onclick="Deconnecter">@L["Deconnexion"]</button>
+            </div>
+        </nav>
+        <main class="contenu">@Body</main>
+    </div>
+}
+
+@code {
+    protected override void OnInitialized()
+    {
+        Session.Changement += Rafraichir;
+        Navigation.LocationChanged += SurNavigation;
+        ExigerConnexion();
+    }
+
+    private void SurNavigation(object? sender, LocationChangedEventArgs e) => ExigerConnexion();
+
+    /// <summary>Toute page hors connexion exige une session.</summary>
+    private void ExigerConnexion()
+    {
+        var page = Navigation.ToBaseRelativePath(Navigation.Uri);
+        if (!Session.EstConnecte && !page.StartsWith("connexion", StringComparison.Ordinal))
+        {
+            Navigation.NavigateTo("connexion");
+        }
+    }
+
+    private void Rafraichir() => InvokeAsync(StateHasChanged);
+
+    private async Task ChangerLangue()
+    {
+        var autre = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "en" ? "fr" : "en";
+        await Js.InvokeVoidAsync("localStorage.setItem", Langues.Cle, autre);
+        Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
+    }
+
+    private async Task Deconnecter()
+    {
+        await Session.DeconnecterAsync();
+        Navigation.NavigateTo("connexion");
+    }
+
+    public void Dispose()
+    {
+        Session.Changement -= Rafraichir;
+        Navigation.LocationChanged -= SurNavigation;
+    }
+}

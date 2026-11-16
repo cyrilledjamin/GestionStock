@@ -1,0 +1,73 @@
+@page "/stock/{ArticleId:guid}"
+@inject Api Api
+
+<PageTitle>@L["Journal"] · GestionStock</PageTitle>
+
+<p><a href="stock">← @L["Stock"]</a></p>
+
+<Message Texte="@_erreur" />
+
+@if (_article is not null)
+{
+    <h1><code>@_article.Code</code> @Format.Libelle(_article)</h1>
+
+    <div class="tuiles">
+        <div class="tuile chiffre"><span>@L["Physique"]</span><strong>@Format.Quantite(_solde?.QuantitePhysique ?? 0, _article.PrecisionQuantite) @_article.UniteStock</strong></div>
+        <div class="tuile chiffre"><span>@L["Disponible"]</span><strong>@Format.Quantite(_solde?.QuantiteDisponible ?? 0, _article.PrecisionQuantite)</strong></div>
+        <div class="tuile chiffre"><span>@L["Cump"]</span><strong>@Format.Montant(_solde?.Cump ?? 0)</strong></div>
+        <div class="tuile chiffre"><span>@L["ValeurStock"]</span><strong>@Format.Montant((_solde?.QuantitePhysique ?? 0) * (_solde?.Cump ?? 0))</strong></div>
+    </div>
+
+    <h2>@L["Journal"]</h2>
+    <table>
+        <thead>
+            <tr><th>@L["Date"]</th><th>@L["Mouvement"]</th><th class="nombre">@L["Variation"]</th><th class="nombre">@L["CoutUnitaire"]</th><th>@L["Document"]</th><th>@L["Utilisateur"]</th></tr>
+        </thead>
+        <tbody>
+            @foreach (var mouvement in _mouvements)
+            {
+                <tr>
+                    <td class="court">@Format.Date(mouvement.DateUtc)</td>
+                    <td>@L[$"Mouvement.{mouvement.Type}"]</td>
+                    <td class="nombre @(mouvement.Variation < 0 ? "sortie" : "entree")">@(mouvement.Variation > 0 ? "+" : "")@Format.Quantite(mouvement.Variation, _article.PrecisionQuantite)</td>
+                    <td class="nombre">@Format.Montant(mouvement.CoutUnitaire)</td>
+                    <td>
+                        @if (mouvement.TypeDocument == "Reception")
+                        {
+                            <a href="receptions/@mouvement.DocumentId">@L["Reception"]</a>
+                        }
+                        else
+                        {
+                            @mouvement.TypeDocument
+                        }
+                    </td>
+                    <td>@mouvement.Utilisateur</td>
+                </tr>
+            }
+            @if (_mouvements.Count == 0)
+            {
+                <tr><td colspan="6" class="vide">@L["AucunMouvement"]</td></tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    [Parameter] public Guid ArticleId { get; set; }
+
+    private Article? _article;
+    private SoldeStock? _solde;
+    private List<MouvementStock> _mouvements = [];
+    private string? _erreur;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var article = await Api.GetAsync<Article>($"api/referentiel/articles/{ArticleId}");
+        var soldes = await Api.GetAsync<List<SoldeStock>>("api/stock/soldes");
+        var mouvements = await Api.GetAsync<List<MouvementStock>>($"api/stock/articles/{ArticleId}/mouvements");
+        _erreur = article.Erreur ?? soldes.Erreur ?? mouvements.Erreur;
+        _article = article.Valeur;
+        _solde = soldes.Valeur?.FirstOrDefault(s => s.ArticleId == ArticleId);
+        _mouvements = mouvements.Valeur ?? [];
+    }
+}

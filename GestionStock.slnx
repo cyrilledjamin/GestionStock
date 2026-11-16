@@ -1,5 +1,8 @@
 <Solution>
   <Folder Name="/src/" />
+  <Folder Name="/src/Client/">
+    <Project Path="src/Client/GestionStock.Client/GestionStock.Client.csproj" />
+  </Folder>
   <Folder Name="/src/BuildingBlocks/">
     <Project Path="src/BuildingBlocks/GestionStock.SharedKernel/GestionStock.SharedKernel.csproj" />
     <Project Path="src/BuildingBlocks/GestionStock.Infrastructure/GestionStock.Infrastructure.csproj" />

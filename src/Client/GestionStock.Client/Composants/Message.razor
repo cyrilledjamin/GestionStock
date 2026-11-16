@@ -1,0 +1,11 @@
+@* Message d'erreur ou de confirmation, affiché seulement s'il y a un texte. *@
+@if (!string.IsNullOrEmpty(Texte))
+{
+    <div class="message @(Erreur ? "erreur" : "succes")" role="@(Erreur ? "alert" : "status")">@Texte</div>
+}
+
+@code {
+    [Parameter] public string? Texte { get; set; }
+
+    [Parameter] public bool Erreur { get; set; } = true;
+}

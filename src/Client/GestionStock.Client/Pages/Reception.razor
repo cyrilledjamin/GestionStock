@@ -1,0 +1,231 @@
+@page "/receptions/nouvelle"
+@page "/receptions/{Id:guid}"
+@inject Api Api
+@inject Session Session
+@inject NavigationManager Navigation
+
+<PageTitle>@Titre · GestionStock</PageTitle>
+
+<p><a href="receptions">← @L["Receptions"]</a></p>
+<h1>@Titre</h1>
+
+<Message Texte="@_erreur" />
+<Message Texte="@_succes" Erreur="false" />
+
+@if (_chargee)
+{
+    @if (Modifiable)
+    {
+        <form class="fiche" @onsubmit="Enregistrer">
+            <div class="grille">
+                <label>@L["Fournisseur"]
+                    <select @bind="_fournisseurId" required>
+                        <option value="">@L["Choisir"]</option>
+                        @foreach (var fournisseur in _fournisseurs)
+                        {
+                            <option value="@fournisseur.Id">@fournisseur.Nom</option>
+                        }
+                    </select>
+                </label>
+                <label>@L["BonLivraison"]
+                    <input @bind="_bonLivraison" maxlength="50" />
+                </label>
+            </div>
+
+            <table class="saisie">
+                <thead>
+                    <tr><th>@L["Article"]</th><th class="nombre">@L["Quantite"]</th><th class="nombre">@L["CoutUnitaire"]</th><th class="nombre">@L["Valeur"]</th><th></th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var ligne in _lignes)
+                    {
+                        var article = _articles.FirstOrDefault(a => a.Id == ligne.ArticleId);
+                        <tr>
+                            <td>
+                                <select @bind="ligne.ArticleId" required>
+                                    <option value="@Guid.Empty">@L["Choisir"]</option>
+                                    @foreach (var a in _articles)
+                                    {
+                                        <option value="@a.Id">@a.Code — @Format.Libelle(a)</option>
+                                    }
+                                </select>
+                            </td>
+                            <td class="nombre">
+                                <input type="number" min="0" step="@Pas(article)" @bind="ligne.Quantite" required />
+                                <small class="discret">@article?.UniteStock</small>
+                            </td>
+                            <td class="nombre"><input type="number" min="0" step="any" @bind="ligne.CoutUnitaire" required /></td>
+                            <td class="nombre">@Format.Montant(ligne.Quantite * ligne.CoutUnitaire)</td>
+                            <td><button type="button" class="lien" @onclick="() => _lignes.Remove(ligne)" disabled="@(_lignes.Count == 1)">@L["Retirer"]</button></td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td><button type="button" class="lien" @onclick="() => _lignes.Add(new Ligne())">+ @L["AjouterLigne"]</button></td>
+                        <td></td>
+                        <th class="nombre">@L["Total"]</th>
+                        <th class="nombre">@Format.Montant(_lignes.Sum(l => l.Quantite * l.CoutUnitaire))</th>
+                        <td></td>
+                    </tr>
+                </tfoot>
+            </table>
+
+            <p class="discret">@L["ReceptionAide"]</p>
+            <div class="actions">
+                <button type="submit" class="principal" disabled="@_enCours">@L["EnregistrerBrouillon"]</button>
+                @if (_reception is not null && Session.A(Permissions.ReceptionsValider))
+                {
+                    <button type="button" class="valider" disabled="@_enCours" @onclick="Valider">@L["ValiderReception"]</button>
+                }
+            </div>
+        </form>
+    }
+    else if (_reception is not null)
+    {
+        <div class="fiche">
+            <dl class="grille">
+                <div><dt>@L["Statut"]</dt><dd><span class="pastille @_reception.Statut.ToLowerInvariant()">@L[$"Statut.{_reception.Statut}"]</span></dd></div>
+                <div><dt>@L["Fournisseur"]</dt><dd>@_reception.Fournisseur</dd></div>
+                <div><dt>@L["BonLivraison"]</dt><dd>@(_reception.NumeroBonLivraison ?? "—")</dd></div>
+                <div><dt>@L["SaisiePar"]</dt><dd>@_reception.CreePar, @Format.Date(_reception.DateCreationUtc)</dd></div>
+                @if (_reception.DateValidationUtc is { } validation)
+                {
+                    <div><dt>@L["ValideePar"]</dt><dd>@_reception.ValideePar, @Format.Date(validation)</dd></div>
+                }
+            </dl>
+        </div>
+        <table>
+            <thead>
+                <tr><th>@L["Article"]</th><th class="nombre">@L["Quantite"]</th><th class="nombre">@L["CoutUnitaire"]</th><th class="nombre">@L["Valeur"]</th></tr>
+            </thead>
+            <tbody>
+                @foreach (var ligne in _reception.Lignes)
+                {
+                    <tr>
+                        <td><a href="stock/@ligne.ArticleId"><code>@ligne.CodeArticle</code></a> @ligne.LibelleArticle</td>
+                        <td class="nombre">@Format.Quantite(ligne.Quantite) @ligne.UniteStock</td>
+                        <td class="nombre">@Format.Montant(ligne.CoutUnitaire)</td>
+                        <td class="nombre">@Format.Montant(ligne.Valeur)</td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr><td colspan="3" class="nombre">@L["Total"]</td><th class="nombre">@Format.Montant(_reception.Valeur)</th></tr>
+            </tfoot>
+        </table>
+    }
+}
+
+@code {
+    [Parameter] public Guid? Id { get; set; }
+
+    private DetailReception? _reception;
+    private List<Fournisseur> _fournisseurs = [];
+    private List<Article> _articles = [];
+    private Guid? _fournisseurId;
+    private string? _bonLivraison;
+    private List<Ligne> _lignes = [new()];
+    private string? _erreur;
+    private string? _succes;
+    private bool _chargee;
+    private bool _enCours;
+
+    private string Titre => _reception?.Numero is { } numero ? L["ReceptionNumero", numero] : L["NouvelleReception"];
+
+    private bool Modifiable =>
+        Session.A(Permissions.ReceptionsSaisir) && (_reception is null || _reception.Statut == StatutsReception.Brouillon);
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _chargee = false;
+        if (Id is { } id)
+        {
+            var resultat = await Api.GetAsync<DetailReception>($"api/achats/receptions/{id}");
+            _erreur = resultat.Erreur;
+            Afficher(resultat.Valeur);
+        }
+
+        if (Modifiable)
+        {
+            _fournisseurs = (await Api.GetAsync<List<Fournisseur>>("api/achats/fournisseurs")).Valeur ?? [];
+            _articles = (await Api.GetAsync<List<Article>>("api/referentiel/articles")).Valeur ?? [];
+        }
+
+        _chargee = true;
+    }
+
+    private void Afficher(DetailReception? reception)
+    {
+        _reception = reception;
+        if (reception is null)
+        {
+            return;
+        }
+
+        _fournisseurId = reception.FournisseurId;
+        _bonLivraison = reception.NumeroBonLivraison;
+        _lignes = [.. reception.Lignes.Select(l => new Ligne { ArticleId = l.ArticleId, Quantite = Format.SansZeros(l.Quantite), CoutUnitaire = Format.SansZeros(l.CoutUnitaire) })];
+    }
+
+    private async Task Enregistrer()
+    {
+        _enCours = true;
+        _succes = null;
+        var corps = new
+        {
+            FournisseurId = _fournisseurId ?? Guid.Empty,
+            NumeroBonLivraison = _bonLivraison,
+            Lignes = _lignes.Select(l => new { l.ArticleId, l.Quantite, l.CoutUnitaire }).ToList(),
+        };
+        var resultat = _reception is null
+            ? await Api.PostAsync<DetailReception>("api/achats/receptions", corps)
+            : await Api.PutAsync<DetailReception>($"api/achats/receptions/{_reception.Id}", corps);
+        _enCours = false;
+        _erreur = resultat.Erreur;
+        if (resultat.Valeur is { } reception)
+        {
+            _succes = L["BrouillonEnregistre"];
+            if (_reception is null)
+            {
+                Navigation.NavigateTo($"receptions/{reception.Id}");
+                return;
+            }
+
+            Afficher(reception);
+        }
+    }
+
+    private async Task Valider()
+    {
+        // Le brouillon est enregistré tel qu'affiché avant la validation.
+        await Enregistrer();
+        if (_erreur is not null || _reception is null)
+        {
+            return;
+        }
+
+        _enCours = true;
+        var resultat = await Api.PostAsync<DetailReception>($"api/achats/receptions/{_reception.Id}/validation");
+        _enCours = false;
+        _erreur = resultat.Erreur;
+        if (resultat.Valeur is { } reception)
+        {
+            Afficher(reception);
+            _succes = L["ReceptionValidee"];
+        }
+    }
+
+    private static string Pas(Article? article) => article?.PrecisionQuantite switch
+    {
+        null or 0 => "1",
+        var p => (1m / (decimal)Math.Pow(10, p.Value)).ToString(CultureInfo.InvariantCulture),
+    };
+
+    private sealed class Ligne
+    {
+        public Guid ArticleId { get; set; }
+        public decimal Quantite { get; set; } = 1m;
+        public decimal CoutUnitaire { get; set; }
+    }
+}

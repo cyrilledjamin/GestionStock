@@ -1,0 +1,68 @@
+@page "/stock"
+@inject Api Api
+
+<PageTitle>@L["Stock"] · GestionStock</PageTitle>
+
+<h1>@L["Stock"]</h1>
+<p class="discret">@L["StockIntro"]</p>
+
+<div class="barre">
+    <input type="search" placeholder="@L["Rechercher"]" @bind="_recherche" @bind:event="oninput" />
+</div>
+
+<Message Texte="@_erreur" />
+
+<table>
+    <thead>
+        <tr>
+            <th>@L["Code"]</th><th>@L["Libelle"]</th>
+            <th class="nombre">@L["Physique"]</th><th class="nombre">@L["Disponible"]</th>
+            <th class="nombre">@L["Cump"]</th><th class="nombre">@L["ValeurStock"]</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var ligne in Lignes)
+        {
+            <tr class="@(ligne.Solde.QuantitePhysique < 0 ? "negatif" : "")">
+                <td><a href="stock/@ligne.Article.Id"><code>@ligne.Article.Code</code></a></td>
+                <td>@Format.Libelle(ligne.Article)</td>
+                <td class="nombre">@Format.Quantite(ligne.Solde.QuantitePhysique, ligne.Article.PrecisionQuantite) @ligne.Article.UniteStock</td>
+                <td class="nombre">@Format.Quantite(ligne.Solde.QuantiteDisponible, ligne.Article.PrecisionQuantite)</td>
+                <td class="nombre">@Format.Montant(ligne.Solde.Cump)</td>
+                <td class="nombre">@Format.Montant(ligne.Solde.QuantitePhysique * ligne.Solde.Cump)</td>
+            </tr>
+        }
+        @if (!Lignes.Any())
+        {
+            <tr><td colspan="6" class="vide">@L["AucunStock"]</td></tr>
+        }
+    </tbody>
+    <tfoot>
+        <tr><td colspan="5" class="nombre">@L["Total"]</td><th class="nombre">@Format.Montant(Lignes.Sum(l => l.Solde.QuantitePhysique * l.Solde.Cump))</th></tr>
+    </tfoot>
+</table>
+
+@code {
+    private List<(Article Article, SoldeStock Solde)> _lignes = [];
+    private string _recherche = "";
+    private string? _erreur;
+
+    private IEnumerable<(Article Article, SoldeStock Solde)> Lignes => string.IsNullOrWhiteSpace(_recherche)
+        ? _lignes
+        : _lignes.Where(l =>
+            l.Article.Code.Contains(_recherche, StringComparison.CurrentCultureIgnoreCase)
+            || l.Article.Libelle.Contains(_recherche, StringComparison.CurrentCultureIgnoreCase)
+            || l.Article.LibelleTraduit?.Contains(_recherche, StringComparison.CurrentCultureIgnoreCase) == true);
+
+    protected override async Task OnInitializedAsync()
+    {
+        var soldes = await Api.GetAsync<List<SoldeStock>>("api/stock/soldes");
+        var articles = await Api.GetAsync<List<Article>>("api/referentiel/articles?inclureInactifs=true");
+        _erreur = soldes.Erreur ?? articles.Erreur;
+        var parId = (articles.Valeur ?? []).ToDictionary(a => a.Id);
+        _lignes = [.. (soldes.Valeur ?? [])
+            .Where(s => parId.ContainsKey(s.ArticleId))
+            .Select(s => (parId[s.ArticleId], s))
+            .OrderBy(l => l.Item1.Code, StringComparer.Ordinal)];
+    }
+}

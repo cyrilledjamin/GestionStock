@@ -1,0 +1,108 @@
+/* GestionStock : feuille de style locale (aucune ressource externe, utilisable sans Internet). */
+:root {
+    --vert: #1f5f4a;
+    --vert-clair: #e7f1ed;
+    --texte: #1d2321;
+    --discret: #5f6b67;
+    --bordure: #d9dfdc;
+    --fond: #f6f8f7;
+    --rouge: #b42318;
+    --rouge-clair: #fdecea;
+    --ambre: #8a5a00;
+    --ambre-clair: #fff4dc;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 15px;
+    color: var(--texte);
+    background: var(--fond);
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; }
+h1 { font-size: 1.5rem; margin: 0 0 .5rem; }
+h1:focus { outline: none; }
+h2 { font-size: 1.1rem; margin: 0 0 .75rem; }
+a { color: var(--vert); }
+code { font-family: ui-monospace, Consolas, monospace; font-size: .9em; white-space: nowrap; }
+.discret { color: var(--discret); }
+
+/* Mise en page */
+.cadre { display: flex; min-height: 100vh; }
+.menu { width: 220px; flex-shrink: 0; background: var(--vert); color: #fff; display: flex; flex-direction: column; padding: 1rem .75rem; gap: .25rem; }
+.menu .marque { font-weight: 700; font-size: 1.15rem; padding: .25rem .5rem 1rem; }
+.menu a { color: #fff; text-decoration: none; padding: .5rem; border-radius: 6px; }
+.menu a:hover { background: rgba(255,255,255,.12); }
+.menu a.active { background: rgba(255,255,255,.22); font-weight: 600; }
+.pied-menu { margin-top: auto; display: flex; flex-direction: column; gap: .4rem; padding: .5rem; border-top: 1px solid rgba(255,255,255,.25); }
+.pied-menu .utilisateur small { opacity: .8; }
+.pied-menu .lien { color: #fff; text-align: left; padding: 0; }
+.contenu { flex: 1; padding: 1.5rem 2rem; max-width: 1200px; }
+.seul { min-height: 100vh; display: grid; place-items: center; }
+
+/* Connexion */
+.connexion { width: min(360px, 92vw); background: #fff; border: 1px solid var(--bordure); border-radius: 10px; padding: 2rem; }
+.connexion h1 { color: var(--vert); }
+.connexion form { display: flex; flex-direction: column; gap: .9rem; margin: 1rem 0; }
+.connexion .lien { padding: 0; }
+
+/* Formulaires */
+label { display: flex; flex-direction: column; gap: .3rem; font-size: .9rem; color: var(--discret); }
+label.case { flex-direction: row; align-items: center; gap: .4rem; color: var(--texte); }
+input, select { font: inherit; padding: .5rem .6rem; border: 1px solid var(--bordure); border-radius: 6px; background: #fff; color: var(--texte); }
+input:disabled, select:disabled { background: var(--fond); color: var(--discret); }
+input[type=number] { text-align: right; width: 9rem; }
+input:focus, select:focus { outline: 2px solid var(--vert); outline-offset: -1px; }
+button, .bouton { font: inherit; padding: .5rem .9rem; border: 1px solid var(--bordure); border-radius: 6px; background: #fff; color: var(--texte); cursor: pointer; text-decoration: none; display: inline-block; }
+button:disabled { opacity: .5; cursor: default; }
+.principal { background: var(--vert); border-color: var(--vert); color: #fff; }
+.valider { background: #fff; border-color: var(--vert); color: var(--vert); font-weight: 600; }
+.lien { background: none; border: none; color: var(--vert); padding: 0 .25rem; text-decoration: underline; cursor: pointer; }
+.barre { display: flex; align-items: center; gap: 1rem; margin: 1rem 0; flex-wrap: wrap; }
+.barre input[type=search] { width: 20rem; }
+.fiche { background: #fff; border: 1px solid var(--bordure); border-radius: 10px; padding: 1.25rem; margin: 1rem 0; }
+.grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; align-items: end; margin: 0; }
+dl.grille dt { font-size: .85rem; color: var(--discret); }
+dl.grille dd { margin: .2rem 0 0; }
+.actions { display: flex; gap: .75rem; margin-top: 1rem; }
+
+/* Tableaux */
+table { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid var(--bordure); border-radius: 10px; overflow: hidden; margin: 1rem 0; }
+th, td { padding: .55rem .75rem; border-bottom: 1px solid var(--bordure); text-align: left; vertical-align: middle; }
+thead th { background: var(--vert-clair); font-size: .85rem; color: var(--discret); font-weight: 600; }
+tfoot th, tfoot td { border-bottom: none; font-weight: 600; }
+.nombre { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.court { white-space: nowrap; }
+.vide { text-align: center; color: var(--discret); padding: 1.5rem; }
+tr.inactif td { color: var(--discret); }
+tr.negatif td { background: var(--rouge-clair); }
+.actions-ligne { text-align: right; white-space: nowrap; }
+.actions-ligne > * + * { margin-left: .75rem; }
+table.saisie input, table.saisie select { width: 100%; }
+table.saisie input[type=number] { width: 8rem; }
+td.entree { color: var(--vert); font-weight: 600; }
+td.sortie { color: var(--rouge); font-weight: 600; }
+
+/* Pastilles, messages, tuiles */
+.pastille { padding: .15rem .55rem; border-radius: 999px; font-size: .8rem; font-weight: 600; }
+.pastille.brouillon { background: var(--ambre-clair); color: var(--ambre); }
+.pastille.validee { background: var(--vert-clair); color: var(--vert); }
+.message { padding: .65rem .9rem; border-radius: 6px; margin: .75rem 0; }
+.message.erreur { background: var(--rouge-clair); color: var(--rouge); }
+.message.succes { background: var(--vert-clair); color: var(--vert); }
+.tuiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; margin: 1rem 0; }
+.tuile { background: #fff; border: 1px solid var(--bordure); border-radius: 10px; padding: 1rem; display: flex; flex-direction: column; gap: .35rem; color: var(--texte); text-decoration: none; }
+a.tuile:hover { border-color: var(--vert); }
+.tuile strong { color: var(--vert); }
+.tuile span { color: var(--discret); font-size: .9rem; }
+.tuile.chiffre strong { font-size: 1.35rem; color: var(--texte); }
+
+/* Chargement et erreurs Blazor */
+.chargement { display: grid; place-items: center; min-height: 100vh; color: var(--discret); }
+#blazor-error-ui { display: none; position: fixed; bottom: 0; left: 0; right: 0; padding: .75rem 1rem; background: var(--rouge-clair); color: var(--rouge); }
+#blazor-error-ui .reload { margin-left: 1rem; }
+
+@media (max-width: 760px) {
+    .cadre { flex-direction: column; }
+    .menu { width: auto; flex-direction: row; flex-wrap: wrap; align-items: center; }
+    .pied-menu { margin: 0; border: none; flex-direction: row; }
+    .contenu { padding: 1rem; }
+}
