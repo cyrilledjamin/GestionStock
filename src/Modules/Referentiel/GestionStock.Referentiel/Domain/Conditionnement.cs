@@ -37,6 +37,9 @@ internal sealed class Conditionnement
 
     public bool Actif { get; private set; } = true;
 
+    /// <summary>Proposé en tuile à la caisse (articles sans code-barres, riz au kilo…), au choix du Gérant.</summary>
+    public bool VenteRapide { get; private set; }
+
     /// <summary>Conditionnement « Unité » créé avec l'article : facteur 1, toujours actif.</summary>
     public bool EstUnite => Niveau == NiveauConditionnement.Unite && QuantiteUniteStock == 1m;
 
@@ -101,5 +104,21 @@ internal sealed class Conditionnement
 
         Libelle = nettoye;
         Actif = actif;
+        if (!actif)
+        {
+            // Un conditionnement désactivé n'est plus vendu : il quitte la grille de la caisse.
+            VenteRapide = false;
+        }
+    }
+
+    /// <summary>Ajoute ou retire le conditionnement de la grille d'articles rapides de la caisse ; seul un actif y entre.</summary>
+    public void ChoisirVenteRapide(bool venteRapide)
+    {
+        if (venteRapide && !Actif)
+        {
+            throw new ExceptionReferentiel(CodesErreurReferentiel.ConditionnementInactif);
+        }
+
+        VenteRapide = venteRapide;
     }
 }

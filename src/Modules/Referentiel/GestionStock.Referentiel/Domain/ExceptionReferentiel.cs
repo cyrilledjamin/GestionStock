@@ -25,4 +25,5 @@ internal static class CodesErreurReferentiel
     public const string CodeInvalide = "Referentiel.CodeInvalide";
     public const string CodeDejaAttribue = "Referentiel.CodeDejaAttribue";
     public const string CodeIntrouvable = "Referentiel.CodeIntrouvable";
+    public const string ConditionnementInactif = "Referentiel.ConditionnementInactif";
 }

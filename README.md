@@ -61,6 +61,7 @@ src/
 tests/
   GestionStock.Api.IntegrationTests  API complète par HTTP sur PostgreSQL réelle (Testcontainers)
   GestionStock.ArchitectureTests     règles de dépendance et conventions
+  GestionStock.Client.Tests          logique du client (vente en cours), sans navigateur
   GestionStock.Infrastructure.Tests  briques transverses
   GestionStock.Stock.Domain.Tests    règles du domaine Stock
   GestionStock.Stock.IntegrationTests  PostgreSQL réelle (Testcontainers)
@@ -191,6 +192,8 @@ Si le port 5432 est déjà pris (PostgreSQL installé sur le poste), choisir un 
 | `POST /api/referentiel/conditionnements/{id}/codes/interne` | `Referentiel.Articles.Gerer` | Génère un code interne `INT000001` à imprimer en étiquette |
 | `POST /api/referentiel/codes/{id}/desactivation` | `Referentiel.Articles.Gerer` | Désactive un code (il reste dans l'historique) |
 | `GET /api/referentiel/scan/{valeur}` | `Referentiel.Consulter` | Article + conditionnement d'un code scanné ou du code article (404 si inconnu) |
+| `PUT /api/referentiel/conditionnements/{id}/vente-rapide` | `Referentiel.Articles.Gerer` | `{ venteRapide }` : tuile à la caisse (articles sans code-barres) ; refusé sur un conditionnement désactivé, et retiré à sa désactivation |
+| `GET /api/referentiel/vendables/rapides` | `Referentiel.Consulter` | Articles rapides de la caisse : conditionnements actifs marqués, d'articles actifs |
 | `GET /api/referentiel/vendables?recherche=` | `Referentiel.Consulter` | Articles actifs (code ou libellé) avec chacun de leurs conditionnements actifs |
 | `GET /api/prix/regime` | `Prix.Consulter` | Régime de TVA : `{ assujetti, tauxPourcent, tauxApplique }` |
 | `GET /api/prix/articles/{id}` | `Prix.Consulter` | Conditionnements de l'article avec prix en vigueur et prochain prix programmé |
@@ -262,8 +265,8 @@ Ouvrir http://localhost:8080 (docker-compose) puis se connecter. Le menu dépend
 | Réceptions | Liste ; saisie en brouillon (lignes, valeur calculée), enregistrement, validation |
 | Fournisseurs | Liste, création, modification, désactivation |
 | Articles | Recherche, création, modification, désactivation |
-| Fiche article | Conditionnements, codes-barres (saisis, générés, désactivés) et prix (en vigueur, programmé, nouveau) |
-| Caisse | Ouverture de session (poste, fond) ; scan à la douchette (le curseur revient sur le scan après chaque ajout) ou recherche ; panier ; client et crédit ; paiements combinés avec rendu (une ligne par mode, un nouveau clic sur un mode lui ajoute le reste à payer) ; validation d'un responsable si remise ou plafond dépassé ; reçu 80 mm imprimable et PDF ; remboursement de crédit ; clôture avec écart |
+| Fiche article | Conditionnements, codes-barres (saisis, générés, désactivés), case « Vente rapide » (Gérant) et prix (en vigueur, programmé, nouveau) |
+| Caisse | Ouverture de session (poste, fond) ; plein comptoir pendant la vente (menu en tiroir) ; un seul champ : code-barres ou code article à la touche Entrée, recherche en direct dès qu'il contient une lettre (un résultat unique est ajouté) ; résultats et articles rapides en tuiles ; panier à lignes larges (− / +, remise repliée, ligne choisie pour le pavé) ; pavé numérique (quantité ou espèces reçues), affiché d'office sur écran tactile ; billets rapides (500 à 10 000 XAF, cumulés) et « Compte juste » ; raccourcis F2 (scan), F4 (compte juste), F8 (encaisser), Échap ; le curseur revient au scan après chaque bouton (douchette) ; client et crédit ; paiements combinés avec rendu (une ligne par mode, un nouveau clic sur un mode lui ajoute le reste à payer) ; validation d'un responsable si remise ou plafond dépassé ; reçu 80 mm imprimable et PDF ; remboursement de crédit ; clôture avec écart |
 | Tickets de la session, ticket | Recherche par numéro, réimpression, avoir (quantités à rendre, mode de remboursement) |
 | Sessions de caisse | Supervision (Gérant, Comptable) : ventes nettes, espèces théoriques et comptées, écart, validation |
 | Clients, fiche client | Clients à crédit, impayés, création (Gérant), plafond (Comptable), ventes non soldées, journal |
@@ -566,7 +569,8 @@ Chaque permission est attribuée à des rôles dans
 | `GestionStock.Stock.Domain.Tests` | Règles du domaine : mouvements, soldes, CUMP, RG03 / RG22 | Non |
 | `GestionStock.Infrastructure.Tests` | Horloge, stockage de fichiers, chaîne de connexion, clés de protection conservées | Non |
 | `GestionStock.Api.IntegrationTests` | API complète par HTTP : connexion, jetons, 401 / 403, comptes, articles, fournisseurs, réceptions (CUMP, transaction, validation simultanée), soldes et journal | Oui |
-| `GestionStock.ArchitectureTests` | Dépendances entre projets, visibilité, couches, traductions | Non |
+| `GestionStock.ArchitectureTests` | Dépendances entre projets, visibilité, couches, traductions, conventions de style du client | Non |
+| `GestionStock.Client.Tests` | Vente en cours au comptoir : panier, arrondi identique au serveur, billets rapides, compte juste, pas de saisie | Non |
 | `GestionStock.Stock.IntegrationTests` | PostgreSQL 17 réelle : migration, transaction partagée, idempotence, journal immuable, mouvements simultanés | Oui |
 
 Les tests d'intégration démarrent un conteneur `postgres:17-alpine` (Testcontainers), appliquent les
@@ -628,7 +632,7 @@ sur une machine Linux de GitHub qui dispose de Docker :
 | 33 | Client : écrans des comptes et « Mon compte » | Fait |
 | 34 | Architecture, CI, README, démonstration de la tranche 5 | Fait |
 | 35 | Design : jetons, composants, icônes, menu en tiroir (responsive), accessibilité | Fait |
-| 36 | Design : caisse, vente (champ unique, articles rapides, pavé numérique, raccourcis) | À faire |
+| 36 | Design : caisse, vente (champ unique, articles rapides, pavé numérique, raccourcis) | Fait |
 | 37 | Design : caisse, ouverture, session bloquée (clôture par le Gérant), clôture guidée | À faire |
 | 38 | Accueil en tableau de bord par rôle | À faire |
 | 39 | Téléphone et tablette : listes en cartes, caisse sur tablette | À faire |

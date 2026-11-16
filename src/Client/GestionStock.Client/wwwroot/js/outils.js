@@ -25,5 +25,27 @@ window.gestionStock = {
             element.focus();
             element.select();
         }
+    },
+
+    // Écran tactile (doigt comme pointeur principal) : la caisse affiche alors son pavé numérique d'office.
+    tactile: function () {
+        return window.matchMedia("(pointer: coarse)").matches;
+    },
+
+    // Raccourcis clavier d'une page : les touches choisies sont relayées à la méthode .NET « Raccourci ».
+    // Renvoie un objet dont « arreter » retire l'écouteur quand la page se ferme.
+    raccourcis: function (composant, touches) {
+        const ecouter = function (evenement) {
+            if (touches.indexOf(evenement.key) >= 0 && !evenement.repeat) {
+                evenement.preventDefault();
+                composant.invokeMethodAsync("Raccourci", evenement.key);
+            }
+        };
+        document.addEventListener("keydown", ecouter);
+        return {
+            arreter: function () {
+                document.removeEventListener("keydown", ecouter);
+            }
+        };
     }
 };

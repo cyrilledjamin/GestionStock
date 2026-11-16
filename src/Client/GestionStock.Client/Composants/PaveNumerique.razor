@@ -1,0 +1,63 @@
+@* Pavé numérique à l'écran (écran tactile, ou en appoint du clavier) : la valeur saisie est remise par Valide. *@
+@using System.Globalization
+
+<div class="pave" role="group" aria-label="@L["PaveNumerique"]">
+    <div class="pave-ecran" aria-live="polite"><span>@Titre</span><strong>@(_saisie.Length == 0 ? "0" : _saisie)</strong></div>
+    <div class="pave-touches">
+        @foreach (var touche in Chiffres)
+        {
+            <button type="button" @onclick="() => Taper(touche)">@touche</button>
+        }
+        <button type="button" disabled="@(!Decimal)" @onclick='() => Taper(",")'>,</button>
+        <button type="button" @onclick='() => Taper("0")'>0</button>
+        <button type="button" title="@L["Effacer"]" aria-label="@L["Effacer"]" @onclick="Effacer">⌫</button>
+    </div>
+    <button type="button" class="principal" disabled="@(_saisie.Length == 0)" @onclick="Valider">@L["Ok"]</button>
+</div>
+
+@code {
+    private static readonly string[] Chiffres = ["7", "8", "9", "4", "5", "6", "1", "2", "3"];
+    private const int LongueurMax = 12;
+
+    /// <summary>Ce que la saisie va modifier (ex. « Quantité : Riz parfumé »).</summary>
+    [Parameter] public string Titre { get; set; } = "";
+
+    /// <summary>Virgule permise (quantité au poids) ou non (montants en francs, pièces).</summary>
+    [Parameter] public bool Decimal { get; set; }
+
+    [Parameter] public EventCallback<decimal> Valide { get; set; }
+
+    private string _saisie = "";
+    private string _titrePrecedent = "";
+
+    protected override void OnParametersSet()
+    {
+        // Nouvelle cible : on repart d'une saisie vide.
+        if (Titre != _titrePrecedent)
+        {
+            _titrePrecedent = Titre;
+            _saisie = "";
+        }
+    }
+
+    private void Taper(string touche)
+    {
+        if (_saisie.Length >= LongueurMax || (touche == "," && (!Decimal || _saisie.Contains(','))))
+        {
+            return;
+        }
+
+        _saisie = _saisie.Length == 0 && touche == "," ? "0," : _saisie + touche;
+    }
+
+    private void Effacer() => _saisie = _saisie.Length > 0 ? _saisie[..^1] : "";
+
+    private async Task Valider()
+    {
+        if (decimal.TryParse(_saisie.Replace(',', '.'), NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var valeur))
+        {
+            _saisie = "";
+            await Valide.InvokeAsync(valeur);
+        }
+    }
+}

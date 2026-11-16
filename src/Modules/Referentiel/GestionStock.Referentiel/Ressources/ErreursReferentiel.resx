@@ -20,4 +20,5 @@
   <data name="Referentiel.CodeInvalide" xml:space="preserve"><value>Code-barres invalide : EAN-13, EAN-8 ou UPC-A avec une clé de contrôle correcte.</value></data>
   <data name="Referentiel.CodeDejaAttribue" xml:space="preserve"><value>Ce code-barres est déjà attribué à un autre conditionnement.</value></data>
   <data name="Referentiel.CodeIntrouvable" xml:space="preserve"><value>Code inconnu.</value></data>
+  <data name="Referentiel.ConditionnementInactif" xml:space="preserve"><value>Un conditionnement désactivé ne peut pas être proposé en vente rapide.</value></data>
 </root>

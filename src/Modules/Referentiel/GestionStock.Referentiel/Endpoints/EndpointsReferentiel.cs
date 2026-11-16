@@ -60,6 +60,11 @@ internal static class EndpointsReferentiel
             Executer(async () => TypedResults.Ok(await service.ModifierAsync(id, saisie, annulation))))
             .RequireAuthorization(Permissions.ArticlesGerer);
 
+        // Grille d'articles rapides de la caisse (choix du Gérant)
+        groupe.MapPut("/conditionnements/{id:guid}/vente-rapide", (Guid id, ChoixVenteRapide saisie, ServiceConditionnements service, CancellationToken annulation) =>
+            Executer(async () => TypedResults.Ok(await service.ChoisirVenteRapideAsync(id, saisie, annulation))))
+            .RequireAuthorization(Permissions.ArticlesGerer);
+
         groupe.MapPost("/conditionnements/{id:guid}/codes", (Guid id, NouveauCode saisie, ServiceConditionnements service, CancellationToken annulation) =>
             Executer(async () => TypedResults.Ok(await service.AjouterCodeAsync(id, saisie, annulation))))
             .RequireAuthorization(Permissions.ArticlesGerer);
@@ -77,6 +82,10 @@ internal static class EndpointsReferentiel
             await service.ResoudreAsync(valeur, annulation) is { } article
                 ? Results.Ok(article)
                 : ReponsesErreur.Probleme(StatusCodes.Status404NotFound, CodesErreurReferentiel.CodeIntrouvable, Ressources, valeur))
+            .RequireAuthorization(Permissions.ReferentielConsulter);
+
+        groupe.MapGet("/vendables/rapides", async (ServiceConditionnements service, CancellationToken annulation) =>
+            TypedResults.Ok(await service.ListerVenteRapideAsync(annulation)))
             .RequireAuthorization(Permissions.ReferentielConsulter);
 
         groupe.MapGet("/vendables", async (string? recherche, ServiceConditionnements service, CancellationToken annulation) =>

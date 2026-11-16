@@ -155,6 +155,10 @@ namespace GestionStock.Referentiel.Infrastructure.Migrations
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("quantite_unite_stock");
 
+                    b.Property<bool>("VenteRapide")
+                        .HasColumnType("boolean")
+                        .HasColumnName("vente_rapide");
+
                     b.HasKey("Id")
                         .HasName("pk_conditionnement");
 

@@ -127,9 +127,6 @@
   <data name="EspecesComptees" xml:space="preserve"><value>Espèces comptées</value></data>
   <data name="EspecesTheoriques" xml:space="preserve"><value>Espèces théoriques</value></data>
   <data name="SessionCloturee" xml:space="preserve"><value>Session clôturée. Espèces théoriques : {0} ; écart : {1}.</value></data>
-  <data name="ScanAide" xml:space="preserve"><value>Scanner ou saisir un code, puis Entrée</value></data>
-  <data name="RechercherArticle" xml:space="preserve"><value>Rechercher un article</value></data>
-  <data name="Prix" xml:space="preserve"><value>Prix</value></data>
   <data name="Remise" xml:space="preserve"><value>Remise</value></data>
   <data name="Montant" xml:space="preserve"><value>Montant</value></data>
   <data name="PanierVide" xml:space="preserve"><value>Scannez un article pour commencer.</value></data>
@@ -422,4 +419,23 @@
   <data name="AllerAuContenu" xml:space="preserve"><value>Aller au contenu</value></data>
   <data name="Menu" xml:space="preserve"><value>Menu</value></data>
   <data name="Chargement" xml:space="preserve"><value>Chargement…</value></data>
+  <data name="ScanOuRecherche" xml:space="preserve"><value>Scanner un code ou rechercher un article</value></data>
+  <data name="Resultats" xml:space="preserve"><value>Résultats</value></data>
+  <data name="ArticlesRapides" xml:space="preserve"><value>Articles rapides</value></data>
+  <data name="Panier" xml:space="preserve"><value>Panier</value></data>
+  <data name="Moins" xml:space="preserve"><value>Une unité de moins</value></data>
+  <data name="Plus" xml:space="preserve"><value>Une unité de plus</value></data>
+  <data name="EspecesRecues" xml:space="preserve"><value>Espèces reçues</value></data>
+  <data name="CompteJuste" xml:space="preserve"><value>Compte juste</value></data>
+  <data name="PaveNumerique" xml:space="preserve"><value>Pavé numérique</value></data>
+  <data name="AnnulerVente" xml:space="preserve"><value>Annuler la vente</value></data>
+  <data name="ConfirmerAnnulationVente" xml:space="preserve"><value>Vider le panier et annuler cette vente ?</value></data>
+  <data name="PaveQuantite" xml:space="preserve"><value>Quantité : {0}</value></data>
+  <data name="Effacer" xml:space="preserve"><value>Effacer</value></data>
+  <data name="Ok" xml:space="preserve"><value>OK</value></data>
+  <data name="VenteRapide" xml:space="preserve"><value>Vente rapide</value></data>
+  <data name="VenteRapideAide" xml:space="preserve"><value>Proposé en tuile à la caisse (articles sans code-barres, au poids…)</value></data>
+  <data name="VenteRapideAjoutee" xml:space="preserve"><value>Ajouté aux articles rapides de la caisse.</value></data>
+  <data name="VenteRapideRetiree" xml:space="preserve"><value>Retiré des articles rapides de la caisse.</value></data>
+  <data name="RechercherArticle" xml:space="preserve"><value>Rechercher un article</value></data>
 </root>
