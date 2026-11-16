@@ -113,4 +113,115 @@
   <data name="MotDePasseRegle" xml:space="preserve"><value>Mot de passe : au moins 8 caractères, avec une majuscule, une minuscule, un chiffre et un caractère spécial.</value></data>
   <data name="CreerCompte" xml:space="preserve"><value>Créer le compte</value></data>
   <data name="CompteCree" xml:space="preserve"><value>Compte « {0} » créé.</value></data>
+  <data name="Caisse" xml:space="preserve"><value>Caisse</value></data>
+  <data name="CaisseAide" xml:space="preserve"><value>Vendre au comptoir, encaisser, imprimer le reçu.</value></data>
+  <data name="SessionsCaisse" xml:space="preserve"><value>Sessions de caisse</value></data>
+  <data name="SessionsAide" xml:space="preserve"><value>Suivre les caisses et valider les écarts de clôture.</value></data>
+  <data name="Clients" xml:space="preserve"><value>Clients</value></data>
+  <data name="ClientsAide" xml:space="preserve"><value>Clients à crédit, plafonds et impayés.</value></data>
+  <data name="OuvrirSession" xml:space="preserve"><value>Ouvrir la session</value></data>
+  <data name="Poste" xml:space="preserve"><value>Poste</value></data>
+  <data name="FondCaisse" xml:space="preserve"><value>Fond de caisse (XAF)</value></data>
+  <data name="TicketsDuJour" xml:space="preserve"><value>Tickets de la session</value></data>
+  <data name="RemboursementCredit" xml:space="preserve"><value>Remboursement de crédit</value></data>
+  <data name="Cloturer" xml:space="preserve"><value>Clôturer la caisse</value></data>
+  <data name="ClotureAide" xml:space="preserve"><value>Comptez les espèces du tiroir (fond compris) : l'écart avec le théorique sera enregistré et validé par un responsable.</value></data>
+  <data name="EspecesComptees" xml:space="preserve"><value>Espèces comptées</value></data>
+  <data name="EspecesTheoriques" xml:space="preserve"><value>Espèces théoriques</value></data>
+  <data name="SessionCloturee" xml:space="preserve"><value>Session clôturée. Espèces théoriques : {0} ; écart : {1}.</value></data>
+  <data name="ScanAide" xml:space="preserve"><value>Scanner ou saisir un code, puis Entrée</value></data>
+  <data name="RechercherArticle" xml:space="preserve"><value>Rechercher un article</value></data>
+  <data name="Prix" xml:space="preserve"><value>Prix</value></data>
+  <data name="Remise" xml:space="preserve"><value>Remise</value></data>
+  <data name="Montant" xml:space="preserve"><value>Montant</value></data>
+  <data name="PanierVide" xml:space="preserve"><value>Scannez un article pour commencer.</value></data>
+  <data name="ClientCredit" xml:space="preserve"><value>Client (vente à crédit)</value></data>
+  <data name="ChercherClient" xml:space="preserve"><value>Chercher un client (nom ou téléphone)</value></data>
+  <data name="Paiements" xml:space="preserve"><value>Paiements</value></data>
+  <data name="Mode" xml:space="preserve"><value>Mode</value></data>
+  <data name="Mode.Especes" xml:space="preserve"><value>Espèces</value></data>
+  <data name="Mode.MobileMoney" xml:space="preserve"><value>Mobile Money</value></data>
+  <data name="Mode.Carte" xml:space="preserve"><value>Carte</value></data>
+  <data name="Mode.Credit" xml:space="preserve"><value>Crédit</value></data>
+  <data name="Reference" xml:space="preserve"><value>Référence</value></data>
+  <data name="ResteAPayer" xml:space="preserve"><value>Reste à payer</value></data>
+  <data name="Rendu" xml:space="preserve"><value>Rendu</value></data>
+  <data name="ValidationResponsable" xml:space="preserve"><value>Validation d'un responsable</value></data>
+  <data name="Encaisser" xml:space="preserve"><value>Encaisser</value></data>
+  <data name="TotauxSession" xml:space="preserve"><value>Session : {0} ventes, {1}</value></data>
+  <data name="PrixAbsentArticle" xml:space="preserve"><value>L'article {0} n'a pas de prix de vente.</value></data>
+  <data name="NouvelleVente" xml:space="preserve"><value>Nouvelle vente</value></data>
+  <data name="Ticket" xml:space="preserve"><value>Ticket</value></data>
+  <data name="Avoir" xml:space="preserve"><value>Avoir</value></data>
+  <data name="Caissier" xml:space="preserve"><value>Caissier</value></data>
+  <data name="TotalHt" xml:space="preserve"><value>Total HT</value></data>
+  <data name="Tva" xml:space="preserve"><value>TVA</value></data>
+  <data name="PrixNets" xml:space="preserve"><value>Prix nets, TVA non applicable</value></data>
+  <data name="Merci" xml:space="preserve"><value>Merci de votre visite !</value></data>
+  <data name="ImprimerRecu" xml:space="preserve"><value>Imprimer le reçu</value></data>
+  <data name="RecuPdf" xml:space="preserve"><value>Reçu PDF</value></data>
+  <data name="RecuIndisponible" xml:space="preserve"><value>Reçu indisponible.</value></data>
+  <data name="SoldeDu" xml:space="preserve"><value>Dû</value></data>
+  <data name="Plafond" xml:space="preserve"><value>Plafond</value></data>
+  <data name="RemboursementEnregistre" xml:space="preserve"><value>Remboursement de {0} enregistré ; reste dû : {1}.</value></data>
+  <data name="NumeroTicketAide" xml:space="preserve"><value>Numéro de ticket (ex. CAISSE-1-000042)</value></data>
+  <data name="AucunTicket" xml:space="preserve"><value>Aucun ticket.</value></data>
+  <data name="RetourCaisse" xml:space="preserve"><value>Retour à la caisse</value></data>
+  <data name="FaireAvoir" xml:space="preserve"><value>Faire un avoir</value></data>
+  <data name="Vendu" xml:space="preserve"><value>Vendu</value></data>
+  <data name="DejaRendu" xml:space="preserve"><value>Déjà rendu</value></data>
+  <data name="ARendre" xml:space="preserve"><value>À rendre</value></data>
+  <data name="ModeRemboursement" xml:space="preserve"><value>Remboursement</value></data>
+  <data name="AvoirAide" xml:space="preserve"><value>La marchandise revient en stock. Si le ticket était à crédit, la dette est annulée d'abord ; le reste est rendu au client.</value></data>
+  <data name="ConditionnementsEtPrix" xml:space="preserve"><value>Conditionnements, codes et prix</value></data>
+  <data name="Conditionnement" xml:space="preserve"><value>Conditionnement</value></data>
+  <data name="Contenu" xml:space="preserve"><value>Contenu</value></data>
+  <data name="Codes" xml:space="preserve"><value>Codes-barres</value></data>
+  <data name="PrixActuel" xml:space="preserve"><value>Prix actuel</value></data>
+  <data name="PrixProgramme" xml:space="preserve"><value>Prix programmé</value></data>
+  <data name="ALaDate" xml:space="preserve"><value>au {0}</value></data>
+  <data name="DesactiverCode" xml:space="preserve"><value>Désactiver ce code</value></data>
+  <data name="CodeBarresAide" xml:space="preserve"><value>EAN-13, EAN-8, UPC-A</value></data>
+  <data name="Ajouter" xml:space="preserve"><value>Ajouter</value></data>
+  <data name="GenererCodeInterne" xml:space="preserve"><value>Code interne</value></data>
+  <data name="NouveauPrix" xml:space="preserve"><value>Prix TTC</value></data>
+  <data name="Fixer" xml:space="preserve"><value>Fixer</value></data>
+  <data name="NouveauConditionnement" xml:space="preserve"><value>Nouveau conditionnement</value></data>
+  <data name="Niveau" xml:space="preserve"><value>Niveau</value></data>
+  <data name="Niveau.Unite" xml:space="preserve"><value>unité</value></data>
+  <data name="Niveau.Pack" xml:space="preserve"><value>Pack</value></data>
+  <data name="Niveau.Carton" xml:space="preserve"><value>Carton</value></data>
+  <data name="Niveau.Sac" xml:space="preserve"><value>Sac</value></data>
+  <data name="Niveau.Palette" xml:space="preserve"><value>Palette</value></data>
+  <data name="ConditionnementExemple" xml:space="preserve"><value>Carton de 24, sac de 25 kg…</value></data>
+  <data name="ConditionnementAjoute" xml:space="preserve"><value>Conditionnement ajouté.</value></data>
+  <data name="CodeAjoute" xml:space="preserve"><value>Code ajouté.</value></data>
+  <data name="CodeDesactive" xml:space="preserve"><value>Code désactivé.</value></data>
+  <data name="PrixFixe" xml:space="preserve"><value>Prix enregistré.</value></data>
+  <data name="SeulementImpayes" xml:space="preserve"><value>Seulement les impayés</value></data>
+  <data name="NouveauClient" xml:space="preserve"><value>Nouveau client</value></data>
+  <data name="DelaiPaiement" xml:space="preserve"><value>Délai de paiement (jours)</value></data>
+  <data name="DonneesPersonnellesAide" xml:space="preserve"><value>Seuls le nom et le téléphone sont conservés (loi n° 2024/017). Le plafond de crédit est fixé par le Comptable.</value></data>
+  <data name="EnRetard" xml:space="preserve"><value>En retard</value></data>
+  <data name="AucunClient" xml:space="preserve"><value>Aucun client.</value></data>
+  <data name="PlafondFixe" xml:space="preserve"><value>Plafond enregistré.</value></data>
+  <data name="VentesNonSoldees" xml:space="preserve"><value>Ventes non soldées</value></data>
+  <data name="Echeance" xml:space="preserve"><value>Échéance</value></data>
+  <data name="ResteDu" xml:space="preserve"><value>Reste dû</value></data>
+  <data name="AucuneDette" xml:space="preserve"><value>Aucune dette.</value></data>
+  <data name="Operation" xml:space="preserve"><value>Opération</value></data>
+  <data name="Operation.VenteCredit" xml:space="preserve"><value>Vente à crédit</value></data>
+  <data name="Operation.Remboursement" xml:space="preserve"><value>Remboursement</value></data>
+  <data name="Operation.Annulation" xml:space="preserve"><value>Annulation (avoir)</value></data>
+  <data name="TousStatuts" xml:space="preserve"><value>Tous les statuts</value></data>
+  <data name="StatutSession.Ouverte" xml:space="preserve"><value>Ouverte</value></data>
+  <data name="StatutSession.Comptee" xml:space="preserve"><value>Comptée</value></data>
+  <data name="StatutSession.Validee" xml:space="preserve"><value>Validée</value></data>
+  <data name="Ouverture" xml:space="preserve"><value>Ouverture</value></data>
+  <data name="Ventes" xml:space="preserve"><value>Ventes nettes</value></data>
+  <data name="Ecart" xml:space="preserve"><value>Écart</value></data>
+  <data name="ValiderEcart" xml:space="preserve"><value>Valider l'écart</value></data>
+  <data name="AucuneSession" xml:space="preserve"><value>Aucune session.</value></data>
+  <data name="AvoirSur" xml:space="preserve"><value>Sur le ticket</value></data>
+  <data name="Client" xml:space="preserve"><value>Client</value></data>
 </root>

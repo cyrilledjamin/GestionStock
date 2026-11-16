@@ -1,0 +1,61 @@
+@page "/caisse/tickets"
+@inject Api Api
+@inject NavigationManager Navigation
+
+<PageTitle>@L["TicketsDuJour"] · GestionStock</PageTitle>
+
+<p><a href="caisse">← @L["Caisse"]</a></p>
+<h1>@L["TicketsDuJour"]</h1>
+
+<form class="barre" @onsubmit="ChercherNumero">
+    <input placeholder="@L["NumeroTicketAide"]" @bind="_numero" />
+    <button type="submit">@L["Rechercher"]</button>
+</form>
+
+<Message Texte="@_erreur" />
+
+<table>
+    <thead><tr><th>@L["Numero"]</th><th>@L["Date"]</th><th class="nombre">@L["Total"]</th><th>@L["Paiements"]</th><th></th></tr></thead>
+    <tbody>
+        @foreach (var ticket in _tickets)
+        {
+            <tr>
+                <td class="court"><a href="caisse/tickets/@ticket.Id">@ticket.Numero</a></td>
+                <td class="court">@Format.Date(ticket.DateUtc)</td>
+                <td class="nombre">@(ticket.EstAvoir ? "-" : "")@Format.Montant(ticket.TotalTtc)</td>
+                <td>@string.Join(", ", ticket.Paiements.Select(p => L[$"Mode.{p.Mode}"].Value))</td>
+                <td>@if (ticket.EstAvoir) { <span class="pastille brouillon">@L["Avoir"]</span> }</td>
+            </tr>
+        }
+        @if (_tickets.Count == 0)
+        {
+            <tr><td colspan="5" class="vide">@L["AucunTicket"]</td></tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    private List<TicketCaisse> _tickets = [];
+    private string _numero = "";
+    private string? _erreur;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var session = await Api.GetAsync<SessionCaisse>("api/caisse/sessions/courante");
+        _erreur = session.Erreur;
+        if (session.Valeur is { } courante)
+        {
+            _tickets = (await Api.GetAsync<List<TicketCaisse>>($"api/caisse/sessions/{courante.Id}/tickets")).Valeur ?? [];
+        }
+    }
+
+    private async Task ChercherNumero()
+    {
+        var resultat = await Api.GetAsync<TicketCaisse>($"api/caisse/tickets/numero/{Uri.EscapeDataString(_numero.Trim())}");
+        _erreur = resultat.Erreur;
+        if (resultat.Valeur is { } ticket)
+        {
+            Navigation.NavigateTo($"caisse/tickets/{ticket.Id}");
+        }
+    }
+}

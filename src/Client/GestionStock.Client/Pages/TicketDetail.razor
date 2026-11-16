@@ -1,0 +1,96 @@
+@page "/caisse/tickets/{Id:guid}"
+@inject Api Api
+@inject Session Session
+
+<PageTitle>@(_ticket?.Numero ?? L["Ticket"]) · GestionStock</PageTitle>
+
+<p><a href="caisse/tickets">← @L["TicketsDuJour"]</a></p>
+
+<Message Texte="@_erreur" />
+
+@if (_avoir is not null)
+{
+    <h1>@L["Avoir"] @_avoir.Numero</h1>
+    <RecuTicket Ticket="_avoir">
+        <a class="bouton valider" href="caisse">@L["RetourCaisse"]</a>
+    </RecuTicket>
+}
+else if (_ticket is not null)
+{
+    <h1>@(_ticket.EstAvoir ? L["Avoir"] : L["Ticket"]) @_ticket.Numero</h1>
+
+    @if (!_ticket.EstAvoir && Session.A(Permissions.CaisseVendre) && _ticket.Lignes.Any(l => l.Quantite > l.QuantiteRendue))
+    {
+        <form class="fiche" @onsubmit="FaireAvoir">
+            <h2>@L["FaireAvoir"]</h2>
+            <table class="saisie">
+                <thead><tr><th>@L["Article"]</th><th class="nombre">@L["Vendu"]</th><th class="nombre">@L["DejaRendu"]</th><th class="nombre">@L["ARendre"]</th></tr></thead>
+                <tbody>
+                    @foreach (var ligne in _ticket.Lignes)
+                    {
+                        <tr>
+                            <td>@ligne.Libelle</td>
+                            <td class="nombre">@Format.Quantite(ligne.Quantite)</td>
+                            <td class="nombre">@Format.Quantite(ligne.QuantiteRendue)</td>
+                            <td class="nombre"><input type="number" min="0" max="@(ligne.Quantite - ligne.QuantiteRendue)" step="any" @bind="_aRendre[ligne.Id]" /></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <div class="grille">
+                <label>@L["ModeRemboursement"]
+                    <select @bind="_mode">
+                        <option value="@ModesPaiement.Especes">@L["Mode.Especes"]</option>
+                        <option value="@ModesPaiement.MobileMoney">@L["Mode.MobileMoney"]</option>
+                        <option value="@ModesPaiement.Carte">@L["Mode.Carte"]</option>
+                    </select>
+                </label>
+                @if (_mode == ModesPaiement.MobileMoney)
+                {
+                    <label>@L["Reference"] <input @bind="_reference" required /></label>
+                }
+            </div>
+            <p class="discret">@L["AvoirAide"]</p>
+            <div class="actions"><button type="submit" class="principal" disabled="@_enCours">@L["FaireAvoir"]</button></div>
+        </form>
+    }
+
+    <RecuTicket Ticket="_ticket" />
+}
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+
+    private TicketCaisse? _ticket;
+    private TicketCaisse? _avoir;
+    private Dictionary<Guid, decimal> _aRendre = [];
+    private string _mode = ModesPaiement.Especes;
+    private string? _reference;
+    private string? _erreur;
+    private bool _enCours;
+    private Guid _idIdempotence = Guid.NewGuid();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var resultat = await Api.GetAsync<TicketCaisse>($"api/caisse/tickets/{Id}");
+        _erreur = resultat.Erreur;
+        _ticket = resultat.Valeur;
+        _aRendre = _ticket?.Lignes.ToDictionary(l => l.Id, _ => 0m) ?? [];
+    }
+
+    private async Task FaireAvoir()
+    {
+        _enCours = true;
+        var resultat = await Api.PostAsync<TicketCaisse>("api/caisse/avoirs", new
+        {
+            IdIdempotence = _idIdempotence,
+            TicketOrigineId = Id,
+            Lignes = _aRendre.Where(r => r.Value > 0).Select(r => new { LigneOrigineId = r.Key, Quantite = r.Value }).ToList(),
+            ModeRemboursement = _mode,
+            Reference = _reference,
+        });
+        _enCours = false;
+        _erreur = resultat.Erreur;
+        _avoir = resultat.Valeur;
+    }
+}

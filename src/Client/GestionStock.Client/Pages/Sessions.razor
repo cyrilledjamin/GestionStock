@@ -1,0 +1,75 @@
+@page "/sessions"
+@inject Api Api
+@inject Session Session
+
+<PageTitle>@L["SessionsCaisse"] · GestionStock</PageTitle>
+
+<h1>@L["SessionsCaisse"]</h1>
+
+<div class="barre">
+    <select @bind="_statut" @bind:after="Charger">
+        <option value="">@L["TousStatuts"]</option>
+        <option value="Ouverte">@L["StatutSession.Ouverte"]</option>
+        <option value="Comptee">@L["StatutSession.Comptee"]</option>
+        <option value="Validee">@L["StatutSession.Validee"]</option>
+    </select>
+</div>
+
+<Message Texte="@_erreur" />
+
+<table>
+    <thead>
+        <tr>
+            <th>@L["Poste"]</th><th>@L["Caissier"]</th><th>@L["Ouverture"]</th><th class="nombre">@L["Ventes"]</th>
+            <th class="nombre">@L["EspecesTheoriques"]</th><th class="nombre">@L["EspecesComptees"]</th><th class="nombre">@L["Ecart"]</th><th>@L["Statut"]</th><th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var session in _sessions)
+        {
+            <tr class="@(session.Ecart < 0 ? "negatif" : "")">
+                <td>@session.NumeroCaisse</td>
+                <td>@session.Caissier</td>
+                <td class="court">@Format.Date(session.OuvertureUtc)</td>
+                <td class="nombre">@Format.Montant(session.Totaux.Ventes - session.Totaux.Avoirs)</td>
+                <td class="nombre">@Format.Montant(session.Totaux.EspecesTheoriques)</td>
+                <td class="nombre">@(session.EspecesComptees is { } comptees ? Format.Montant(comptees) : "")</td>
+                <td class="nombre">@(session.Ecart is { } ecart ? Format.Montant(ecart) : "")</td>
+                <td>@L[$"StatutSession.{session.Statut}"] @if (session.ValideePar is not null) { <small class="discret">(@session.ValideePar)</small> }</td>
+                <td>
+                    @if (session.Statut == "Comptee" && Session.A(Permissions.SessionsValider))
+                    {
+                        <button class="lien" @onclick="() => Valider(session.Id)">@L["ValiderEcart"]</button>
+                    }
+                </td>
+            </tr>
+        }
+        @if (_sessions.Count == 0)
+        {
+            <tr><td colspan="9" class="vide">@L["AucuneSession"]</td></tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    private List<SessionCaisse> _sessions = [];
+    private string _statut = "";
+    private string? _erreur;
+
+    protected override Task OnInitializedAsync() => Charger();
+
+    private async Task Charger()
+    {
+        var url = string.IsNullOrEmpty(_statut) ? "api/caisse/sessions" : $"api/caisse/sessions?statut={_statut}";
+        var resultat = await Api.GetAsync<List<SessionCaisse>>(url);
+        _sessions = resultat.Valeur ?? [];
+        _erreur = resultat.Erreur;
+    }
+
+    private async Task Valider(Guid id)
+    {
+        var resultat = await Api.PostAsync<SessionCaisse>($"api/caisse/sessions/{id}/validation");
+        _erreur = resultat.Erreur;
+        await Charger();
+    }
+}

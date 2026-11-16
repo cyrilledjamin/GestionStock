@@ -1,0 +1,94 @@
+@page "/clients/{Id:guid}"
+@inject Api Api
+@inject Session Session
+
+<PageTitle>@(_fiche?.Client.Nom ?? L["Clients"]) · GestionStock</PageTitle>
+
+<p><a href="clients">← @L["Clients"]</a></p>
+<Message Texte="@_erreur" />
+<Message Texte="@_succes" Erreur="false" />
+
+@if (_fiche is { Client: var client })
+{
+    <h1>@client.Nom</h1>
+    <p class="discret">@client.Telephone · @L["DelaiPaiement"] : @client.DelaiPaiementJours</p>
+
+    <div class="tuiles">
+        <div class="tuile chiffre"><span>@L["SoldeDu"]</span><strong>@Format.Montant(client.SoldeDu)</strong></div>
+        <div class="tuile chiffre"><span>@L["Plafond"]</span><strong>@Format.Montant(client.PlafondCredit)</strong></div>
+        <div class="tuile chiffre"><span>@L["EnRetard"]</span><strong>@Format.Montant(client.MontantEnRetard)</strong></div>
+    </div>
+
+    @if (Session.A(Permissions.PlafondsGerer))
+    {
+        <form class="barre" @onsubmit="FixerPlafond">
+            <label>@L["Plafond"] <input type="number" min="0" step="1" @bind="_plafond" /></label>
+            <button type="submit" class="principal">@L["Fixer"]</button>
+        </form>
+    }
+
+    <h2>@L["VentesNonSoldees"]</h2>
+    <table>
+        <thead><tr><th>@L["Ticket"]</th><th>@L["Date"]</th><th>@L["Echeance"]</th><th class="nombre">@L["Montant"]</th><th class="nombre">@L["ResteDu"]</th></tr></thead>
+        <tbody>
+            @foreach (var vente in _fiche.VentesOuvertes)
+            {
+                <tr class="@(vente.EnRetard ? "negatif" : "")">
+                    <td class="court"><a href="caisse/tickets/@vente.TicketId">@vente.NumeroTicket</a></td>
+                    <td class="court">@Format.Date(vente.DateUtc)</td>
+                    <td class="court">@Format.Date(vente.EcheanceUtc)</td>
+                    <td class="nombre">@Format.Montant(vente.Montant)</td>
+                    <td class="nombre">@Format.Montant(vente.ResteDu)</td>
+                </tr>
+            }
+            @if (_fiche.VentesOuvertes.Count == 0)
+            {
+                <tr><td colspan="5" class="vide">@L["AucuneDette"]</td></tr>
+            }
+        </tbody>
+    </table>
+
+    <h2>@L["Journal"]</h2>
+    <table>
+        <thead><tr><th>@L["Date"]</th><th>@L["Operation"]</th><th class="nombre">@L["Montant"]</th><th>@L["Utilisateur"]</th><th>@L["ValideePar"]</th></tr></thead>
+        <tbody>
+            @foreach (var operation in _fiche.Operations)
+            {
+                <tr>
+                    <td class="court">@Format.Date(operation.DateUtc)</td>
+                    <td>@L[$"Operation.{operation.Type}"] @operation.NumeroTicket</td>
+                    <td class="nombre">@Format.Montant(operation.Montant)</td>
+                    <td>@operation.Utilisateur</td>
+                    <td>@operation.ValideePar</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+
+    private FicheClient? _fiche;
+    private decimal _plafond;
+    private string? _erreur;
+    private string? _succes;
+
+    protected override Task OnParametersSetAsync() => Charger();
+
+    private async Task Charger()
+    {
+        var resultat = await Api.GetAsync<FicheClient>($"api/credit/clients/{Id}");
+        _erreur = resultat.Erreur;
+        _fiche = resultat.Valeur;
+        _plafond = _fiche?.Client.PlafondCredit ?? 0;
+    }
+
+    private async Task FixerPlafond()
+    {
+        var resultat = await Api.PutAsync<ClientCredit>($"api/credit/clients/{Id}/plafond", new { PlafondCredit = _plafond });
+        _erreur = resultat.Erreur;
+        _succes = resultat.Reussi ? L["PlafondFixe"].Value : null;
+        await Charger();
+    }
+}

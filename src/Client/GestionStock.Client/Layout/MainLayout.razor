@@ -14,6 +14,18 @@ else
         <nav class="menu">
             <div class="marque">GestionStock</div>
             <NavLink href="" Match="NavLinkMatch.All">@L["Accueil"]</NavLink>
+            @if (Session.A(Permissions.CaisseVendre))
+            {
+                <NavLink href="caisse">@L["Caisse"]</NavLink>
+            }
+            @if (Session.A(Permissions.SessionsConsulter))
+            {
+                <NavLink href="sessions">@L["SessionsCaisse"]</NavLink>
+            }
+            @if (Session.A(Permissions.CreditConsulter))
+            {
+                <NavLink href="clients">@L["Clients"]</NavLink>
+            }
             @if (Session.A(Permissions.StockConsulter))
             {
                 <NavLink href="stock">@L["Stock"]</NavLink>

@@ -9,6 +9,18 @@
     <p class="discret">@L["AccueilIntro"]</p>
 
     <div class="tuiles">
+        @if (Session.A(Permissions.CaisseVendre))
+        {
+            <a class="tuile" href="caisse"><strong>@L["Caisse"]</strong><span>@L["CaisseAide"]</span></a>
+        }
+        @if (Session.A(Permissions.SessionsConsulter))
+        {
+            <a class="tuile" href="sessions"><strong>@L["SessionsCaisse"]</strong><span>@L["SessionsAide"]</span></a>
+        }
+        @if (Session.A(Permissions.CreditConsulter))
+        {
+            <a class="tuile" href="clients"><strong>@L["Clients"]</strong><span>@L["ClientsAide"]</span></a>
+        }
         @if (Session.A(Permissions.ReceptionsSaisir))
         {
             <a class="tuile" href="receptions/nouvelle"><strong>@L["NouvelleReception"]</strong><span>@L["NouvelleReceptionAide"]</span></a>

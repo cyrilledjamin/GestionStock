@@ -106,3 +106,121 @@ public static class Permissions
     public const string SessionsConsulter = "Caisse.Sessions.Consulter";
     public const string SessionsValider = "Caisse.Sessions.Valider";
 }
+
+// --- Conditionnements, codes, prix -------------------------------------------------------------------------------
+
+public sealed record CodeArticle(Guid Id, string Valeur, string Type, bool Principal, bool Actif);
+
+public sealed record Conditionnement(Guid Id, Guid ArticleId, string Libelle, string Niveau, decimal QuantiteUniteStock, bool Actif, List<CodeArticle> Codes);
+
+public sealed record ArticleVendable(
+    Guid ArticleId,
+    string CodeArticle,
+    string Libelle,
+    string? LibelleTraduit,
+    string UniteStock,
+    int PrecisionQuantite,
+    Guid ConditionnementId,
+    string LibelleConditionnement,
+    decimal QuantiteUniteStock,
+    string? CodeScanne);
+
+public sealed record PrixConditionnement(
+    Guid ConditionnementId,
+    string Libelle,
+    decimal QuantiteUniteStock,
+    bool Actif,
+    decimal? PrixTtc,
+    DateOnly? DebutValidite,
+    decimal? ProchainPrixTtc,
+    DateOnly? ProchaineValidite);
+
+public sealed record PrixApplicable(Guid ConditionnementId, decimal PrixTtc, DateOnly DebutValidite);
+
+public sealed record RegimeTva(bool Assujetti, decimal TauxPourcent, decimal TauxApplique);
+
+// --- Crédit ------------------------------------------------------------------------------------------------------
+
+public sealed record ClientCredit(Guid Id, string Nom, string Telephone, decimal PlafondCredit, int DelaiPaiementJours, decimal SoldeDu, decimal MontantEnRetard, bool Actif);
+
+public sealed record VenteOuverte(Guid OperationId, Guid TicketId, string? NumeroTicket, DateTime DateUtc, DateTime EcheanceUtc, decimal Montant, decimal ResteDu, bool EnRetard);
+
+public sealed record OperationCredit(Guid Id, DateTime DateUtc, string Type, decimal Montant, Guid DocumentId, string? NumeroTicket, string Utilisateur, string? ValideePar);
+
+public sealed record FicheClient(ClientCredit Client, List<VenteOuverte> VentesOuvertes, List<OperationCredit> Operations);
+
+// --- Caisse ------------------------------------------------------------------------------------------------------
+
+public sealed record TotauxSession(
+    int NombreVentes,
+    int NombreAvoirs,
+    decimal Ventes,
+    decimal Avoirs,
+    decimal Especes,
+    decimal MobileMoney,
+    decimal Carte,
+    decimal Credit,
+    decimal RemboursementsCredit,
+    decimal EspecesTheoriques);
+
+public sealed record SessionCaisse(
+    Guid Id,
+    string NumeroCaisse,
+    string Caissier,
+    DateTime OuvertureUtc,
+    decimal FondCaisse,
+    string Statut,
+    DateTime? ClotureUtc,
+    decimal? EspecesComptees,
+    decimal? Ecart,
+    string? ValideePar,
+    TotauxSession Totaux);
+
+public sealed record LigneTicket(
+    Guid Id,
+    int Ordre,
+    Guid ArticleId,
+    Guid ConditionnementId,
+    string Libelle,
+    string LibelleConditionnement,
+    decimal Quantite,
+    decimal QuantiteRendue,
+    decimal PrixUnitaire,
+    decimal Remise,
+    decimal MontantTtc);
+
+public sealed record PaiementTicket(string Mode, decimal Montant, string? Reference);
+
+public sealed record TicketCaisse(
+    Guid Id,
+    Guid IdIdempotence,
+    string Numero,
+    DateTime DateUtc,
+    string Caissier,
+    bool EstAvoir,
+    Guid? TicketOrigineId,
+    Guid? ClientId,
+    decimal TotalTtc,
+    decimal TotalHt,
+    decimal TotalTva,
+    decimal TauxTva,
+    decimal Rendu,
+    string? RemiseValideePar,
+    string? CreditValidePar,
+    List<LigneTicket> Lignes,
+    List<PaiementTicket> Paiements);
+
+public sealed record RemboursementCredit(Guid Id, Guid ClientId, string Mode, decimal Montant, string? Reference, DateTime DateUtc, decimal SoldeDuApres);
+
+/// <summary>Modes de paiement (mêmes noms que l'API).</summary>
+public static class ModesPaiement
+{
+    public const string Especes = "Especes";
+    public const string MobileMoney = "MobileMoney";
+    public const string Carte = "Carte";
+    public const string Credit = "Credit";
+
+    public static IReadOnlyList<string> Tous { get; } = [Especes, MobileMoney, Carte, Credit];
+}
+
+public sealed record EnteteRecu(string Nom, string? Adresse, string? Telephone, string? NumeroContribuable, bool AssujettiTva);

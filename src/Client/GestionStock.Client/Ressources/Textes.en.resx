@@ -113,4 +113,115 @@
   <data name="MotDePasseRegle" xml:space="preserve"><value>Password: at least 8 characters, with an uppercase letter, a lowercase letter, a digit and a special character.</value></data>
   <data name="CreerCompte" xml:space="preserve"><value>Create account</value></data>
   <data name="CompteCree" xml:space="preserve"><value>Account “{0}” created.</value></data>
+  <data name="Caisse" xml:space="preserve"><value>Till</value></data>
+  <data name="CaisseAide" xml:space="preserve"><value>Sell at the counter, take payment, print the receipt.</value></data>
+  <data name="SessionsCaisse" xml:space="preserve"><value>Till sessions</value></data>
+  <data name="SessionsAide" xml:space="preserve"><value>Monitor tills and approve closing differences.</value></data>
+  <data name="Clients" xml:space="preserve"><value>Customers</value></data>
+  <data name="ClientsAide" xml:space="preserve"><value>Credit customers, limits and overdue debts.</value></data>
+  <data name="OuvrirSession" xml:space="preserve"><value>Open session</value></data>
+  <data name="Poste" xml:space="preserve"><value>Till</value></data>
+  <data name="FondCaisse" xml:space="preserve"><value>Cash float (XAF)</value></data>
+  <data name="TicketsDuJour" xml:space="preserve"><value>Session receipts</value></data>
+  <data name="RemboursementCredit" xml:space="preserve"><value>Credit repayment</value></data>
+  <data name="Cloturer" xml:space="preserve"><value>Close the till</value></data>
+  <data name="ClotureAide" xml:space="preserve"><value>Count the cash in the drawer (float included): the difference with the expected amount is recorded and approved by a manager.</value></data>
+  <data name="EspecesComptees" xml:space="preserve"><value>Cash counted</value></data>
+  <data name="EspecesTheoriques" xml:space="preserve"><value>Expected cash</value></data>
+  <data name="SessionCloturee" xml:space="preserve"><value>Session closed. Expected cash: {0}; difference: {1}.</value></data>
+  <data name="ScanAide" xml:space="preserve"><value>Scan or type a code, then Enter</value></data>
+  <data name="RechercherArticle" xml:space="preserve"><value>Search for an item</value></data>
+  <data name="Prix" xml:space="preserve"><value>Price</value></data>
+  <data name="Remise" xml:space="preserve"><value>Discount</value></data>
+  <data name="Montant" xml:space="preserve"><value>Amount</value></data>
+  <data name="PanierVide" xml:space="preserve"><value>Scan an item to start.</value></data>
+  <data name="ClientCredit" xml:space="preserve"><value>Customer (credit sale)</value></data>
+  <data name="ChercherClient" xml:space="preserve"><value>Search for a customer (name or phone)</value></data>
+  <data name="Paiements" xml:space="preserve"><value>Payments</value></data>
+  <data name="Mode" xml:space="preserve"><value>Method</value></data>
+  <data name="Mode.Especes" xml:space="preserve"><value>Cash</value></data>
+  <data name="Mode.MobileMoney" xml:space="preserve"><value>Mobile Money</value></data>
+  <data name="Mode.Carte" xml:space="preserve"><value>Card</value></data>
+  <data name="Mode.Credit" xml:space="preserve"><value>Credit</value></data>
+  <data name="Reference" xml:space="preserve"><value>Reference</value></data>
+  <data name="ResteAPayer" xml:space="preserve"><value>Amount due</value></data>
+  <data name="Rendu" xml:space="preserve"><value>Change</value></data>
+  <data name="ValidationResponsable" xml:space="preserve"><value>Manager approval</value></data>
+  <data name="Encaisser" xml:space="preserve"><value>Take payment</value></data>
+  <data name="TotauxSession" xml:space="preserve"><value>Session: {0} sales, {1}</value></data>
+  <data name="PrixAbsentArticle" xml:space="preserve"><value>Item {0} has no selling price.</value></data>
+  <data name="NouvelleVente" xml:space="preserve"><value>New sale</value></data>
+  <data name="Ticket" xml:space="preserve"><value>Receipt</value></data>
+  <data name="Avoir" xml:space="preserve"><value>Credit note</value></data>
+  <data name="Caissier" xml:space="preserve"><value>Cashier</value></data>
+  <data name="TotalHt" xml:space="preserve"><value>Total excl. VAT</value></data>
+  <data name="Tva" xml:space="preserve"><value>VAT</value></data>
+  <data name="PrixNets" xml:space="preserve"><value>Net prices, VAT not applicable</value></data>
+  <data name="Merci" xml:space="preserve"><value>Thank you for your visit!</value></data>
+  <data name="ImprimerRecu" xml:space="preserve"><value>Print receipt</value></data>
+  <data name="RecuPdf" xml:space="preserve"><value>PDF receipt</value></data>
+  <data name="RecuIndisponible" xml:space="preserve"><value>Receipt unavailable.</value></data>
+  <data name="SoldeDu" xml:space="preserve"><value>Owed</value></data>
+  <data name="Plafond" xml:space="preserve"><value>Limit</value></data>
+  <data name="RemboursementEnregistre" xml:space="preserve"><value>Repayment of {0} recorded; still owed: {1}.</value></data>
+  <data name="NumeroTicketAide" xml:space="preserve"><value>Receipt number (e.g. CAISSE-1-000042)</value></data>
+  <data name="AucunTicket" xml:space="preserve"><value>No receipts.</value></data>
+  <data name="RetourCaisse" xml:space="preserve"><value>Back to the till</value></data>
+  <data name="FaireAvoir" xml:space="preserve"><value>Issue a credit note</value></data>
+  <data name="Vendu" xml:space="preserve"><value>Sold</value></data>
+  <data name="DejaRendu" xml:space="preserve"><value>Already returned</value></data>
+  <data name="ARendre" xml:space="preserve"><value>To return</value></data>
+  <data name="ModeRemboursement" xml:space="preserve"><value>Refund</value></data>
+  <data name="AvoirAide" xml:space="preserve"><value>The goods go back into stock. If the receipt was on credit, the debt is cancelled first; the rest is refunded to the customer.</value></data>
+  <data name="ConditionnementsEtPrix" xml:space="preserve"><value>Packagings, codes and prices</value></data>
+  <data name="Conditionnement" xml:space="preserve"><value>Packaging</value></data>
+  <data name="Contenu" xml:space="preserve"><value>Contains</value></data>
+  <data name="Codes" xml:space="preserve"><value>Barcodes</value></data>
+  <data name="PrixActuel" xml:space="preserve"><value>Current price</value></data>
+  <data name="PrixProgramme" xml:space="preserve"><value>Scheduled price</value></data>
+  <data name="ALaDate" xml:space="preserve"><value>from {0}</value></data>
+  <data name="DesactiverCode" xml:space="preserve"><value>Deactivate this code</value></data>
+  <data name="CodeBarresAide" xml:space="preserve"><value>EAN-13, EAN-8, UPC-A</value></data>
+  <data name="Ajouter" xml:space="preserve"><value>Add</value></data>
+  <data name="GenererCodeInterne" xml:space="preserve"><value>Internal code</value></data>
+  <data name="NouveauPrix" xml:space="preserve"><value>Price</value></data>
+  <data name="Fixer" xml:space="preserve"><value>Set</value></data>
+  <data name="NouveauConditionnement" xml:space="preserve"><value>New packaging</value></data>
+  <data name="Niveau" xml:space="preserve"><value>Level</value></data>
+  <data name="Niveau.Unite" xml:space="preserve"><value>unit</value></data>
+  <data name="Niveau.Pack" xml:space="preserve"><value>Pack</value></data>
+  <data name="Niveau.Carton" xml:space="preserve"><value>Carton</value></data>
+  <data name="Niveau.Sac" xml:space="preserve"><value>Bag</value></data>
+  <data name="Niveau.Palette" xml:space="preserve"><value>Pallet</value></data>
+  <data name="ConditionnementExemple" xml:space="preserve"><value>Carton of 24, 25 kg bag…</value></data>
+  <data name="ConditionnementAjoute" xml:space="preserve"><value>Packaging added.</value></data>
+  <data name="CodeAjoute" xml:space="preserve"><value>Code added.</value></data>
+  <data name="CodeDesactive" xml:space="preserve"><value>Code deactivated.</value></data>
+  <data name="PrixFixe" xml:space="preserve"><value>Price saved.</value></data>
+  <data name="SeulementImpayes" xml:space="preserve"><value>Overdue only</value></data>
+  <data name="NouveauClient" xml:space="preserve"><value>New customer</value></data>
+  <data name="DelaiPaiement" xml:space="preserve"><value>Payment term (days)</value></data>
+  <data name="DonneesPersonnellesAide" xml:space="preserve"><value>Only the name and phone number are kept (law no. 2024/017). The credit limit is set by the accountant.</value></data>
+  <data name="EnRetard" xml:space="preserve"><value>Overdue</value></data>
+  <data name="AucunClient" xml:space="preserve"><value>No customers.</value></data>
+  <data name="PlafondFixe" xml:space="preserve"><value>Limit saved.</value></data>
+  <data name="VentesNonSoldees" xml:space="preserve"><value>Unpaid sales</value></data>
+  <data name="Echeance" xml:space="preserve"><value>Due date</value></data>
+  <data name="ResteDu" xml:space="preserve"><value>Still owed</value></data>
+  <data name="AucuneDette" xml:space="preserve"><value>No debt.</value></data>
+  <data name="Operation" xml:space="preserve"><value>Operation</value></data>
+  <data name="Operation.VenteCredit" xml:space="preserve"><value>Credit sale</value></data>
+  <data name="Operation.Remboursement" xml:space="preserve"><value>Repayment</value></data>
+  <data name="Operation.Annulation" xml:space="preserve"><value>Cancellation (credit note)</value></data>
+  <data name="TousStatuts" xml:space="preserve"><value>All statuses</value></data>
+  <data name="StatutSession.Ouverte" xml:space="preserve"><value>Open</value></data>
+  <data name="StatutSession.Comptee" xml:space="preserve"><value>Counted</value></data>
+  <data name="StatutSession.Validee" xml:space="preserve"><value>Approved</value></data>
+  <data name="Ouverture" xml:space="preserve"><value>Opened</value></data>
+  <data name="Ventes" xml:space="preserve"><value>Net sales</value></data>
+  <data name="Ecart" xml:space="preserve"><value>Difference</value></data>
+  <data name="ValiderEcart" xml:space="preserve"><value>Approve difference</value></data>
+  <data name="AucuneSession" xml:space="preserve"><value>No sessions.</value></data>
+  <data name="AvoirSur" xml:space="preserve"><value>For receipt</value></data>
+  <data name="Client" xml:space="preserve"><value>Customer</value></data>
 </root>
