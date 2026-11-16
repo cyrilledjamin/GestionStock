@@ -25,7 +25,10 @@ internal sealed class ServiceConnexion(
             return TypedResults.Empty;
         }
 
-        var code = resultat.IsLockedOut ? CodesErreurIdentite.CompteVerrouille : CodesErreurIdentite.IdentifiantsInvalides;
+        // Un compte désactivé est verrouillé sans limite : il le dit plutôt que « réessayez plus tard ».
+        var code = resultat.IsLockedOut
+            ? (await connexion.UserManager.FindByNameAsync(identifiant) is { Actif: false } ? CodesErreurIdentite.CompteDesactive : CodesErreurIdentite.CompteVerrouille)
+            : CodesErreurIdentite.IdentifiantsInvalides;
         return ReponsesErreur.Probleme(StatusCodes.Status401Unauthorized, code, CodesErreurIdentite.Ressources);
     }
 

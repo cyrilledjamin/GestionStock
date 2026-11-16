@@ -16,7 +16,9 @@ internal sealed class ServiceValidationResponsable(UserManager<Utilisateur> util
         }
 
         var responsable = await utilisateurs.FindByNameAsync(identifiant.Trim());
-        if (responsable is null)
+
+        // Un compte désactivé ou au mot de passe provisoire ne valide rien.
+        if (responsable is null || !responsable.Actif || responsable.MotDePasseProvisoire)
         {
             return null;
         }

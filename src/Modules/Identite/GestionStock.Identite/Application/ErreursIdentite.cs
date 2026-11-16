@@ -12,6 +12,17 @@ internal static class CodesErreurIdentite
     public const string IdentifiantDejaUtilise = "Identite.IdentifiantDejaUtilise";
     public const string RoleInconnu = "Identite.RoleInconnu";
     public const string MotDePasseRefuse = "Identite.MotDePasseRefuse";
+    public const string CompteIntrouvable = "Identite.CompteIntrouvable";
+    public const string CompteDesactive = "Identite.CompteDesactive";
+    public const string MatriculeInvalide = "Identite.MatriculeInvalide";
+    public const string NomObligatoire = "Identite.NomObligatoire";
+    public const string NomTropLong = "Identite.NomTropLong";
+    public const string TelephoneInvalide = "Identite.TelephoneInvalide";
+    public const string RoleObligatoire = "Identite.RoleObligatoire";
+    public const string LangueInconnue = "Identite.LangueInconnue";
+    public const string DernierAdministrateur = "Identite.DernierAdministrateur";
+    public const string MotDePasseActuelInvalide = "Identite.MotDePasseActuelInvalide";
+    public const string MotDePasseIdentique = "Identite.MotDePasseIdentique";
 
     public static ResourceManager Ressources { get; } =
         new("GestionStock.Identite.Ressources.ErreursIdentite", typeof(CodesErreurIdentite).Assembly);

@@ -58,7 +58,12 @@ internal sealed partial class InitialisationAdministrateur(
         }
 
         var service = portee.ServiceProvider.GetRequiredService<ServiceUtilisateurs>();
-        await service.CreerAsync(configuration.Identifiant, configuration.MotDePasse, Roles.Administrateur, cancellationToken);
+        // Mot de passe défini par la configuration du déploiement : il n'est pas provisoire (à changer en boutique).
+        await service.CreerAsync(
+            new SaisieCompte(configuration.Identifiant, "Administrateur", "Initial", null, [Roles.Administrateur], null, configuration.MotDePasse),
+            ServiceUtilisateurs.AuteurSysteme,
+            motDePasseProvisoire: false,
+            cancellationToken);
         JournalCree(journal, configuration.Identifiant);
     }
 

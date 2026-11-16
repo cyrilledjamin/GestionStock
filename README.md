@@ -169,11 +169,16 @@ Si le port 5432 est déjà pris (PostgreSQL installé sur le poste), choisir un 
 | `GET /health` | anonyme | Le processus répond (200) |
 | `GET /health/pret` | anonyme | La base de données répond (200), sinon 503 |
 | `GET /openapi/v1.json` | anonyme | Description OpenAPI, en Development uniquement |
-| `POST /api/identite/connexion` | anonyme | `{ identifiant, motDePasse }` → jeton d'accès (1 h) et jeton de renouvellement |
+| `POST /api/identite/connexion` | anonyme | `{ identifiant, motDePasse }` (identifiant = matricule) → jeton d'accès (1 h) et jeton de renouvellement |
 | `POST /api/identite/rafraichir` | anonyme | `{ jetonRenouvellement }` → nouveau jeton d'accès |
-| `GET /api/identite/moi` | connecté | Identifiant, rôles et permissions de l'utilisateur |
-| `GET /api/identite/utilisateurs` | `Identite.Utilisateurs.Gerer` | Liste des comptes et de leurs rôles |
-| `POST /api/identite/utilisateurs` | `Identite.Utilisateurs.Gerer` | `{ identifiant, motDePasse, role }` → crée un compte |
+| `GET /api/identite/moi` | connecté | Matricule, nom, langue, mot de passe provisoire ou non, rôles et permissions (aucune tant qu'il est provisoire) |
+| `POST /api/identite/moi/mot-de-passe` | connecté | `{ actuel, nouveau }` : change son mot de passe (obligatoire s'il est provisoire) |
+| `PUT /api/identite/moi/langue` | connecté | `{ langue: fr \| en }` |
+| `GET /api/identite/utilisateurs`, `GET .../{id}` | `Identite.Utilisateurs.Gerer` | Comptes (fiche, rôles, statut) ; fiche avec le journal du compte |
+| `POST /api/identite/utilisateurs` | `Identite.Utilisateurs.Gerer` | `{ matricule?, prenom, nom, telephone?, roles, langue?, motDePasse }` : mot de passe provisoire |
+| `PUT /api/identite/utilisateurs/{id}` | `Identite.Utilisateurs.Gerer` | `{ prenom, nom, telephone?, roles, langue? }` (le matricule ne change pas) |
+| `POST /api/identite/utilisateurs/{id}/desactivation`, `/reactivation` | `Identite.Utilisateurs.Gerer` | Départ ou retour d'un employé ; rien n'est supprimé |
+| `POST /api/identite/utilisateurs/{id}/mot-de-passe` | `Identite.Utilisateurs.Gerer` | `{ motDePasse }` : mot de passe provisoire (oubli) |
 | `GET /api/referentiel/articles` | `Referentiel.Consulter` | Articles actifs ; `?recherche=` (code ou libellé, sans casse), `?inclureInactifs=true` |
 | `GET /api/referentiel/articles/{id}` | `Referentiel.Consulter` | Un article (404 s'il n'existe pas) |
 | `POST /api/referentiel/articles` | `Referentiel.Articles.Gerer` | `{ code, libelle, libelleTraduit?, uniteStock, precisionQuantite }` → crée un article (409 si le code existe) |
@@ -487,6 +492,23 @@ Comptes locaux nominatifs (ENF06), stockés dans le schéma `identite`. Mot de p
 avec majuscule, minuscule, chiffre et caractère spécial ; compte verrouillé 5 minutes après 5 échecs.
 Au premier démarrage, l'Administrateur initial est créé depuis la configuration ; il crée ensuite les autres comptes.
 
+**Fiche du personnel** : prénom et nom (obligatoires), téléphone (facultatif), **matricule**, un ou plusieurs rôles,
+langue de l'interface, statut actif ou désactivé. Rien d'autre (loi n° 2024/017).
+
+- **Matricule = identifiant de connexion**, tracé dans tous les documents : il ne change plus après la création. Celui
+  de l'entreprise est saisi tel quel (lettres, chiffres, `.`, `-`, `_`, 20 caractères au plus, unique) ; sinon il est
+  généré (`S000001`, `S000002`…). Les comptes antérieurs gardent leur identifiant comme matricule.
+- **Mot de passe provisoire** : à la création comme après un oubli, l'Administrateur fixe un mot de passe provisoire.
+  Tant qu'il n'est pas changé, le jeton ne donne **aucune permission** (403 partout sauf `/moi` et le changement de
+  mot de passe) ; l'Administrateur ne connaît jamais le mot de passe définitif. Une réinitialisation ferme les
+  sessions en cours et lève un verrouillage après trop d'essais.
+- **Désactivation** (départ d'un employé) : connexion (`Identite.CompteDesactive`), renouvellement de session et
+  validation par un responsable refusés ; le compte et ses documents restent. Réactivation possible.
+- **Rôles** : un changement de rôles ferme les sessions en cours (elles se reconnectent avec les nouveaux droits).
+- Il reste toujours **un Administrateur actif** (`Identite.DernierAdministrateur`).
+- **Journal du compte** (ENF03) : création, modification, désactivation, réactivation, réinitialisation et changement
+  de mot de passe, avec l'auteur et l'horodatage, sans aucun mot de passe.
+
 **Validation par un responsable** (`IValidationResponsable`) : une remise ou un dépassement de plafond de crédit
 (RG40, décision 31) est validé par un responsable présent, qui saisit ses propres identifiants sur le poste du
 caissier. Ses échecs comptent pour le verrouillage de son compte ; son identifiant est tracé avec l'opération.
@@ -582,6 +604,10 @@ sur une machine Linux de GitHub qui dispose de Docker :
 | 28 | Exports comptables Excel et CSV | Fait |
 | 29 | Client : écrans frais, dettes, rapports, exports | Fait |
 | 30 | Architecture, CI, README, démonstration de la tranche 4 | Fait |
+| 31 | Identité : fiche du personnel, matricule, plusieurs rôles, désactivation, mot de passe provisoire | Fait |
+| 32 | Noms complets du personnel dans les rapports et les exports | À faire |
+| 33 | Client : écrans des comptes et « Mon compte » | À faire |
+| 34 | Architecture, CI, README, démonstration de la tranche 5 | À faire |
 
 ## Démonstration
 
@@ -676,6 +702,9 @@ le contenu de chaque journal sont couverts par les tests d'intégration.
 - Dettes fournisseurs : pas d'échéance de paiement (le dossier n'en fixe pas) ; modes de paiement espèces, Mobile
   Money, virement et chèque ; dette = marchandise et frais d'approche (choix validés).
 - Exports : format CSV (`;`, UTF-8 avec BOM) ; production attribuée au Comptable et, provisoirement, au Gérant.
+- Comptes : matricule généré au format `S` + 6 chiffres ; prénom et nom obligatoires, téléphone facultatif ; après une
+  désactivation, un jeton d'accès déjà délivré reste valable jusqu'à son expiration (1 h au plus), son renouvellement
+  est refusé.
 - Revalorisation (RG30) : le supplément porte sur la quantité encore en stock ; la part des frais qui concerne de la
   marchandise déjà vendue n'entre pas dans le CUMP (conservée sur la réception, signalée dans les rapports).
 - Motif de démarque (RG23) : absent du modèle UML ; porté par la déclaration de démarque que le mouvement référence.
