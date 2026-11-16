@@ -25,6 +25,9 @@ src/
   Modules/Identite/
     GestionStock.Identite.Contracts  contrat public : Roles, Permissions
     GestionStock.Identite            comptes locaux (ASP.NET Core Identity), jetons porteurs, matrice des permissions
+  Modules/Referentiel/
+    GestionStock.Referentiel.Contracts  contrat public : IConsultationReferentiel (articles, site de la boutique)
+    GestionStock.Referentiel         articles, site et emplacements (style CRUD)
   Modules/Stock/
     GestionStock.Stock.Contracts     contrat public : IServiceMouvementsStock, IConsultationStock
     GestionStock.Stock.Domain        C# pur : MouvementStock, StockSite, StockEmplacement
@@ -129,11 +132,26 @@ Si le port 5432 est déjà pris (PostgreSQL installé sur le poste), choisir un 
 | `GET /api/identite/moi` | connecté | Identifiant, rôles et permissions de l'utilisateur |
 | `GET /api/identite/utilisateurs` | `Identite.Utilisateurs.Gerer` | Liste des comptes et de leurs rôles |
 | `POST /api/identite/utilisateurs` | `Identite.Utilisateurs.Gerer` | `{ identifiant, motDePasse, role }` → crée un compte |
+| `GET /api/referentiel/articles` | `Referentiel.Consulter` | Articles actifs ; `?recherche=` (code ou libellé, sans casse), `?inclureInactifs=true` |
+| `GET /api/referentiel/articles/{id}` | `Referentiel.Consulter` | Un article (404 s'il n'existe pas) |
+| `POST /api/referentiel/articles` | `Referentiel.Articles.Gerer` | `{ code, libelle, libelleTraduit?, uniteStock, precisionQuantite }` → crée un article (409 si le code existe) |
+| `PUT /api/referentiel/articles/{id}` | `Referentiel.Articles.Gerer` | `{ libelle, libelleTraduit?, actif }` : le code, l'unité et la précision sont fixés à la création |
+| `GET /api/referentiel/site` | `Referentiel.Consulter` | Site de la boutique et son emplacement de vente |
 
 Tout autre endpoint est refusé par défaut (401 sans jeton) : chaque endpoint métier déclare sa permission
 (`RequireAuthorization(Permissions.X)`), 403 si l'utilisateur ne la détient pas. Les jetons s'envoient dans
 l'en-tête `Authorization: Bearer <jeton>`. Les erreurs sont des ProblemDetails : titre traduit selon
 `Accept-Language` (fr par défaut, en) et code stable dans l'extension `code` (ex. `Identite.IdentifiantsInvalides`).
+
+## Référentiel
+
+- **Article** (UC01) : code unique, libellé principal obligatoire et traduction facultative (décision 20), unité de
+  stock = plus petite unité vendue (RG44), précision des quantités de 0 à 3 décimales (RG46). Le code, l'unité et la
+  précision ne changent plus après la création (les mouvements sont exprimés dans cette unité) ; un article n'est
+  jamais supprimé, il est désactivé. Mode de suivi (lots, séries) et DLC sont prévus dans la table, inutilisés en V1.
+- **Site et emplacement** : la migration crée la boutique (`BOUTIQUE`, type Magasin, sans séparation réserve / rayon)
+  et son emplacement de vente `VENTE` (RG20). Sans gestion par emplacements, la marchandise reçue y est disponible
+  dès la validation (RG13). Pas d'écran de gestion des sites en V1 (mono-site).
 
 ## Comptes, rôles et permissions
 
@@ -160,7 +178,7 @@ Chaque permission est attribuée à des rôles dans
 | --- | --- | --- |
 | `GestionStock.Stock.Domain.Tests` | Règles du domaine : mouvements, soldes, CUMP, RG03 / RG22 | Non |
 | `GestionStock.Infrastructure.Tests` | Horloge, stockage de fichiers, chaîne de connexion | Non |
-| `GestionStock.Api.IntegrationTests` | API complète par HTTP : connexion, jetons, 401 / 403, comptes, messages traduits | Oui |
+| `GestionStock.Api.IntegrationTests` | API complète par HTTP : connexion, jetons, 401 / 403, comptes, articles, messages traduits | Oui |
 | `GestionStock.ArchitectureTests` | Dépendances entre projets, visibilité, couches, traductions | Non |
 | `GestionStock.Stock.IntegrationTests` | PostgreSQL 17 réelle : migration, transaction partagée, idempotence, journal immuable, mouvements simultanés | Oui |
 
@@ -192,7 +210,7 @@ sur une machine Linux de GitHub qui dispose de Docker :
 | 6 | Tests d'architecture | Fait |
 | 7 | Tests d'intégration (Testcontainers) | Fait (exécutés en CI) |
 | 8 | Module Identite : comptes locaux, rôles, permissions, jetons porteurs | Fait |
-| 9 | Module Referentiel : articles, site et emplacement de vente | À faire |
+| 9 | Module Referentiel : articles, site et emplacement de vente | Fait |
 | 10 | Module Achats minimal : fournisseurs, réception simple ; lectures du stock | À faire |
 | 11 | Client Blazor WebAssembly : premiers écrans | À faire |
 | 12 | Tests d'architecture, Docker, démonstration de bout en bout | À faire |

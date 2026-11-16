@@ -22,6 +22,8 @@ public sealed class DependancesProjetsTests
             Assemblages.NomInfrastructure,
             "GestionStock.Identite",
             "GestionStock.Identite.Contracts",
+            "GestionStock.Referentiel",
+            "GestionStock.Referentiel.Contracts",
             "GestionStock.Stock",
             "GestionStock.Stock.Contracts",
             "GestionStock.Stock.Domain",

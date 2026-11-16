@@ -1,6 +1,7 @@
 using GestionStock.Identite;
 using GestionStock.Infrastructure;
 using GestionStock.Infrastructure.Persistance;
+using GestionStock.Referentiel;
 using GestionStock.Stock;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
@@ -21,6 +22,7 @@ builder.Services.AddAuthorizationBuilder()
 // Modules
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddIdentiteModule(builder.Configuration);
+builder.Services.AddReferentielModule(builder.Configuration);
 builder.Services.AddStockModule(builder.Configuration);
 
 var app = builder.Build();
@@ -57,6 +59,7 @@ if (app.Environment.IsDevelopment())
 
 // Modules
 app.MapIdentiteEndpoints();
+app.MapReferentielEndpoints();
 app.MapStockEndpoints();
 
 await app.RunAsync();

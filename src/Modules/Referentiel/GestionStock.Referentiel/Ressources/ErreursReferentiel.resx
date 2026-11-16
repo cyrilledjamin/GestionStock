@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Referentiel.CodeObligatoire" xml:space="preserve"><value>Le code de l'article est obligatoire.</value></data>
+  <data name="Referentiel.CodeTropLong" xml:space="preserve"><value>Le code de l'article est trop long : 50 caractères au maximum.</value></data>
+  <data name="Referentiel.CodeDejaUtilise" xml:space="preserve"><value>Ce code est déjà utilisé par un autre article.</value></data>
+  <data name="Referentiel.LibelleObligatoire" xml:space="preserve"><value>Le libellé est obligatoire.</value></data>
+  <data name="Referentiel.LibelleTropLong" xml:space="preserve"><value>Le libellé est trop long : 200 caractères au maximum.</value></data>
+  <data name="Referentiel.UniteObligatoire" xml:space="preserve"><value>L'unité de stock est obligatoire.</value></data>
+  <data name="Referentiel.UniteTropLongue" xml:space="preserve"><value>L'unité de stock est trop longue : 20 caractères au maximum.</value></data>
+  <data name="Referentiel.PrecisionInvalide" xml:space="preserve"><value>La précision des quantités doit être comprise entre 0 et 3 décimales.</value></data>
+  <data name="Referentiel.ArticleIntrouvable" xml:space="preserve"><value>Article introuvable.</value></data>
+</root>

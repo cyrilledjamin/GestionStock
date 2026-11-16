@@ -7,6 +7,7 @@
   <ItemGroup>
     <ProjectReference Include="../../BuildingBlocks/GestionStock.Infrastructure/GestionStock.Infrastructure.csproj" />
     <ProjectReference Include="../../Modules/Identite/GestionStock.Identite/GestionStock.Identite.csproj" />
+    <ProjectReference Include="../../Modules/Referentiel/GestionStock.Referentiel/GestionStock.Referentiel.csproj" />
     <ProjectReference Include="../../Modules/Stock/GestionStock.Stock/GestionStock.Stock.csproj" />
   </ItemGroup>
 </Project>
