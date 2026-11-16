@@ -230,3 +230,72 @@ public static class ModesPaiement
 }
 
 public sealed record EnteteRecu(string Nom, string? Adresse, string? Telephone, string? NumeroContribuable, bool AssujettiTva);
+
+// --- Inventaire, démarque, reprise -------------------------------------------------------------------------------
+
+public sealed record ResumeInventaire(
+    Guid Id,
+    string Numero,
+    string Type,
+    string Statut,
+    DateTime CreeLeUtc,
+    string CreePar,
+    DateTime? TermineLeUtc,
+    string? TerminePar,
+    int NombreLignes,
+    int NombreComptees);
+
+public sealed record LigneInventaire(
+    Guid Id,
+    Guid ArticleId,
+    string CodeArticle,
+    string Libelle,
+    string UniteStock,
+    int PrecisionQuantite,
+    decimal? QuantiteTheorique,
+    decimal? QuantiteComptee,
+    decimal? Ecart,
+    string MotifEcart,
+    decimal? CoutOuverture,
+    decimal CoutUnitaire,
+    decimal? ValeurEcart,
+    DateTime? ComptageUtc,
+    string? ComptePar);
+
+public sealed record DetailInventaire(ResumeInventaire Inventaire, decimal ValeurEcarts, List<LigneInventaire> Lignes);
+
+public sealed record DeclarationDemarque(
+    Guid Id,
+    string Numero,
+    Guid ArticleId,
+    string CodeArticle,
+    string Libelle,
+    string UniteStock,
+    decimal Quantite,
+    string Motif,
+    string? Commentaire,
+    string Statut,
+    DateTime DeclareeLeUtc,
+    string DeclareePar,
+    DateTime? TraiteeLeUtc,
+    string? TraiteePar,
+    string? MotifRefus);
+
+public sealed record ErreurReprise(int Ligne, string Code, string Message, string? Colonne, string? Detail);
+
+public sealed record RapportReprise(
+    bool Importe,
+    int Lignes,
+    int Articles,
+    int Conditionnements,
+    int CodesBarres,
+    int Prix,
+    List<ErreurReprise> Erreurs,
+    Guid? InventaireOuvertureId,
+    string? InventaireOuvertureNumero);
+
+/// <summary>Motifs de démarque (mêmes noms que l'API).</summary>
+public static class MotifsDemarque
+{
+    public static IReadOnlyList<string> Tous { get; } = ["Casse", "Vol", "Perime", "Freinte"];
+}

@@ -30,6 +30,22 @@ public sealed class InventaireTests(ApiDeTest api)
     }
 
     [Fact]
+    public async Task Un_inventaire_partiel_demarre_vide_et_se_remplit_au_comptage()
+    {
+        var b = await BoutiqueAsync(stockInitial: 10m, cout: 500m);
+
+        var inventaire = await CreerPartielAsync(b);
+        var vide = await b.Comptable.PostAsync($"/api/inventaires/{inventaire}/validation", null, Annulation);
+        var compte = await CompterAsync(b, inventaire, b.Article, 9m);
+        await ValiderAsync(b, inventaire);
+
+        Assert.Equal(HttpStatusCode.BadRequest, vide.StatusCode);
+        Assert.Contains("Inventaire.InventaireSansLigne", await vide.Content.ReadAsStringAsync(Annulation), StringComparison.Ordinal);
+        Assert.Equal(-1m, compte.Lignes.Single().Ecart);
+        Assert.Equal(9m, await SoldeAsync(b));
+    }
+
+    [Fact]
     public async Task Un_surplus_entre_au_CUMP_sans_le_modifier()
     {
         var b = await BoutiqueAsync(stockInitial: 10m, cout: 500m);

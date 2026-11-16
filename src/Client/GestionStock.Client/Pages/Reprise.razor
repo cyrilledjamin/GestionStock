@@ -1,0 +1,117 @@
+@page "/reprise"
+@inject Api Api
+@inject IJSRuntime Js
+
+<PageTitle>@L["Reprise"] · GestionStock</PageTitle>
+
+<h1>@L["Reprise"]</h1>
+<p class="discret">@L["RepriseIntro"]</p>
+
+<div class="fiche">
+    <h2>1. @L["RepriseEtape1"]</h2>
+    <div class="actions">
+        <button @onclick="() => Telecharger(false)">@L["ModeleVide"]</button>
+        <button @onclick="() => Telecharger(true)">@L["ModeleExemple"]</button>
+    </div>
+</div>
+
+<div class="fiche">
+    <h2>2. @L["RepriseEtape2"]</h2>
+    <InputFile OnChange="Choisir" accept=".xlsx" />
+    @if (_nomFichier is not null)
+    {
+        <p class="discret">@_nomFichier</p>
+    }
+    <div class="actions">
+        <button class="principal" disabled="@(_fichier is null || _enCours)" @onclick="() => Envoyer(simulation: true)">@L["Controler"]</button>
+        <button class="valider" disabled="@(_fichier is null || _enCours || _rapport is not { Erreurs.Count: 0 } || _rapport.Importe)" @onclick="() => Envoyer(simulation: false)">@L["Importer"]</button>
+    </div>
+</div>
+
+<Message Texte="@_erreur" />
+
+@if (_rapport is not null)
+{
+    <div class="fiche">
+        <h2>@(_rapport.Importe ? L["ImportReussi"] : _rapport.Erreurs.Count == 0 ? L["ControleReussi"] : L["ControleErreurs", _rapport.Erreurs.Count])</h2>
+        <div class="tuiles">
+            <div class="tuile chiffre"><span>@L["Lignes"]</span><strong>@_rapport.Lignes</strong></div>
+            <div class="tuile chiffre"><span>@L["Articles"]</span><strong>@_rapport.Articles</strong></div>
+            <div class="tuile chiffre"><span>@L["Conditionnements"]</span><strong>@_rapport.Conditionnements</strong></div>
+            <div class="tuile chiffre"><span>@L["Codes"]</span><strong>@_rapport.CodesBarres</strong></div>
+            <div class="tuile chiffre"><span>@L["PrixFixes"]</span><strong>@_rapport.Prix</strong></div>
+        </div>
+        @if (_rapport.InventaireOuvertureId is { } ouverture)
+        {
+            <Message Texte="@L["OuvertureCreee", _rapport.InventaireOuvertureNumero ?? ""]" Erreur="false" />
+            <a class="bouton principal" href="inventaires/@ouverture">@L["OuvrirInventaire"]</a>
+        }
+        @if (_rapport.Erreurs.Count > 0)
+        {
+            <table>
+                <thead><tr><th class="nombre">@L["Ligne"]</th><th>@L["Colonne"]</th><th>@L["Erreur"]</th><th>@L["Valeur"]</th></tr></thead>
+                <tbody>
+                    @foreach (var erreur in _rapport.Erreurs)
+                    {
+                        <tr>
+                            <td class="nombre">@(erreur.Ligne > 0 ? erreur.Ligne : "")</td>
+                            <td>@erreur.Colonne</td>
+                            <td>@erreur.Message</td>
+                            <td><code>@erreur.Detail</code></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+}
+
+@code {
+    private const long TailleMax = 5 * 1024 * 1024;
+
+    private byte[]? _fichier;
+    private string? _nomFichier;
+    private RapportReprise? _rapport;
+    private string? _erreur;
+    private bool _enCours;
+
+    private async Task Telecharger(bool exemple)
+    {
+        var octets = await Api.GetOctetsAsync($"api/reprise/modele.xlsx?exemple={exemple.ToString().ToLowerInvariant()}");
+        _erreur = octets is null ? L["FichierIndisponible"].Value : null;
+        if (octets is not null)
+        {
+            await Js.InvokeVoidAsync(
+                "gestionStock.telecharger",
+                exemple ? "reprise-exemple.xlsx" : "reprise-modele.xlsx",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                Convert.ToBase64String(octets));
+        }
+    }
+
+    private async Task Choisir(InputFileChangeEventArgs e)
+    {
+        _rapport = null;
+        _erreur = null;
+        if (e.File.Size > TailleMax)
+        {
+            _fichier = null;
+            _erreur = L["FichierTropGros"].Value;
+            return;
+        }
+
+        using var copie = new MemoryStream();
+        await e.File.OpenReadStream(TailleMax).CopyToAsync(copie);
+        _fichier = copie.ToArray();
+        _nomFichier = e.File.Name;
+    }
+
+    private async Task Envoyer(bool simulation)
+    {
+        _enCours = true;
+        var resultat = await Api.EnvoyerFichierAsync<RapportReprise>(simulation ? "api/reprise/simulation" : "api/reprise/import", _fichier!);
+        _enCours = false;
+        _erreur = resultat.Erreur;
+        _rapport = resultat.Valeur ?? _rapport;
+    }
+}

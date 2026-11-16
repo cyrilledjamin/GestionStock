@@ -1,0 +1,189 @@
+@page "/inventaires/{Id:guid}"
+@inject Api Api
+@inject Session Session
+@inject IJSRuntime Js
+
+<PageTitle>@(_detail?.Inventaire.Numero ?? L["Inventaires"]) · GestionStock</PageTitle>
+
+<p><a href="inventaires">← @L["Inventaires"]</a></p>
+<Message Texte="@_erreur" />
+<Message Texte="@_succes" Erreur="false" />
+
+@if (_detail is { Inventaire: var inventaire })
+{
+    <h1>@inventaire.Numero <small class="discret">@L[$"TypeInventaire.{inventaire.Type}"] · @L[$"StatutInventaire.{inventaire.Statut}"]</small></h1>
+
+    <div class="tuiles">
+        <div class="tuile chiffre"><span>@L["Comptes"]</span><strong>@inventaire.NombreComptees / @inventaire.NombreLignes</strong></div>
+        <div class="tuile chiffre"><span>@L["ValeurEcarts"]</span><strong>@Format.Montant(_detail.ValeurEcarts)</strong></div>
+    </div>
+
+    @if (EnCours)
+    {
+        <div class="barre">
+            @if (Session.A(Permissions.InventaireCompter))
+            {
+                <input id="scan" placeholder="@L["ScanInventaireAide"]" @bind="_code" @bind:event="oninput" @onkeydown="SurTouche" autocomplete="off" />
+            }
+            <label class="case"><input type="checkbox" @bind="_seulementNonComptes" /> @L["SeulementNonComptes"]</label>
+            @if (Session.A(Permissions.InventaireValider))
+            {
+                <button class="valider" disabled="@_enCours" @onclick="Valider">@L["ValiderInventaire"]</button>
+            }
+            @if (Session.A(Permissions.InventaireCompter))
+            {
+                <button disabled="@_enCours" @onclick="Annuler">@L["AnnulerInventaire"]</button>
+            }
+        </div>
+        <p class="discret">@L["InventaireAide"]</p>
+    }
+
+    <table class="saisie">
+        <thead>
+            <tr>
+                <th>@L["Code"]</th><th>@L["Libelle"]</th><th class="nombre">@L["Theorique"]</th><th class="nombre">@L["Compte"]</th>
+                <th class="nombre">@L["Ecart"]</th><th class="nombre">@L["ValeurEcart"]</th><th>@L["Freinte"]</th><th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var ligne in Lignes)
+            {
+                <tr class="@(ligne.Ecart < 0 ? "negatif" : "")">
+                    <td><code>@ligne.CodeArticle</code></td>
+                    <td>@ligne.Libelle <small class="discret">@ligne.UniteStock</small></td>
+                    <td class="nombre">@(ligne.QuantiteTheorique is { } t ? Format.Quantite(t, ligne.PrecisionQuantite) : "—")</td>
+                    <td class="nombre">
+                        @if (EnCours && Session.A(Permissions.InventaireCompter))
+                        {
+                            <input type="number" min="0" step="@Pas(ligne)" @bind="_saisies[ligne.ArticleId]" />
+                        }
+                        else
+                        {
+                            @(ligne.QuantiteComptee is { } c ? Format.Quantite(c, ligne.PrecisionQuantite) : "—")
+                        }
+                    </td>
+                    <td class="nombre">@(ligne.Ecart is { } e ? (e > 0 ? "+" : "") + Format.Quantite(e, ligne.PrecisionQuantite) : "")</td>
+                    <td class="nombre">@(ligne.ValeurEcart is { } v ? Format.Montant(v) : "")</td>
+                    <td>
+                        @if (EnCours && Session.A(Permissions.InventaireCompter))
+                        {
+                            <input type="checkbox" @bind="_freintes[ligne.ArticleId]" title="@L["FreinteAide"]" />
+                        }
+                        else if (ligne.MotifEcart == "Freinte")
+                        {
+                            @L["Freinte"]
+                        }
+                    </td>
+                    <td>
+                        @if (EnCours && Session.A(Permissions.InventaireCompter))
+                        {
+                            <button class="lien" @onclick="() => Enregistrer(ligne.ArticleId)">@L["Enregistrer"]</button>
+                        }
+                    </td>
+                </tr>
+            }
+            @if (!Lignes.Any())
+            {
+                <tr><td colspan="8" class="vide">@L["AucunArticleACompter"]</td></tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+
+    private DetailInventaire? _detail;
+    private Dictionary<Guid, decimal?> _saisies = [];
+    private Dictionary<Guid, bool> _freintes = [];
+    private string _code = "";
+    private bool _seulementNonComptes;
+    private string? _erreur;
+    private string? _succes;
+    private bool _enCours;
+
+    private bool EnCours => _detail?.Inventaire.Statut == "EnCours";
+
+    private IEnumerable<LigneInventaire> Lignes =>
+        (_detail?.Lignes ?? []).Where(l => !_seulementNonComptes || l.QuantiteComptee is null);
+
+    protected override Task OnParametersSetAsync() => Charger();
+
+    private async Task Charger()
+    {
+        var resultat = await Api.GetAsync<DetailInventaire>($"api/inventaires/{Id}");
+        _erreur = resultat.Erreur;
+        Afficher(resultat.Valeur);
+    }
+
+    private void Afficher(DetailInventaire? detail)
+    {
+        _detail = detail ?? _detail;
+        foreach (var ligne in _detail?.Lignes ?? [])
+        {
+            _saisies[ligne.ArticleId] = ligne.QuantiteComptee is { } q ? decimal.Round(q, ligne.PrecisionQuantite) : null;
+            _freintes[ligne.ArticleId] = ligne.MotifEcart == "Freinte";
+        }
+    }
+
+    /// <summary>Scan : le conditionnement scanné ajoute son contenu à la quantité déjà comptée de l'article.</summary>
+    private async Task SurTouche(KeyboardEventArgs e)
+    {
+        if (e.Key != "Enter" || string.IsNullOrWhiteSpace(_code))
+        {
+            return;
+        }
+
+        var code = _code.Trim();
+        _code = "";
+        var scan = await Api.GetAsync<ArticleVendable>($"api/referentiel/scan/{Uri.EscapeDataString(code)}");
+        _erreur = scan.Erreur;
+        if (scan.Valeur is { } vendable)
+        {
+            var dejaCompte = _detail?.Lignes.FirstOrDefault(l => l.ArticleId == vendable.ArticleId)?.QuantiteComptee ?? 0m;
+            await Compter(vendable.ArticleId, dejaCompte + vendable.QuantiteUniteStock, freinte: false);
+            _succes = $"{vendable.CodeArticle} : {Format.Quantite(dejaCompte + vendable.QuantiteUniteStock)} {vendable.UniteStock}";
+        }
+
+        await Js.InvokeVoidAsync("gestionStock.focaliser", "scan");
+    }
+
+    private Task Enregistrer(Guid article) =>
+        _saisies.GetValueOrDefault(article) is { } quantite
+            ? Compter(article, quantite, _freintes.GetValueOrDefault(article))
+            : Task.CompletedTask;
+
+    private async Task Compter(Guid article, decimal quantite, bool freinte)
+    {
+        var resultat = await Api.PostAsync<DetailInventaire>($"api/inventaires/{Id}/comptages", new
+        {
+            ArticleId = article,
+            Quantite = quantite,
+            MotifEcart = freinte ? "Freinte" : "Aucun",
+        });
+        _erreur = resultat.Erreur;
+        _succes = null;
+        Afficher(resultat.Valeur);
+    }
+
+    private async Task Valider()
+    {
+        _enCours = true;
+        var resultat = await Api.PostAsync<DetailInventaire>($"api/inventaires/{Id}/validation");
+        _enCours = false;
+        _erreur = resultat.Erreur;
+        _succes = resultat.Reussi ? L["InventaireValide"].Value : null;
+        Afficher(resultat.Valeur);
+    }
+
+    private async Task Annuler()
+    {
+        var resultat = await Api.PostAsync<DetailInventaire>($"api/inventaires/{Id}/annulation");
+        _erreur = resultat.Erreur;
+        Afficher(resultat.Valeur);
+    }
+
+    private static string Pas(LigneInventaire ligne) => ligne.PrecisionQuantite == 0
+        ? "1"
+        : (1m / (decimal)Math.Pow(10, ligne.PrecisionQuantite)).ToString(CultureInfo.InvariantCulture);
+}

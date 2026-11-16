@@ -56,7 +56,8 @@ public sealed partial class ConventionsClientTests
             .SelectMany(f => CleStatique().Matches(File.ReadAllText(f)).Select(m => m.Groups[1].Value))
             .ToHashSet(StringComparer.Ordinal);
 
-        // Clés construites à l'exécution : rôles, statuts, types de mouvement, modes de paiement, opérations, niveaux.
+        // Clés construites à l'exécution : rôles, statuts, types de mouvement, modes de paiement, opérations, niveaux,
+        // types et statuts d'inventaire, statuts et motifs de démarque.
         utilisees.UnionWith(Roles.Tous.Select(r => $"Role.{r}"));
         utilisees.UnionWith(["Statut.Brouillon", "Statut.Validee"]);
         utilisees.UnionWith(Enum.GetNames<TypeMouvementStock>().Select(t => $"Mouvement.{t}"));
@@ -64,6 +65,10 @@ public sealed partial class ConventionsClientTests
         utilisees.UnionWith(["StatutSession.Ouverte", "StatutSession.Comptee", "StatutSession.Validee"]);
         utilisees.UnionWith(["Operation.VenteCredit", "Operation.Remboursement", "Operation.Annulation"]);
         utilisees.UnionWith(["Niveau.Unite", "Niveau.Pack", "Niveau.Carton", "Niveau.Sac", "Niveau.Palette"]);
+        utilisees.UnionWith(["TypeInventaire.Ouverture", "TypeInventaire.Complet", "TypeInventaire.Partiel"]);
+        utilisees.UnionWith(["StatutInventaire.EnCours", "StatutInventaire.Valide", "StatutInventaire.Annule"]);
+        utilisees.UnionWith(["StatutDemarque.Declaree", "StatutDemarque.Validee", "StatutDemarque.Refusee"]);
+        utilisees.UnionWith(["MotifDemarque.Casse", "MotifDemarque.Vol", "MotifDemarque.Perime", "MotifDemarque.Freinte"]);
 
         Assert.Empty(utilisees.Except(francais));
         Assert.Empty(utilisees.Except(anglais));

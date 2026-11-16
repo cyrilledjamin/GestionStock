@@ -1,0 +1,155 @@
+@page "/demarques"
+@inject Api Api
+@inject Session Session
+
+<PageTitle>@L["Demarque"] · GestionStock</PageTitle>
+
+<h1>@L["Demarque"]</h1>
+<p class="discret">@L["DemarqueIntro"]</p>
+
+<Message Texte="@_erreur" />
+<Message Texte="@_succes" Erreur="false" />
+
+@if (Session.A(Permissions.DemarqueDeclarer))
+{
+    <form class="fiche" @onsubmit="Declarer">
+        <h2>@L["DeclarerDemarque"]</h2>
+        @if (_article is null)
+        {
+            <input type="search" placeholder="@L["RechercherArticle"]" @bind="_recherche" @bind:event="oninput" @bind:after="Rechercher" />
+            @if (_resultats.Count > 0)
+            {
+                <ul class="resultats">
+                    @foreach (var vendable in _resultats.DistinctBy(v => v.ArticleId))
+                    {
+                        <li><button type="button" class="lien" @onclick="() => _article = vendable">@vendable.CodeArticle — @vendable.Libelle</button></li>
+                    }
+                </ul>
+            }
+        }
+        else
+        {
+            <div class="client-choisi"><span><code>@_article.CodeArticle</code> @_article.Libelle</span><button type="button" class="lien" @onclick="() => _article = null">✕</button></div>
+            <div class="grille">
+                <label>@L["Quantite"] (@_article.UniteStock) <input type="number" min="0" step="any" @bind="_quantite" required /></label>
+                <label>@L["Motif"]
+                    <select @bind="_motif">
+                        @foreach (var motif in MotifsDemarque.Tous)
+                        {
+                            <option value="@motif">@L[$"MotifDemarque.{motif}"]</option>
+                        }
+                    </select>
+                </label>
+                <label>@L["Commentaire"] <input @bind="_commentaire" maxlength="500" /></label>
+            </div>
+            <div class="actions"><button type="submit" class="principal">@L["Declarer"]</button></div>
+        }
+    </form>
+}
+
+<div class="barre">
+    <select @bind="_statut" @bind:after="Charger">
+        <option value="">@L["TousStatuts"]</option>
+        <option value="Declaree">@L["StatutDemarque.Declaree"]</option>
+        <option value="Validee">@L["StatutDemarque.Validee"]</option>
+        <option value="Refusee">@L["StatutDemarque.Refusee"]</option>
+    </select>
+</div>
+
+<table>
+    <thead><tr><th>@L["Numero"]</th><th>@L["Date"]</th><th>@L["Article"]</th><th class="nombre">@L["Quantite"]</th><th>@L["Motif"]</th><th>@L["DeclareePar"]</th><th>@L["Statut"]</th><th></th></tr></thead>
+    <tbody>
+        @foreach (var demarque in _demarques)
+        {
+            <tr>
+                <td class="court">@demarque.Numero</td>
+                <td class="court">@Format.Date(demarque.DeclareeLeUtc)</td>
+                <td><code>@demarque.CodeArticle</code> @demarque.Libelle @if (demarque.Commentaire is not null) { <br /><small class="discret">@demarque.Commentaire</small> }</td>
+                <td class="nombre">@Format.Quantite(demarque.Quantite) @demarque.UniteStock</td>
+                <td>@L[$"MotifDemarque.{demarque.Motif}"]</td>
+                <td>@demarque.DeclareePar</td>
+                <td>
+                    <span class="pastille @(demarque.Statut == "Declaree" ? "brouillon" : "validee")">@L[$"StatutDemarque.{demarque.Statut}"]</span>
+                    @if (demarque.TraiteePar is not null) { <small class="discret"> (@demarque.TraiteePar)</small> }
+                    @if (demarque.MotifRefus is not null) { <br /><small class="discret">@demarque.MotifRefus</small> }
+                </td>
+                <td class="actions-ligne">
+                    @if (demarque.Statut == "Declaree" && Session.A(Permissions.DemarqueValider))
+                    {
+                        <button class="lien" @onclick="() => Valider(demarque.Id)">@L["Valider"]</button>
+                        <input class="motif-refus" placeholder="@L["MotifRefus"]" @bind="_motifsRefus[demarque.Id]" />
+                        <button class="lien" @onclick="() => Refuser(demarque.Id)">@L["Refuser"]</button>
+                    }
+                </td>
+            </tr>
+        }
+        @if (_demarques.Count == 0)
+        {
+            <tr><td colspan="8" class="vide">@L["AucuneDemarque"]</td></tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    private List<DeclarationDemarque> _demarques = [];
+    private Dictionary<Guid, string?> _motifsRefus = [];
+    private string _statut = "";
+    private string _recherche = "";
+    private List<ArticleVendable> _resultats = [];
+    private ArticleVendable? _article;
+    private decimal _quantite;
+    private string _motif = "Casse";
+    private string? _commentaire;
+    private string? _erreur;
+    private string? _succes;
+
+    protected override Task OnInitializedAsync() => Charger();
+
+    private async Task Charger()
+    {
+        var resultat = await Api.GetAsync<List<DeclarationDemarque>>(string.IsNullOrEmpty(_statut) ? "api/demarques" : $"api/demarques?statut={_statut}");
+        _demarques = resultat.Valeur ?? [];
+        _erreur = resultat.Erreur;
+        foreach (var demarque in _demarques)
+        {
+            _motifsRefus.TryAdd(demarque.Id, null);
+        }
+    }
+
+    private async Task Rechercher()
+    {
+        _resultats = _recherche.Trim().Length < 2
+            ? []
+            : (await Api.GetAsync<List<ArticleVendable>>($"api/referentiel/vendables?recherche={Uri.EscapeDataString(_recherche.Trim())}")).Valeur ?? [];
+    }
+
+    private async Task Declarer()
+    {
+        var resultat = await Api.PostAsync<DeclarationDemarque>("api/demarques", new { _article!.ArticleId, Quantite = _quantite, Motif = _motif, Commentaire = _commentaire });
+        _erreur = resultat.Erreur;
+        if (resultat.Valeur is { } demarque)
+        {
+            _succes = L["DemarqueDeclaree", demarque.Numero].Value;
+            _article = null;
+            _quantite = 0;
+            _commentaire = null;
+            _recherche = "";
+            _resultats = [];
+            await Charger();
+        }
+    }
+
+    private async Task Valider(Guid id)
+    {
+        var resultat = await Api.PostAsync<DeclarationDemarque>($"api/demarques/{id}/validation");
+        _erreur = resultat.Erreur;
+        await Charger();
+    }
+
+    private async Task Refuser(Guid id)
+    {
+        var resultat = await Api.PostAsync<DeclarationDemarque>($"api/demarques/{id}/refus", new { Motif = _motifsRefus.GetValueOrDefault(id) ?? "" });
+        _erreur = resultat.Erreur;
+        await Charger();
+    }
+}

@@ -1,0 +1,70 @@
+@page "/inventaires"
+@inject Api Api
+@inject Session Session
+@inject NavigationManager Navigation
+
+<PageTitle>@L["Inventaires"] · GestionStock</PageTitle>
+
+<h1>@L["Inventaires"]</h1>
+
+<div class="barre">
+    <select @bind="_statut" @bind:after="Charger">
+        <option value="">@L["TousStatuts"]</option>
+        <option value="EnCours">@L["StatutInventaire.EnCours"]</option>
+        <option value="Valide">@L["StatutInventaire.Valide"]</option>
+        <option value="Annule">@L["StatutInventaire.Annule"]</option>
+    </select>
+    @if (Session.A(Permissions.InventaireCompter))
+    {
+        <button class="principal" @onclick='() => Creer("Complet")'>@L["NouvelInventaireComplet"]</button>
+        <button @onclick='() => Creer("Partiel")'>@L["NouvelInventairePartiel"]</button>
+    }
+</div>
+
+<Message Texte="@_erreur" />
+
+<table>
+    <thead><tr><th>@L["Numero"]</th><th>@L["Type"]</th><th>@L["Date"]</th><th>@L["CreePar"]</th><th class="nombre">@L["Comptes"]</th><th>@L["Statut"]</th></tr></thead>
+    <tbody>
+        @foreach (var inventaire in _inventaires)
+        {
+            <tr>
+                <td class="court"><a href="inventaires/@inventaire.Id">@inventaire.Numero</a></td>
+                <td>@L[$"TypeInventaire.{inventaire.Type}"]</td>
+                <td class="court">@Format.Date(inventaire.CreeLeUtc)</td>
+                <td>@inventaire.CreePar</td>
+                <td class="nombre">@inventaire.NombreComptees / @inventaire.NombreLignes</td>
+                <td><span class="pastille @(inventaire.Statut == "EnCours" ? "brouillon" : "validee")">@L[$"StatutInventaire.{inventaire.Statut}"]</span></td>
+            </tr>
+        }
+        @if (_inventaires.Count == 0)
+        {
+            <tr><td colspan="6" class="vide">@L["AucunInventaire"]</td></tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    private List<ResumeInventaire> _inventaires = [];
+    private string _statut = "";
+    private string? _erreur;
+
+    protected override Task OnInitializedAsync() => Charger();
+
+    private async Task Charger()
+    {
+        var resultat = await Api.GetAsync<List<ResumeInventaire>>(string.IsNullOrEmpty(_statut) ? "api/inventaires" : $"api/inventaires?statut={_statut}");
+        _inventaires = resultat.Valeur ?? [];
+        _erreur = resultat.Erreur;
+    }
+
+    private async Task Creer(string type)
+    {
+        var resultat = await Api.PostAsync<DetailInventaire>("api/inventaires", new { Type = type, Articles = Array.Empty<Guid>() });
+        _erreur = resultat.Erreur;
+        if (resultat.Valeur is { } inventaire)
+        {
+            Navigation.NavigateTo($"inventaires/{inventaire.Inventaire.Id}");
+        }
+    }
+}
