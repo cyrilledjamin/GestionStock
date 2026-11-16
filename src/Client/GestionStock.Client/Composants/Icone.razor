@@ -1,0 +1,43 @@
+@* Icône SVG embarquée (aucun fichier ni police externe, utilisable hors ligne). Décorative : le texte voisin porte le sens. *@
+<svg class="icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+    @foreach (var trace in Traces(Nom))
+    {
+        <path d="@trace" />
+    }
+</svg>
+
+@code {
+    /// <summary>Nom de l'icône, parmi <see cref="Noms"/>.</summary>
+    [Parameter, EditorRequired] public string Nom { get; set; } = "";
+
+    /// <summary>Tracés de chaque icône sur une grille de 24 × 24 (traits de 2, extrémités arrondies).</summary>
+    private static readonly Dictionary<string, string[]> Dessins = new(StringComparer.Ordinal)
+    {
+        ["accueil"] = ["M3 11 12 4l9 7", "M5 10v10h5v-6h4v6h5V10"],
+        ["caisse"] = ["M4 10h16v10H4z", "M7 10V5h10v5", "M9 7h6", "M8 14h2", "M14 14h2", "M8 17h8"],
+        ["sessions"] = ["M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z", "M12 7v5l3 2"],
+        ["clients"] = ["M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z", "M2 21v-1a6 6 0 0 1 12 0v1", "M16 3.5a4 4 0 0 1 0 7", "M18 14.5a6 6 0 0 1 4 5.5v1"],
+        ["stock"] = ["M12 3 3 7.5v9L12 21l9-4.5v-9z", "M3 7.5 12 12l9-4.5", "M12 12v9"],
+        ["receptions"] = ["M2 6h12v10H2z", "M14 10h4l4 3v3h-8", "M6 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4z", "M18 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"],
+        ["fournisseurs"] = ["M4 21V5l8-2v18", "M12 9h8v12", "M2 21h20", "M7 8h2", "M7 12h2", "M7 16h2", "M15 13h2", "M15 17h2"],
+        ["dettes"] = ["M3 7h18v12H3z", "M3 7l3-4h12l3 4", "M16 13h2"],
+        ["articles"] = ["M3 12V4h8l10 10-8 8z", "M7.5 8.5h.01"],
+        ["inventaires"] = ["M9 4h6v3H9z", "M15 5h3v16H6V5h3", "M9 13l2 2 4-4"],
+        ["demarque"] = ["M12 3 2 20h20z", "M12 10v4", "M12 17h.01"],
+        ["rapports"] = ["M4 20V10", "M10 20V4", "M16 20v-7", "M22 20H2"],
+        ["exports"] = ["M12 3v12", "M7 10l5 5 5-5", "M4 21h16"],
+        ["reprise"] = ["M12 15V3", "M7 8l5-5 5 5", "M4 21h16"],
+        ["utilisateurs"] = ["M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z", "M4 21v-1a8 8 0 0 1 16 0v1"],
+        ["compte"] = ["M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z", "M12 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6z", "M6.5 18a6 6 0 0 1 11 0"],
+        ["langue"] = ["M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z", "M3 12h18", "M12 3c2.5 2.5 3.5 5.5 3.5 9s-1 6.5-3.5 9c-2.5-2.5-3.5-5.5-3.5-9s1-6.5 3.5-9z"],
+        ["deconnexion"] = ["M14 4h5v16h-5", "M10 8l-4 4 4 4", "M6 12h11"],
+        ["succes"] = ["M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z", "M8 12l3 3 5-6"],
+        ["erreur"] = ["M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z", "M12 7v6", "M12 16.5h.01"],
+        ["marque"] = ["M4 8l8-5 8 5v12H4z", "M9 20v-6h6v6", "M4 8h16"],
+    };
+
+    /// <summary>Noms disponibles (vérifiés par les tests de conventions du client).</summary>
+    public static IReadOnlyCollection<string> Noms => Dessins.Keys;
+
+    private static string[] Traces(string nom) => Dessins.TryGetValue(nom, out var traces) ? traces : [];
+}

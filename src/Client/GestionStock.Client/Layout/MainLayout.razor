@@ -11,65 +11,74 @@
 }
 else
 {
-    <div class="cadre">
-        <nav class="menu">
-            <div class="marque">GestionStock</div>
-            <NavLink href="" Match="NavLinkMatch.All">@L["Accueil"]</NavLink>
+    <a class="evitement" href="@($"{Navigation.ToBaseRelativePath(Navigation.Uri).Split('#')[0]}#contenu")">@L["AllerAuContenu"]</a>
+    <div class="cadre @(_menuOuvert ? "menu-ouvert" : "")">
+        @* Écran étroit : barre du haut avec le bouton du menu en tiroir. *@
+        <header class="barre-haut">
+            <span class="marque"><Icone Nom="marque" /> GestionStock</span>
+            <button class="ouvrir-menu" aria-expanded="@(_menuOuvert ? "true" : "false")" aria-controls="menu" @onclick="BasculerMenu">
+                <span aria-hidden="true">☰</span> @L["Menu"]
+            </button>
+        </header>
+        <div class="voile" @onclick="FermerMenu"></div>
+        <nav class="menu" id="menu" aria-label="@L["Menu"]">
+            <div class="marque"><Icone Nom="marque" /> GestionStock</div>
+            <NavLink href="" Match="NavLinkMatch.All"><Icone Nom="accueil" />@L["Accueil"]</NavLink>
             @if (Session.A(Permissions.CaisseVendre))
             {
-                <NavLink href="caisse">@L["Caisse"]</NavLink>
+                <NavLink href="caisse"><Icone Nom="caisse" />@L["Caisse"]</NavLink>
             }
             @if (Session.A(Permissions.SessionsConsulter))
             {
-                <NavLink href="sessions">@L["SessionsCaisse"]</NavLink>
+                <NavLink href="sessions"><Icone Nom="sessions" />@L["SessionsCaisse"]</NavLink>
             }
             @if (Session.A(Permissions.CreditConsulter))
             {
-                <NavLink href="clients">@L["Clients"]</NavLink>
+                <NavLink href="clients"><Icone Nom="clients" />@L["Clients"]</NavLink>
             }
             @if (Session.A(Permissions.StockConsulter))
             {
-                <NavLink href="stock">@L["Stock"]</NavLink>
+                <NavLink href="stock"><Icone Nom="stock" />@L["Stock"]</NavLink>
             }
             @if (Session.A(Permissions.AchatsConsulter))
             {
-                <NavLink href="receptions">@L["Receptions"]</NavLink>
-                <NavLink href="fournisseurs">@L["Fournisseurs"]</NavLink>
-                <NavLink href="dettes">@L["DettesFournisseurs"]</NavLink>
+                <NavLink href="receptions"><Icone Nom="receptions" />@L["Receptions"]</NavLink>
+                <NavLink href="fournisseurs"><Icone Nom="fournisseurs" />@L["Fournisseurs"]</NavLink>
+                <NavLink href="dettes"><Icone Nom="dettes" />@L["DettesFournisseurs"]</NavLink>
             }
             @if (Session.A(Permissions.ReferentielConsulter))
             {
-                <NavLink href="articles">@L["Articles"]</NavLink>
+                <NavLink href="articles"><Icone Nom="articles" />@L["Articles"]</NavLink>
             }
             @if (Session.A(Permissions.InventaireConsulter))
             {
-                <NavLink href="inventaires">@L["Inventaires"]</NavLink>
-                <NavLink href="demarques">@L["Demarque"]</NavLink>
+                <NavLink href="inventaires"><Icone Nom="inventaires" />@L["Inventaires"]</NavLink>
+                <NavLink href="demarques"><Icone Nom="demarque" />@L["Demarque"]</NavLink>
             }
             @if (Session.A(Permissions.RapportsConsulter))
             {
-                <NavLink href="rapports">@L["Rapports"]</NavLink>
+                <NavLink href="rapports"><Icone Nom="rapports" />@L["Rapports"]</NavLink>
             }
             @if (Session.A(Permissions.ExportsProduire))
             {
-                <NavLink href="exports">@L["Exports"]</NavLink>
+                <NavLink href="exports"><Icone Nom="exports" />@L["Exports"]</NavLink>
             }
             @if (Session.A(Permissions.RepriseImporter))
             {
-                <NavLink href="reprise">@L["Reprise"]</NavLink>
+                <NavLink href="reprise"><Icone Nom="reprise" />@L["Reprise"]</NavLink>
             }
             @if (Session.A(Permissions.UtilisateursGerer))
             {
-                <NavLink href="utilisateurs">@L["Utilisateurs"]</NavLink>
+                <NavLink href="utilisateurs"><Icone Nom="utilisateurs" />@L["Utilisateurs"]</NavLink>
             }
             <div class="pied-menu">
-                <NavLink href="mon-compte">@L["MonCompte"]</NavLink>
                 <div class="utilisateur">@Session.Profil!.NomComplet<br /><small>@Session.Profil.Identifiant · @string.Join(", ", Session.Profil.Roles.Select(r => L[$"Role.{r}"].Value))</small></div>
-                <button class="lien" @onclick="ChangerLangue">@L["AutreLangue"]</button>
-                <button class="lien" @onclick="Deconnecter">@L["Deconnexion"]</button>
+                <NavLink href="mon-compte"><Icone Nom="compte" />@L["MonCompte"]</NavLink>
+                <button class="lien" @onclick="ChangerLangue"><Icone Nom="langue" />@L["AutreLangue"]</button>
+                <button class="lien" @onclick="Deconnecter"><Icone Nom="deconnexion" />@L["Deconnexion"]</button>
             </div>
         </nav>
-        <main class="contenu">@Body</main>
+        <main class="contenu" id="contenu" tabindex="-1">@Body</main>
     </div>
 }
 
@@ -81,7 +90,24 @@ else
         ExigerConnexion();
     }
 
-    private void SurNavigation(object? sender, LocationChangedEventArgs e) => ExigerConnexion();
+    /// <summary>Menu en tiroir, ouvert sur écran étroit seulement (la feuille de style l'ignore ailleurs).</summary>
+    private bool _menuOuvert;
+
+    private void BasculerMenu() => _menuOuvert = !_menuOuvert;
+
+    private void FermerMenu() => _menuOuvert = false;
+
+    private void SurNavigation(object? sender, LocationChangedEventArgs e)
+    {
+        // Un choix dans le tiroir le referme.
+        if (_menuOuvert)
+        {
+            _menuOuvert = false;
+            InvokeAsync(StateHasChanged);
+        }
+
+        ExigerConnexion();
+    }
 
     /// <summary>Toute page hors connexion exige une session.</summary>
     private void ExigerConnexion()

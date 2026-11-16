@@ -1,7 +1,7 @@
 @* Message d'erreur ou de confirmation, affiché seulement s'il y a un texte. *@
 @if (!string.IsNullOrEmpty(Texte))
 {
-    <div class="message @(Erreur ? "erreur" : "succes")" role="@(Erreur ? "alert" : "status")">@Texte</div>
+    <div class="message @(Erreur ? "erreur" : "succes")" role="@(Erreur ? "alert" : "status")"><Icone Nom="@(Erreur ? "erreur" : "succes")" /><span>@Texte</span></div>
 }
 
 @code {
