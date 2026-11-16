@@ -36,6 +36,9 @@ public static class Permissions
     /// <summary>Consulter les rapports (décision 33) : ventes et marge, stock, créances et dettes, caisse.</summary>
     public const string RapportsConsulter = "Rapports.Consulter";
 
+    /// <summary>Produire les exports comptables (UC16) : journaux et valeur du stock, en Excel ou CSV.</summary>
+    public const string ExportsProduire = "Rapports.Exports.Produire";
+
     /// <summary>Consulter les prix de vente et le régime de TVA.</summary>
     public const string PrixConsulter = "Prix.Consulter";
 

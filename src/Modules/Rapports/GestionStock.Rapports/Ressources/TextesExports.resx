@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Total" xml:space="preserve"><value>Total</value></data>
+  <data name="Journal.ventes" xml:space="preserve"><value>Journal des ventes</value></data>
+  <data name="Journal.achats" xml:space="preserve"><value>Journal des achats</value></data>
+  <data name="Journal.encaissements" xml:space="preserve"><value>Journal des encaissements</value></data>
+  <data name="Journal.creances" xml:space="preserve"><value>Journal des créances</value></data>
+  <data name="Journal.valeur-stock" xml:space="preserve"><value>Valeur du stock</value></data>
+  <data name="Colonne.Date" xml:space="preserve"><value>Date</value></data>
+  <data name="Colonne.Piece" xml:space="preserve"><value>Pièce</value></data>
+  <data name="Colonne.Operation" xml:space="preserve"><value>Opération</value></data>
+  <data name="Colonne.Caissier" xml:space="preserve"><value>Caissier</value></data>
+  <data name="Colonne.Client" xml:space="preserve"><value>Client</value></data>
+  <data name="Colonne.TicketOrigine" xml:space="preserve"><value>Ticket d'origine</value></data>
+  <data name="Colonne.Remise" xml:space="preserve"><value>Remise</value></data>
+  <data name="Colonne.TotalHt" xml:space="preserve"><value>Total HT</value></data>
+  <data name="Colonne.Tva" xml:space="preserve"><value>TVA</value></data>
+  <data name="Colonne.TotalTtc" xml:space="preserve"><value>Total TTC</value></data>
+  <data name="Colonne.Fournisseur" xml:space="preserve"><value>Fournisseur</value></data>
+  <data name="Colonne.Libelle" xml:space="preserve"><value>Libellé</value></data>
+  <data name="Colonne.Mode" xml:space="preserve"><value>Mode de paiement</value></data>
+  <data name="Colonne.Reference" xml:space="preserve"><value>Référence</value></data>
+  <data name="Colonne.MontantDu" xml:space="preserve"><value>Montant dû</value></data>
+  <data name="Colonne.MontantPaye" xml:space="preserve"><value>Montant payé</value></data>
+  <data name="Colonne.Montant" xml:space="preserve"><value>Montant</value></data>
+  <data name="Colonne.Telephone" xml:space="preserve"><value>Téléphone</value></data>
+  <data name="Colonne.Echeance" xml:space="preserve"><value>Échéance</value></data>
+  <data name="Colonne.Utilisateur" xml:space="preserve"><value>Utilisateur</value></data>
+  <data name="Colonne.Code" xml:space="preserve"><value>Code</value></data>
+  <data name="Colonne.Unite" xml:space="preserve"><value>Unité</value></data>
+  <data name="Colonne.Quantite" xml:space="preserve"><value>Quantité</value></data>
+  <data name="Colonne.Cump" xml:space="preserve"><value>CUMP</value></data>
+  <data name="Colonne.Valeur" xml:space="preserve"><value>Valeur</value></data>
+  <data name="Valeur.Vente" xml:space="preserve"><value>Vente</value></data>
+  <data name="Valeur.Avoir" xml:space="preserve"><value>Avoir</value></data>
+  <data name="Valeur.Reception" xml:space="preserve"><value>Réception</value></data>
+  <data name="Valeur.FraisTardif" xml:space="preserve"><value>Frais d'approche tardif</value></data>
+  <data name="Valeur.Paiement" xml:space="preserve"><value>Paiement</value></data>
+  <data name="Valeur.AnnulationPaiement" xml:space="preserve"><value>Annulation de paiement</value></data>
+  <data name="Valeur.RemboursementCredit" xml:space="preserve"><value>Remboursement de crédit</value></data>
+  <data name="Valeur.VenteCredit" xml:space="preserve"><value>Vente à crédit</value></data>
+  <data name="Valeur.Remboursement" xml:space="preserve"><value>Remboursement</value></data>
+  <data name="Valeur.Annulation" xml:space="preserve"><value>Annulation</value></data>
+  <data name="Valeur.Especes" xml:space="preserve"><value>Espèces</value></data>
+  <data name="Valeur.MobileMoney" xml:space="preserve"><value>Mobile Money</value></data>
+  <data name="Valeur.Carte" xml:space="preserve"><value>Carte</value></data>
+  <data name="Valeur.Virement" xml:space="preserve"><value>Virement</value></data>
+  <data name="Valeur.Cheque" xml:space="preserve"><value>Chèque</value></data>
+</root>

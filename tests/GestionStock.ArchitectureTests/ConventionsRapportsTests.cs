@@ -35,6 +35,8 @@ public sealed partial class ConventionsRapportsTests
 
     [Theory]
     [InlineData(CodesErreurRapports.PeriodeInvalide)]
+    [InlineData(CodesErreurRapports.JournalInconnu)]
+    [InlineData(CodesErreurRapports.FormatInvalide)]
     public void Chaque_code_d_erreur_est_traduit_en_francais_et_en_anglais(string code)
     {
         var francais = EndpointsRapports.Ressources.GetString(code, CultureInfo.GetCultureInfo("fr"));
@@ -43,6 +45,18 @@ public sealed partial class ConventionsRapportsTests
         Assert.False(string.IsNullOrWhiteSpace(francais));
         Assert.False(string.IsNullOrWhiteSpace(anglais));
         Assert.NotEqual(francais, anglais);
+    }
+
+    [Fact]
+    public void Chaque_journal_a_son_titre_dans_les_deux_langues()
+    {
+        Assert.All(GestionStock.Rapports.Contracts.JournauxComptables.Tous, journal =>
+        {
+            var francais = ServiceExports.Textes.GetString($"Journal.{journal}", CultureInfo.GetCultureInfo("fr"));
+            var anglais = ServiceExports.Textes.GetString($"Journal.{journal}", CultureInfo.GetCultureInfo("en"));
+            Assert.False(string.IsNullOrWhiteSpace(francais));
+            Assert.NotEqual(francais, anglais);
+        });
     }
 
     [GeneratedRegex(@"(?:FROM|JOIN)\s+(\w+)\.(\w+)", RegexOptions.IgnoreCase)]

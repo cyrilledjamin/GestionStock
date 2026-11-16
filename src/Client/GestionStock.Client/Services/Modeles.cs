@@ -97,6 +97,7 @@ public static class Permissions
     public const string FraisSaisir = "Achats.Frais.Saisir";
     public const string PaiementsFournisseursSaisir = "Achats.Paiements.Saisir";
     public const string RapportsConsulter = "Rapports.Consulter";
+    public const string ExportsProduire = "Rapports.Exports.Produire";
     public const string StockConsulter = "Stock.Consulter";
     public const string PrixConsulter = "Prix.Consulter";
     public const string PrixGerer = "Prix.Gerer";
