@@ -454,4 +454,26 @@
   <data name="CloturerAPlaceAide" xml:space="preserve"><value>Session opened on {0} and left open. Count the drawer: the closing is recorded in your name, and the difference still has to be approved.</value></data>
   <data name="CompteePar" xml:space="preserve"><value>counted by {0}</value></data>
   <data name="SessionClotureeAPlace" xml:space="preserve"><value>{1}'s session on {0} closed; difference: {2}. The till is free.</value></data>
+  <data name="MaCaisse" xml:space="preserve"><value>My till</value></data>
+  <data name="SessionOuverteSur" xml:space="preserve"><value>Session open on {0} since {1}</value></data>
+  <data name="NombreVentes" xml:space="preserve"><value>{0} sale(s)</value></data>
+  <data name="ReprendreLaVente" xml:space="preserve"><value>Back to the till</value></data>
+  <data name="AucuneSessionOuverte" xml:space="preserve"><value>No open session</value></data>
+  <data name="OuvrirLaCaisse" xml:space="preserve"><value>Open the till</value></data>
+  <data name="Aujourdhui" xml:space="preserve"><value>Today</value></data>
+  <data name="VentesDuJour" xml:space="preserve"><value>Today's sales (incl. tax)</value></data>
+  <data name="NombreTickets" xml:space="preserve"><value>{0} receipt(s), {1} credit note(s)</value></data>
+  <data name="CaissesOuvertes" xml:space="preserve"><value>Open tills</value></data>
+  <data name="ASurveiller" xml:space="preserve"><value>To watch</value></data>
+  <data name="SessionsAValider" xml:space="preserve"><value>Closings to approve</value></data>
+  <data name="EcartsCumules" xml:space="preserve"><value>Total difference: {0}</value></data>
+  <data name="ValeurDuStock" xml:space="preserve"><value>Stock value: {0}</value></data>
+  <data name="CreancesClients" xml:space="preserve"><value>Customer credit</value></data>
+  <data name="DontEnRetard" xml:space="preserve"><value>of which {0} overdue</value></data>
+  <data name="AFaire" xml:space="preserve"><value>To do</value></data>
+  <data name="ReceptionsEnBrouillon" xml:space="preserve"><value>Draft goods receipts</value></data>
+  <data name="InventairesEnCours" xml:space="preserve"><value>Stock counts in progress</value></data>
+  <data name="DemarquesAValider" xml:space="preserve"><value>Shrinkage to approve</value></data>
+  <data name="DemarquesEnAttente" xml:space="preserve"><value>Shrinkage awaiting approval</value></data>
+  <data name="Raccourcis" xml:space="preserve"><value>Shortcuts</value></data>
 </root>

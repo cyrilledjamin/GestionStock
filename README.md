@@ -241,6 +241,7 @@ Si le port 5432 est déjà pris (PostgreSQL installé sur le poste), choisir un 
 | `POST /api/reprise/simulation` | `Reprise.Importer` | Corps : le classeur (`application/octet-stream`, 5 Mo au plus) ; rapport ligne par ligne, rien n'est écrit |
 | `POST /api/reprise/import` | `Reprise.Importer` | Même contrôle, puis import tout ou rien et inventaire d'ouverture ; rapport |
 | `GET /api/rapports/ventes?du=&au=` | `Rapports.Consulter` | Ventes et marge : totaux, par jour, par article, par caissier (avoirs déduits, coût au CUMP) |
+| `GET /api/rapports/tableau-de-bord` | `Rapports.Consulter` | Accueil : ventes du jour (Douala), sessions ouvertes et à valider (toutes dates) avec leurs écarts, stocks négatifs et valeur du stock, créances et retards, dettes fournisseurs |
 | `GET /api/rapports/stock` | `Rapports.Consulter` | Quantité, CUMP et valeur par article ; total ; stocks négatifs |
 | `GET /api/rapports/creances-dettes` | `Rapports.Consulter` | Clients (dû, en retard RG43, plus ancienne échéance) et fournisseurs (dû, payé, reste) |
 | `GET /api/rapports/caisse?du=&au=` | `Rapports.Consulter` | Sessions et écarts, remises, avoirs, crédits validés par un responsable, stocks négatifs, frais non incorporés |
@@ -261,7 +262,7 @@ Ouvrir http://localhost:8080 (docker-compose) puis se connecter. Le menu dépend
 | Écran | Contenu |
 | --- | --- |
 | Connexion | Matricule et mot de passe (bouton « Afficher » pour vérifier la saisie en clair) ; choix de la langue (français / anglais) ; à la connexion, la langue mémorisée sur le compte s'applique ; un mot de passe provisoire mène directement à « Mon compte » |
-| Accueil | Salutation par le prénom, raccourcis selon les rôles |
+| Accueil | Tableau de bord selon les permissions : **Ma caisse** (Caissier : session ouverte, ventes, chemin vers la caisse) ; **Aujourd'hui** et **À surveiller** (Gérant, Comptable : ventes et marge du jour, caisses ouvertes, clôtures à valider et écarts, stocks négatifs, créances et retards, dettes fournisseurs) ; **À faire** (réceptions en brouillon, inventaires en cours, démarques à valider) ; chaque chiffre mène à son écran, en orange ou en rouge s'il demande une action ; puis raccourcis |
 | Stock | Soldes de la boutique : physique, disponible, CUMP, valeur ; total valorisé |
 | Journal d'un article | Soldes et mouvements (date à l'heure de Douala, variation, coût, document d'origine, utilisateur) |
 | Réceptions | Liste ; saisie en brouillon (lignes, valeur calculée), enregistrement, validation |
@@ -637,7 +638,7 @@ sur une machine Linux de GitHub qui dispose de Docker :
 | 35 | Design : jetons, composants, icônes, menu en tiroir (responsive), accessibilité | Fait |
 | 36 | Design : caisse, vente (champ unique, articles rapides, pavé numérique, raccourcis) | Fait |
 | 37 | Design : caisse, ouverture, session bloquée (clôture par le Gérant), clôture guidée | Fait |
-| 38 | Accueil en tableau de bord par rôle | À faire |
+| 38 | Accueil en tableau de bord par rôle | Fait |
 | 39 | Téléphone et tablette : listes en cartes, caisse sur tablette | À faire |
 | 40 | Identité et finitions (nom et logo, unités traduites, quantités) | À faire |
 | 41 | Vérification, CI, README, démonstration de la tranche 6 | À faire |

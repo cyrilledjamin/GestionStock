@@ -454,4 +454,26 @@
   <data name="CloturerAPlaceAide" xml:space="preserve"><value>Session ouverte le {0} et restée ouverte. Comptez le tiroir : la clôture est enregistrée à votre nom, et l'écart reste à valider.</value></data>
   <data name="CompteePar" xml:space="preserve"><value>comptée par {0}</value></data>
   <data name="SessionClotureeAPlace" xml:space="preserve"><value>Session de {1} sur {0} clôturée ; écart : {2}. Le poste est libre.</value></data>
+  <data name="MaCaisse" xml:space="preserve"><value>Ma caisse</value></data>
+  <data name="SessionOuverteSur" xml:space="preserve"><value>Session ouverte sur {0} depuis le {1}</value></data>
+  <data name="NombreVentes" xml:space="preserve"><value>{0} vente(s)</value></data>
+  <data name="ReprendreLaVente" xml:space="preserve"><value>Reprendre la vente</value></data>
+  <data name="AucuneSessionOuverte" xml:space="preserve"><value>Aucune session ouverte</value></data>
+  <data name="OuvrirLaCaisse" xml:space="preserve"><value>Ouvrir la caisse</value></data>
+  <data name="Aujourdhui" xml:space="preserve"><value>Aujourd'hui</value></data>
+  <data name="VentesDuJour" xml:space="preserve"><value>Ventes du jour (TTC)</value></data>
+  <data name="NombreTickets" xml:space="preserve"><value>{0} ticket(s), {1} avoir(s)</value></data>
+  <data name="CaissesOuvertes" xml:space="preserve"><value>Caisses ouvertes</value></data>
+  <data name="ASurveiller" xml:space="preserve"><value>À surveiller</value></data>
+  <data name="SessionsAValider" xml:space="preserve"><value>Clôtures à valider</value></data>
+  <data name="EcartsCumules" xml:space="preserve"><value>Écarts cumulés : {0}</value></data>
+  <data name="ValeurDuStock" xml:space="preserve"><value>Valeur du stock : {0}</value></data>
+  <data name="CreancesClients" xml:space="preserve"><value>Créances clients</value></data>
+  <data name="DontEnRetard" xml:space="preserve"><value>dont {0} en retard</value></data>
+  <data name="AFaire" xml:space="preserve"><value>À faire</value></data>
+  <data name="ReceptionsEnBrouillon" xml:space="preserve"><value>Réceptions en brouillon</value></data>
+  <data name="InventairesEnCours" xml:space="preserve"><value>Inventaires en cours</value></data>
+  <data name="DemarquesAValider" xml:space="preserve"><value>Démarques à valider</value></data>
+  <data name="DemarquesEnAttente" xml:space="preserve"><value>Démarques en attente de validation</value></data>
+  <data name="Raccourcis" xml:space="preserve"><value>Raccourcis</value></data>
 </root>
