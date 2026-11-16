@@ -15,6 +15,8 @@ internal sealed class AchatsDbContext(DbContextOptions<AchatsDbContext> options)
 
     public DbSet<Reception> Receptions => Set<Reception>();
 
+    public DbSet<PaiementFournisseur> PaiementsFournisseurs => Set<PaiementFournisseur>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema(Schema);
@@ -62,6 +64,25 @@ internal sealed class AchatsDbContext(DbContextOptions<AchatsDbContext> options)
             frais.HasMany(f => f.Allocations).WithOne().HasForeignKey(a => a.FraisApprocheId).OnDelete(DeleteBehavior.Cascade);
             frais.Navigation(f => f.Allocations).AutoInclude();
             frais.Ignore(f => f.MontantNonIncorpore);
+        });
+
+        modelBuilder.Entity<PaiementFournisseur>(paiement =>
+        {
+            paiement.ToTable("paiement_fournisseur");
+            paiement.HasKey(p => p.Id);
+            paiement.Property(p => p.Id).ValueGeneratedNever();
+            paiement.Property(p => p.Montant).HasPrecision(19, 4);
+            paiement.Property(p => p.Mode).HasConversion<string>().HasMaxLength(20);
+            paiement.Property(p => p.Reference).HasMaxLength(PaiementFournisseur.LongueurMaxReference);
+            paiement.Property(p => p.Motif).HasMaxLength(PaiementFournisseur.LongueurMaxMotif);
+            paiement.Property(p => p.SaisiPar).HasMaxLength(256);
+            paiement.HasOne<Reception>().WithMany().HasForeignKey(p => p.ReceptionId).OnDelete(DeleteBehavior.Restrict);
+            paiement.HasOne<Fournisseur>().WithMany().HasForeignKey(p => p.FournisseurId).OnDelete(DeleteBehavior.Restrict);
+            paiement.HasOne<PaiementFournisseur>().WithMany().HasForeignKey(p => p.PaiementAnnuleId).OnDelete(DeleteBehavior.Restrict);
+
+            // Un paiement ne s'annule qu'une fois, même en cas de demandes simultanées.
+            paiement.HasIndex(p => p.PaiementAnnuleId).IsUnique();
+            paiement.HasIndex(p => p.ReceptionId);
         });
 
         modelBuilder.Entity<AllocationFrais>(allocation =>

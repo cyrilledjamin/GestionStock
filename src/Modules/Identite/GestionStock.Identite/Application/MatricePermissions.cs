@@ -68,6 +68,9 @@ internal static class MatricePermissions
 
             // 8.3 : le Comptable saisit les frais d'approche. Provisoire : le Gérant aussi.
             [Permissions.FraisSaisir] = [Roles.Comptable, Roles.Gerant],
+
+            // 8.3 : le Comptable enregistre les paiements fournisseurs.
+            [Permissions.PaiementsFournisseursSaisir] = [Roles.Comptable],
         };
 
     /// <summary>Permissions détenues par un utilisateur ayant ces rôles.</summary>

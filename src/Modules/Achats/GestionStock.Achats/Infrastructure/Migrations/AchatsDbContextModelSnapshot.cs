@@ -202,6 +202,71 @@ namespace GestionStock.Achats.Infrastructure.Migrations
                     b.ToTable("ligne_reception", "achats");
                 });
 
+            modelBuilder.Entity("GestionStock.Achats.Domain.PaiementFournisseur", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("DateUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_utc");
+
+                    b.Property<Guid>("FournisseurId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("fournisseur_id");
+
+                    b.Property<string>("Mode")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("mode");
+
+                    b.Property<decimal>("Montant")
+                        .HasPrecision(19, 4)
+                        .HasColumnType("numeric(19,4)")
+                        .HasColumnName("montant");
+
+                    b.Property<string>("Motif")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("motif");
+
+                    b.Property<Guid?>("PaiementAnnuleId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("paiement_annule_id");
+
+                    b.Property<Guid>("ReceptionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("reception_id");
+
+                    b.Property<string>("Reference")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("reference");
+
+                    b.Property<string>("SaisiPar")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("saisi_par");
+
+                    b.HasKey("Id")
+                        .HasName("pk_paiement_fournisseur");
+
+                    b.HasIndex("FournisseurId")
+                        .HasDatabaseName("ix_paiement_fournisseur_fournisseur_id");
+
+                    b.HasIndex("PaiementAnnuleId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_paiement_fournisseur_paiement_annule_id");
+
+                    b.HasIndex("ReceptionId")
+                        .HasDatabaseName("ix_paiement_fournisseur_reception_id");
+
+                    b.ToTable("paiement_fournisseur", "achats");
+                });
+
             modelBuilder.Entity("GestionStock.Achats.Domain.Reception", b =>
                 {
                     b.Property<Guid>("Id")
@@ -297,6 +362,29 @@ namespace GestionStock.Achats.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_ligne_reception_receptions_reception_id");
+                });
+
+            modelBuilder.Entity("GestionStock.Achats.Domain.PaiementFournisseur", b =>
+                {
+                    b.HasOne("GestionStock.Achats.Domain.Fournisseur", null)
+                        .WithMany()
+                        .HasForeignKey("FournisseurId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_paiement_fournisseur_fournisseur_fournisseur_id");
+
+                    b.HasOne("GestionStock.Achats.Domain.PaiementFournisseur", null)
+                        .WithMany()
+                        .HasForeignKey("PaiementAnnuleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_paiement_fournisseur_paiement_fournisseur_paiement_annule_id");
+
+                    b.HasOne("GestionStock.Achats.Domain.Reception", null)
+                        .WithMany()
+                        .HasForeignKey("ReceptionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_paiement_fournisseur_reception_reception_id");
                 });
 
             modelBuilder.Entity("GestionStock.Achats.Domain.Reception", b =>
