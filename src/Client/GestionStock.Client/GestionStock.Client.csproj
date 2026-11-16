@@ -1,10 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
-  <!-- Client Blazor WebAssembly (back-office), servi par l'hôte. Ne référence aucun projet serveur : il dialogue
-       avec l'API par HTTP et a ses propres modèles. PWA et hors ligne : tranche ultérieure (caisse). -->
+  <!-- Client Blazor WebAssembly (back-office et caisse), servi par l'hôte. Ne référence aucun projet serveur : il
+       dialogue avec l'API par HTTP et a ses propres modèles. Application installable (PWA, décision 24) : le service
+       worker publié garde l'application sur le poste pour la caisse hors ligne (7.8). -->
   <PropertyGroup>
     <NeutralLanguage>fr</NeutralLanguage>
     <BlazorWebAssemblyLoadAllGlobalizationData>true</BlazorWebAssemblyLoadAllGlobalizationData>
+    <ServiceWorkerAssetsManifest>service-worker-assets.js</ServiceWorkerAssetsManifest>
   </PropertyGroup>
+  <ItemGroup>
+    <ServiceWorker Include="wwwroot/service-worker.js" PublishedContent="wwwroot/service-worker.published.js" />
+  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" />
     <PackageReference Include="Microsoft.Extensions.Localization" />

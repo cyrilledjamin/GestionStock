@@ -36,3 +36,6 @@ Thumbs.db
 
 # Fichiers stockés en local par l'API (reçus, imports)
 donnees/
+
+# Traces des vérifications automatisées du navigateur
+.playwright-mcp/

@@ -3,6 +3,7 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.AspNetCore.Components;
+using Microsoft.Extensions.Localization;
 
 namespace GestionStock.Client.Services;
 
@@ -17,10 +18,14 @@ public sealed record Resultat<T>(T? Valeur, string? Erreur, string? Code = null)
 
 /// <summary>
 /// Appels à l'API : ajoute le jeton et la langue, renouvelle le jeton une fois s'il a expiré,
-/// renvoie vers la page de connexion si la session est terminée.
+/// renvoie vers la page de connexion si la session est terminée. Un serveur injoignable ne lève pas d'erreur : le
+/// résultat porte le code <see cref="CodeHorsLigne"/> et <see cref="EtatConnexion"/> passe hors ligne (7.8).
 /// </summary>
-public sealed class Api(HttpClient http, Session session, NavigationManager navigation)
+public sealed class Api(HttpClient http, Session session, NavigationManager navigation, EtatConnexion etat, IStringLocalizer<Textes> textes)
 {
+    /// <summary>Code d'un appel qui n'a pas pu joindre le serveur (réseau coupé, serveur arrêté).</summary>
+    public const string CodeHorsLigne = "HorsLigne";
+
     public Task<Resultat<T>> GetAsync<T>(string url) => EnvoyerAsync<T>(HttpMethod.Get, url, null);
 
     public Task<Resultat<T>> PostAsync<T>(string url, object? corps = null) => EnvoyerAsync<T>(HttpMethod.Post, url, corps);
@@ -30,17 +35,18 @@ public sealed class Api(HttpClient http, Session session, NavigationManager navi
     public Task<Resultat<T>> DeleteAsync<T>(string url) => EnvoyerAsync<T>(HttpMethod.Delete, url, null);
 
     /// <summary>Envoie un fichier tel quel dans le corps de la requête (ex. classeur de reprise).</summary>
-    public async Task<Resultat<T>> EnvoyerFichierAsync<T>(string url, byte[] fichier)
-    {
-        using var reponse = await EnvoyerFichierAvecJetonAsync(url, fichier);
-        if (reponse.StatusCode == HttpStatusCode.Unauthorized && await session.RafraichirAsync())
+    public Task<Resultat<T>> EnvoyerFichierAsync<T>(string url, byte[] fichier) =>
+        SansReseauAsync(async () =>
         {
-            using var nouvelle = await EnvoyerFichierAvecJetonAsync(url, fichier);
-            return await LireAsync<T>(nouvelle);
-        }
+            using var reponse = await EnvoyerFichierAvecJetonAsync(url, fichier);
+            if (reponse.StatusCode == HttpStatusCode.Unauthorized && await session.RafraichirAsync())
+            {
+                using var nouvelle = await EnvoyerFichierAvecJetonAsync(url, fichier);
+                return await LireAsync<T>(nouvelle);
+            }
 
-        return await LireAsync<T>(reponse);
-    }
+            return await LireAsync<T>(reponse);
+        });
 
     private async Task<HttpResponseMessage> EnvoyerFichierAvecJetonAsync(string url, byte[] fichier)
     {
@@ -56,7 +62,10 @@ public sealed class Api(HttpClient http, Session session, NavigationManager navi
     }
 
     /// <summary>Contenu binaire (ex. reçu PDF) ; null en cas d'erreur.</summary>
-    public async Task<byte[]?> GetOctetsAsync(string url)
+    public async Task<byte[]?> GetOctetsAsync(string url) =>
+        (await SansReseauAsync(async () => new Resultat<byte[]>(await LireOctetsAsync(url), null))).Valeur;
+
+    private async Task<byte[]?> LireOctetsAsync(string url)
     {
         using var reponse = await EnvoyerAvecJetonAsync(HttpMethod.Get, url, null);
         if (reponse.StatusCode == HttpStatusCode.Unauthorized && await session.RafraichirAsync())
@@ -94,16 +103,36 @@ public sealed class Api(HttpClient http, Session session, NavigationManager navi
         return ($"{(int)reponse.StatusCode} {reponse.ReasonPhrase}", null);
     }
 
-    private async Task<Resultat<T>> EnvoyerAsync<T>(HttpMethod methode, string url, object? corps)
-    {
-        using var reponse = await EnvoyerAvecJetonAsync(methode, url, corps);
-        if (reponse.StatusCode == HttpStatusCode.Unauthorized && await session.RafraichirAsync())
+    private Task<Resultat<T>> EnvoyerAsync<T>(HttpMethod methode, string url, object? corps) =>
+        SansReseauAsync(async () =>
         {
-            using var nouvelle = await EnvoyerAvecJetonAsync(methode, url, corps);
-            return await LireAsync<T>(nouvelle);
-        }
+            using var reponse = await EnvoyerAvecJetonAsync(methode, url, corps);
+            if (reponse.StatusCode == HttpStatusCode.Unauthorized && await session.RafraichirAsync())
+            {
+                using var nouvelle = await EnvoyerAvecJetonAsync(methode, url, corps);
+                return await LireAsync<T>(nouvelle);
+            }
 
-        return await LireAsync<T>(reponse);
+            return await LireAsync<T>(reponse);
+        });
+
+    /// <summary>
+    /// Exécute un appel ; une erreur réseau (serveur injoignable) devient un résultat <see cref="CodeHorsLigne"/> et
+    /// fait passer le poste hors ligne ; toute réponse du serveur le remet en ligne.
+    /// </summary>
+    private async Task<Resultat<T>> SansReseauAsync<T>(Func<Task<Resultat<T>>> appel)
+    {
+        try
+        {
+            var resultat = await appel();
+            etat.SignalerReussite();
+            return resultat;
+        }
+        catch (HttpRequestException)
+        {
+            etat.SignalerEchec();
+            return new(default, textes["ServeurInjoignable"], CodeHorsLigne);
+        }
     }
 
     private async Task<HttpResponseMessage> EnvoyerAvecJetonAsync(HttpMethod methode, string url, object? corps)

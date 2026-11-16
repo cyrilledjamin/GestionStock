@@ -477,4 +477,6 @@
   <data name="DemarquesEnAttente" xml:space="preserve"><value>Shrinkage awaiting approval</value></data>
   <data name="Raccourcis" xml:space="preserve"><value>Shortcuts</value></data>
   <data name="Payer" xml:space="preserve"><value>Pay</value></data>
+  <data name="ServeurInjoignable" xml:space="preserve"><value>Server unreachable: check the network.</value></data>
+  <data name="HorsLigneBandeau" xml:space="preserve"><value>Offline: the server is not responding. The till keeps selling; its operations will be sent as soon as the network is back.</value></data>
 </root>

@@ -13,6 +13,7 @@ namespace GestionStock.Client.Services;
 public sealed class Session(IJSRuntime js, HttpClient brut)
 {
     private const string CleJetons = "gestionstock.jetons";
+    private const string CleProfil = "gestionstock.profil";
     private readonly SemaphoreSlim _rafraichissement = new(1, 1);
 
     private JetonAcces? _jetons;
@@ -62,9 +63,19 @@ public sealed class Session(IJSRuntime js, HttpClient brut)
         }
 
         _jetons = JsonSerializer.Deserialize<JetonAcces>(json, JsonSerializerOptions.Web);
-        if (!await ChargerProfilAsync() && !(await RafraichirAsync() && await ChargerProfilAsync()))
+        try
         {
-            await OublierAsync();
+            if (!await ChargerProfilAsync() && !(await RafraichirAsync() && await ChargerProfilAsync()))
+            {
+                await OublierAsync();
+            }
+        }
+        catch (HttpRequestException)
+        {
+            // Serveur injoignable pendant un rechargement de la page : la caisse continue avec le profil de l'onglet
+            // (7.8). Ce n'est pas une connexion hors ligne : sans onglet ouvert, il faut le serveur (décision 41).
+            var profil = await js.InvokeAsync<string?>("sessionStorage.getItem", CleProfil);
+            Profil = string.IsNullOrEmpty(profil) ? null : JsonSerializer.Deserialize<ProfilUtilisateur>(profil, JsonSerializerOptions.Web);
         }
     }
 
@@ -139,6 +150,11 @@ public sealed class Session(IJSRuntime js, HttpClient brut)
         requete.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _jetons?.AccessToken);
         using var reponse = await brut.SendAsync(requete);
         Profil = reponse.IsSuccessStatusCode ? await reponse.Content.ReadFromJsonAsync<ProfilUtilisateur>() : null;
+        if (Profil is not null)
+        {
+            await js.InvokeVoidAsync("sessionStorage.setItem", CleProfil, JsonSerializer.Serialize(Profil, JsonSerializerOptions.Web));
+        }
+
         return Profil is not null;
     }
 
@@ -153,5 +169,6 @@ public sealed class Session(IJSRuntime js, HttpClient brut)
         _jetons = null;
         Profil = null;
         await js.InvokeVoidAsync("sessionStorage.removeItem", CleJetons);
+        await js.InvokeVoidAsync("sessionStorage.removeItem", CleProfil);
     }
 }

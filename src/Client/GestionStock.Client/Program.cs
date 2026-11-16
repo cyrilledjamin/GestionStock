@@ -14,6 +14,9 @@ builder.Services.AddScoped(_ => new HttpClient { BaseAddress = new Uri(builder.H
 builder.Services.AddScoped<Session>();
 builder.Services.AddScoped<Api>();
 builder.Services.AddScoped<Boutique>();
+builder.Services.AddScoped<EtatConnexion>();
+builder.Services.AddScoped<StockageLocal>();
+builder.Services.AddScoped<CacheCaisse>();
 builder.Services.AddLocalization(options => options.ResourcesPath = "Ressources");
 
 var hote = builder.Build();
@@ -25,6 +28,7 @@ var culture = CultureInfo.GetCultureInfo(langue == "en" ? "en-GB" : "fr-CM");
 CultureInfo.DefaultThreadCurrentCulture = culture;
 CultureInfo.DefaultThreadCurrentUICulture = culture;
 
+await hote.Services.GetRequiredService<EtatConnexion>().DemarrerAsync();
 await hote.Services.GetRequiredService<Session>().InitialiserAsync();
 await hote.Services.GetRequiredService<Boutique>().ChargerAsync();
 await hote.RunAsync();
