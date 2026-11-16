@@ -15,7 +15,7 @@
             <input @bind="_identifiant" required autocomplete="off" />
         </label>
         <label>@L["MotDePasse"]
-            <input type="password" @bind="_motDePasse" required autocomplete="new-password" />
+            <ChampMotDePasse @bind-Valeur="_motDePasse" Requis="true" Autocomplete="new-password" />
         </label>
         <label>@L["Role"]
             <select @bind="_role">

@@ -1,0 +1,32 @@
+@* Champ de mot de passe masqué par défaut, avec un bouton pour afficher en clair ce qui est saisi. *@
+
+<div class="mot-de-passe">
+    <input type="@(_visible ? "text" : "password")"
+           @bind:get="Valeur"
+           @bind:set="Changer"
+           placeholder="@Placeholder"
+           autocomplete="@Autocomplete"
+           required="@Requis"
+           autocapitalize="off"
+           spellcheck="false" />
+    <button type="button" class="lien" @onclick="() => _visible = !_visible"
+            title="@(_visible ? L["MasquerMotDePasse"] : L["AfficherMotDePasse"])" aria-pressed="@_visible">
+        @(_visible ? L["Masquer"] : L["Afficher"])
+    </button>
+</div>
+
+@code {
+    [Parameter] public string Valeur { get; set; } = "";
+
+    [Parameter] public EventCallback<string> ValeurChanged { get; set; }
+
+    [Parameter] public string? Placeholder { get; set; }
+
+    [Parameter] public string Autocomplete { get; set; } = "current-password";
+
+    [Parameter] public bool Requis { get; set; }
+
+    private bool _visible;
+
+    private Task Changer(string valeur) => ValeurChanged.InvokeAsync(valeur);
+}

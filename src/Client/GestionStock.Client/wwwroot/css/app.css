@@ -45,6 +45,9 @@ code { font-family: ui-monospace, Consolas, monospace; font-size: .9em; white-sp
 .connexion .lien { padding: 0; }
 
 /* Formulaires */
+.mot-de-passe { display: flex; gap: .5rem; align-items: center; }
+.mot-de-passe input { flex: 1; min-width: 0; }
+.mot-de-passe .lien { white-space: nowrap; font-size: .9rem; }
 label { display: flex; flex-direction: column; gap: .3rem; font-size: .9rem; color: var(--discret); }
 label.case { flex-direction: row; align-items: center; gap: .4rem; color: var(--texte); }
 input, select { font: inherit; padding: .5rem .6rem; border: 1px solid var(--bordure); border-radius: 6px; background: #fff; color: var(--texte); }

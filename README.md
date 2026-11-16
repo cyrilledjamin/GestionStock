@@ -216,7 +216,7 @@ Ouvrir http://localhost:8080 (docker-compose) puis se connecter. Le menu dépend
 
 | Écran | Contenu |
 | --- | --- |
-| Connexion | Identifiant et mot de passe ; choix de la langue (français / anglais), mémorisé sur le poste |
+| Connexion | Identifiant et mot de passe (bouton « Afficher » pour vérifier la saisie en clair) ; choix de la langue (français / anglais), mémorisé sur le poste |
 | Accueil | Raccourcis selon le rôle |
 | Stock | Soldes de la boutique : physique, disponible, CUMP, valeur ; total valorisé |
 | Journal d'un article | Soldes et mouvements (date à l'heure de Douala, variation, coût, document d'origine, utilisateur) |
@@ -233,6 +233,10 @@ Ouvrir http://localhost:8080 (docker-compose) puis se connecter. Le menu dépend
 Le reçu s'imprime par le navigateur du poste (feuille de style d'impression au format 80 mm, seul le reçu est
 imprimé) ou se télécharge en PDF pour l'envoyer par WhatsApp. Le panier affiche les prix lus dans l'application ;
 le serveur les relit à l'encaissement.
+
+Tous les champs de mot de passe (connexion, création de compte, validation par un responsable à la caisse) sont masqués
+par défaut et ont un bouton « Afficher » / « Masquer » pour vérifier la saisie. Un mot de passe enregistré ne peut pas
+être réaffiché : seule son empreinte est conservée.
 
 Les jetons de connexion restent dans le `sessionStorage` de l'onglet : ils disparaissent à sa fermeture (poste partagé).
 Montants arrondis à l'unité en XAF, quantités selon la précision de l'article, libellé traduit quand l'interface est

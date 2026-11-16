@@ -224,4 +224,8 @@
   <data name="AucuneSession" xml:space="preserve"><value>No sessions.</value></data>
   <data name="AvoirSur" xml:space="preserve"><value>For receipt</value></data>
   <data name="Client" xml:space="preserve"><value>Customer</value></data>
+  <data name="Afficher" xml:space="preserve"><value>Show</value></data>
+  <data name="Masquer" xml:space="preserve"><value>Hide</value></data>
+  <data name="AfficherMotDePasse" xml:space="preserve"><value>Show the password</value></data>
+  <data name="MasquerMotDePasse" xml:space="preserve"><value>Hide the password</value></data>
 </root>
