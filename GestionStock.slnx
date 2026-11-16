@@ -27,6 +27,10 @@
     <Project Path="src/Modules/Identite/GestionStock.Identite.Contracts/GestionStock.Identite.Contracts.csproj" />
     <Project Path="src/Modules/Identite/GestionStock.Identite/GestionStock.Identite.csproj" />
   </Folder>
+  <Folder Name="/src/Modules/Inventaire/">
+    <Project Path="src/Modules/Inventaire/GestionStock.Inventaire.Contracts/GestionStock.Inventaire.Contracts.csproj" />
+    <Project Path="src/Modules/Inventaire/GestionStock.Inventaire/GestionStock.Inventaire.csproj" />
+  </Folder>
   <Folder Name="/src/Modules/Prix/">
     <Project Path="src/Modules/Prix/GestionStock.Prix.Contracts/GestionStock.Prix.Contracts.csproj" />
     <Project Path="src/Modules/Prix/GestionStock.Prix/GestionStock.Prix.csproj" />

@@ -4,6 +4,7 @@ using GestionStock.Credit;
 using GestionStock.Identite;
 using GestionStock.Infrastructure;
 using GestionStock.Infrastructure.Persistance;
+using GestionStock.Inventaire;
 using GestionStock.Prix;
 using GestionStock.Referentiel;
 using GestionStock.Stock;
@@ -32,6 +33,7 @@ builder.Services.AddStockModule(builder.Configuration);
 builder.Services.AddAchatsModule(builder.Configuration);
 builder.Services.AddCreditModule(builder.Configuration);
 builder.Services.AddCaisseModule(builder.Configuration);
+builder.Services.AddInventaireModule(builder.Configuration);
 
 var app = builder.Build();
 
@@ -79,6 +81,7 @@ app.MapStockEndpoints();
 app.MapAchatsEndpoints();
 app.MapCreditEndpoints();
 app.MapCaisseEndpoints();
+app.MapInventaireEndpoints();
 
 await app.RunAsync();
 

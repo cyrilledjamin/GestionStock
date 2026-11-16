@@ -37,6 +37,9 @@ src/
   Modules/Identite/
     GestionStock.Identite.Contracts  contrat public : Roles, Permissions, IValidationResponsable
     GestionStock.Identite            comptes locaux (ASP.NET Core Identity), jetons porteurs, matrice des permissions
+  Modules/Inventaire/
+    GestionStock.Inventaire.Contracts  contrat public : IServiceInventaire (inventaire d'ouverture pour la reprise)
+    GestionStock.Inventaire          inventaires (ouverture, complet, partiel), écarts, démarque connue
   Modules/Prix/
     GestionStock.Prix.Contracts      contrat public : IConsultationPrix (prix applicable), RegimeTva (HT / TVA)
     GestionStock.Prix                prix de vente par conditionnement, historisés
@@ -202,6 +205,14 @@ Si le port 5432 est déjà pris (PostgreSQL installé sur le poste), choisir un 
 | `POST /api/caisse/remboursements` | `Caisse.Vendre` | Remboursement de crédit : `{ idIdempotence, clientId, mode, montant, reference? }` |
 | `GET /api/caisse/tickets/{id}`, `/tickets/numero/{numero}`, `/sessions/{id}/tickets` | `Caisse.Tickets.Consulter` | Tickets (quantités déjà rendues par ligne) |
 | `GET /api/caisse/tickets/{id}/recu.pdf` | `Caisse.Tickets.Consulter` | Reçu PDF 80 mm dans la langue de la requête |
+| `GET /api/inventaires?statut=`, `GET /api/inventaires/{id}` | `Inventaire.Consulter` | Inventaires ; détail avec théorique relevé, compté, écart et sa valeur |
+| `POST /api/inventaires` | `Inventaire.Compter` | `{ type: Complet \| Partiel, articles? }` |
+| `POST /api/inventaires/{id}/comptages` | `Inventaire.Compter` | `{ articleId, quantite, motifEcart?: Aucun \| Freinte }` (un article hors liste est ajouté) |
+| `POST /api/inventaires/{id}/validation` | `Inventaire.Valider` | Écrit un mouvement par écart, tout ou rien |
+| `POST /api/inventaires/{id}/annulation` | `Inventaire.Compter` | Annule un inventaire en cours |
+| `GET /api/demarques?statut=` | `Inventaire.Consulter` | Déclarations de démarque |
+| `POST /api/demarques` | `Inventaire.Demarque.Declarer` | `{ articleId, quantite, motif: Casse \| Vol \| Perime \| Freinte, commentaire? }` |
+| `POST /api/demarques/{id}/validation`, `/refus` | `Inventaire.Demarque.Valider` | Valide (mouvement Demarque) ou refuse (`{ motif }`) |
 | `GET /api/stock/soldes` | `Stock.Consulter` | Soldes article × site de la boutique : physique, réservé, bloqué, disponible, CUMP |
 | `GET /api/stock/articles/{id}/mouvements` | `Stock.Consulter` | Journal d'un article, du plus récent au plus ancien (`?limite=`, 100 par défaut, 1000 au plus) |
 
@@ -299,6 +310,23 @@ en anglais. Hors ligne (PWA, IndexedDB) : tranche ultérieure, avec la caisse.
   polices standard des lecteurs PDF, à chasse fixe comme un ticket thermique) : aucune police à embarquer, aucune
   dépendance. L'impression se fait sur le poste client.
 
+## Inventaire et démarque
+
+- **Inventaire** (UC11) : d'ouverture (créé par la reprise des données, avec le coût d'achat de chaque article),
+  complet (tous les articles actifs) ou partiel (tournant : articles choisis, ou ajoutés en les comptant).
+  Statuts EnCours, Valide, Annule.
+- **Comptage** par le Magasinier, en unités de stock (selon les décimales de l'article). La quantité théorique est
+  **relevée au moment où la ligne est comptée** (RG16) : la boutique continue de vendre et de recevoir pendant
+  l'inventaire, l'écart reste juste. Un recomptage remplace le précédent.
+- **Validation** par le Comptable (8.3) ; aucun seuil d'écart n'est défini, donc tout écart est validé (RG15,
+  décision 31). Refusée tant qu'un article n'est pas compté (pas de zéro implicite). Une seule transaction, un
+  mouvement par écart sur l'emplacement de vente : `AjustementInventaire` en entrée (au coût d'ouverture, sinon au
+  CUMP, qui ne change donc pas) ou en sortie (au CUMP) ; un manque classé **freinte** devient un mouvement `Demarque`
+  (RG47).
+- **Démarque connue** (UC20, RG23) : déclarée par le Magasinier (casse, vol, périmé, freinte), validée par le
+  Comptable ou le Gérant (mouvement `Demarque` au CUMP) ou refusée avec un motif. Le motif est porté par la
+  déclaration, que le mouvement référence (TypeDocument + DocumentId).
+
 ## Crédit client
 
 - **Client** (UC26) : nom et téléphone obligatoires (RG39), seules données personnelles conservées (loi n° 2024/017) ;
@@ -348,6 +376,10 @@ Chaque permission est attribuée à des rôles dans
 | `Credit.Consulter` | Gerant, Comptable, Caissier |
 | `Credit.Clients.Gerer` | Gerant |
 | `Credit.Plafonds.Gerer` | Comptable |
+| `Inventaire.Consulter` | Gerant, Comptable, Magasinier |
+| `Inventaire.Compter`, `Inventaire.Demarque.Declarer` | Magasinier |
+| `Inventaire.Valider` | Comptable |
+| `Inventaire.Demarque.Valider` | Comptable, Gerant |
 | `Caisse.Vendre` | Caissier |
 | `Caisse.Tickets.Consulter` | Caissier, Gerant, Comptable |
 | `Caisse.Sessions.Consulter`, `Caisse.Sessions.Valider` | Gerant, Comptable |
@@ -406,6 +438,10 @@ sur une machine Linux de GitHub qui dispose de Docker :
 | 17 | Module Caisse : sessions, tickets, avoirs, remises, reçu PDF | Fait |
 | 18 | Client : écran de caisse et écrans de gestion | Fait |
 | 19 | Architecture, CI, README, démonstration de la caisse | Fait |
+| 20 | Module Inventaire : inventaires, écarts, démarque | Fait |
+| 21 | Module Reprise : import Excel des articles, codes, prix et coûts | À faire |
+| 22 | Client : écrans reprise, inventaire, démarque | À faire |
+| 23 | Architecture, CI, README, démonstration de l'inventaire | À faire |
 
 ## Démonstration
 
@@ -456,5 +492,7 @@ Vérifiée dans le navigateur sur http://localhost:8080, avec les comptes de dé
   (le processus 6.1 cite l'Acheteur, rôle absent de la V1) : attributions provisoires, à confirmer (voir ci-dessus).
 
 - Effet des mouvements `Blocage`, `Deblocage` et `Revalorisation` : refusés tant qu'il n'est pas défini.
-- Motif de démarque (RG23) : absent du modèle UML, à ajouter au mouvement.
+- Motif de démarque (RG23) : absent du modèle UML ; porté par la déclaration de démarque que le mouvement référence.
+- Statuts d'inventaire EnCours / Valide / Annule (valeurs non listées par le dossier) ; inventaire complet validable
+  seulement quand tout est compté.
 - CUMP après un stock négatif ou nul : le coût de l'entrée devient le CUMP (choix technique à confirmer).

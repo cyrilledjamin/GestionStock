@@ -59,6 +59,21 @@ public static class Permissions
     /// <summary>Valider la clôture d'une session et son écart (RG36).</summary>
     public const string SessionsValider = "Caisse.Sessions.Valider";
 
+    /// <summary>Consulter les inventaires et les déclarations de démarque.</summary>
+    public const string InventaireConsulter = "Inventaire.Consulter";
+
+    /// <summary>Créer un inventaire et compter (UC11).</summary>
+    public const string InventaireCompter = "Inventaire.Compter";
+
+    /// <summary>Valider les écarts d'un inventaire (RG15).</summary>
+    public const string InventaireValider = "Inventaire.Valider";
+
+    /// <summary>Déclarer une démarque connue (UC20).</summary>
+    public const string DemarqueDeclarer = "Inventaire.Demarque.Declarer";
+
+    /// <summary>Valider ou refuser une démarque (UC20).</summary>
+    public const string DemarqueValider = "Inventaire.Demarque.Valider";
+
     /// <summary>Consulter les disponibilités et les mouvements (UC14).</summary>
     public const string StockConsulter = "Stock.Consulter";
 }

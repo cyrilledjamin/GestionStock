@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Implémentation interne du module Inventaire : inventaires (ouverture, complet, tournant) et démarque connue -->
+  <PropertyGroup>
+    <NeutralLanguage>fr</NeutralLanguage>
+  </PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../GestionStock.Inventaire.Contracts/GestionStock.Inventaire.Contracts.csproj" />
+    <ProjectReference Include="../../Identite/GestionStock.Identite.Contracts/GestionStock.Identite.Contracts.csproj" />
+    <ProjectReference Include="../../Referentiel/GestionStock.Referentiel.Contracts/GestionStock.Referentiel.Contracts.csproj" />
+    <ProjectReference Include="../../Stock/GestionStock.Stock.Contracts/GestionStock.Stock.Contracts.csproj" />
+    <ProjectReference Include="../../../BuildingBlocks/GestionStock.Infrastructure/GestionStock.Infrastructure.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="GestionStock.ArchitectureTests" />
+    <InternalsVisibleTo Include="GestionStock.Api.IntegrationTests" />
+  </ItemGroup>
+</Project>

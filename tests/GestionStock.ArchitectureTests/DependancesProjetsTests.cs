@@ -28,6 +28,8 @@ public sealed class DependancesProjetsTests
             "GestionStock.Credit.Contracts",
             "GestionStock.Identite",
             "GestionStock.Identite.Contracts",
+            "GestionStock.Inventaire",
+            "GestionStock.Inventaire.Contracts",
             "GestionStock.Prix",
             "GestionStock.Prix.Contracts",
             "GestionStock.Referentiel",
