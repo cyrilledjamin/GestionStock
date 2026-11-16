@@ -34,4 +34,14 @@ internal static class CodesErreurAchats
     public const string LibelleFraisTropLong = "Achats.LibelleFraisTropLong";
     public const string RepartitionImpossible = "Achats.RepartitionImpossible";
     public const string FraisIntrouvable = "Achats.FraisIntrouvable";
+    public const string PaiementSurBrouillon = "Achats.PaiementSurBrouillon";
+    public const string ModePaiementInvalide = "Achats.ModePaiementInvalide";
+    public const string MontantPaiementInvalide = "Achats.MontantPaiementInvalide";
+    public const string MontantSuperieurAuReste = "Achats.MontantSuperieurAuReste";
+    public const string ReferenceObligatoire = "Achats.ReferenceObligatoire";
+    public const string ReferenceTropLongue = "Achats.ReferenceTropLongue";
+    public const string PaiementIntrouvable = "Achats.PaiementIntrouvable";
+    public const string PaiementDejaAnnule = "Achats.PaiementDejaAnnule";
+    public const string MotifAnnulationObligatoire = "Achats.MotifAnnulationObligatoire";
+    public const string MotifAnnulationTropLong = "Achats.MotifAnnulationTropLong";
 }

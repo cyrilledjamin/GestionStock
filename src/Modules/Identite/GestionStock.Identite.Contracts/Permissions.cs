@@ -30,6 +30,9 @@ public static class Permissions
     /// <summary>Saisir les frais d'approche d'une réception (RG30), avant ou après sa validation.</summary>
     public const string FraisSaisir = "Achats.Frais.Saisir";
 
+    /// <summary>Enregistrer ou annuler un paiement fournisseur (décision 27).</summary>
+    public const string PaiementsFournisseursSaisir = "Achats.Paiements.Saisir";
+
     /// <summary>Consulter les prix de vente et le régime de TVA.</summary>
     public const string PrixConsulter = "Prix.Consulter";
 

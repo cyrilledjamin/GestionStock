@@ -19,6 +19,7 @@ public static class ModuleAchats
         services.AjouterContexteModule<AchatsDbContext>(AchatsDbContext.Schema);
         services.AddScoped<ServiceFournisseurs>();
         services.AddScoped<ServiceReceptions>();
+        services.AddScoped<ServiceDettes>();
         return services;
     }
 

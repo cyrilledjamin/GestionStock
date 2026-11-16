@@ -195,6 +195,10 @@ Si le port 5432 est déjà pris (PostgreSQL installé sur le poste), choisir un 
 | `POST /api/achats/receptions/{id}/validation` | `Achats.Receptions.Valider` | Valide et fait entrer la marchandise en stock, frais d'approche compris (409 si déjà validée) |
 | `POST /api/achats/receptions/{id}/frais` | `Achats.Frais.Saisir` | `{ type: Transport \| Transit \| Douane \| Autre, montant, cle?: Valeur \| Quantite, libelle? }` : avant ou après la validation |
 | `DELETE /api/achats/receptions/{id}/frais/{fraisId}` | `Achats.Frais.Saisir` | Retire un frais d'un brouillon (409 après la validation) |
+| `GET /api/achats/dettes?fournisseurId=&nonSoldees=` | `Achats.Consulter` | Dettes par fournisseur et par réception validée : dû, payé, reste, statut |
+| `GET /api/achats/receptions/{id}/dette` | `Achats.Consulter` | Dette d'une réception et historique de ses paiements |
+| `POST /api/achats/receptions/{id}/paiements` | `Achats.Paiements.Saisir` | `{ montant, mode: Especes \| MobileMoney \| Virement \| Cheque, reference? }` |
+| `POST /api/achats/paiements/{id}/annulation` | `Achats.Paiements.Saisir` | `{ motif }` : paiement opposé journalisé (409 si déjà annulé) |
 | `GET /api/credit/clients?recherche=` | `Credit.Consulter` | Clients (nom ou téléphone) avec solde dû et montant en retard |
 | `GET /api/credit/clients/{id}` | `Credit.Consulter` | Fiche : client, ventes non soldées (reste dû, échéance), journal des opérations |
 | `GET /api/credit/impayes` | `Credit.Consulter` | Clients ayant une dette échue (RG43) |
@@ -410,6 +414,17 @@ récupérable, clé de répartition (**valeur** par défaut, ou quantité) et li
   de la marchandise déjà sortie est conservée comme **non incorporée** sur le frais. Tout est écrit dans une seule
   transaction ; un frais validé ne se retire plus.
 
+### Dettes fournisseurs (décision 27)
+
+- Une réception **validée** crée une dette : marchandise (quantité × coût unitaire) **plus ses frais d'approche**, y
+  compris les frais tardifs. Un brouillon n'a pas de dette (`Achats.PaiementSurBrouillon`).
+- Le Comptable enregistre des **paiements partiels** : espèces, Mobile Money, virement ou chèque, avec une référence
+  obligatoire sauf en espèces. Le montant ne peut pas dépasser le reste dû ; la réception est verrouillée pendant
+  l'enregistrement, deux paiements simultanés ne peuvent pas la surpayer.
+- Statut déduit : non payée, partiellement payée, payée. La liste regroupe aussi les dettes par fournisseur.
+- Un paiement n'est jamais modifié ni supprimé : une erreur se corrige par une **annulation** (paiement opposé, motif
+  obligatoire, utilisateur et horodatage), une seule fois par paiement.
+
 ## Revalorisation (RG30)
 
 Des frais d'approche connus après la réception donnent un mouvement `Revalorisation` : aucun emplacement, aucune
@@ -454,6 +469,7 @@ Chaque permission est attribuée à des rôles dans
 | `Achats.Fournisseurs.Gerer` | Gerant, Magasinier *(provisoire)* |
 | `Achats.Receptions.Saisir`, `Achats.Receptions.Valider` | Magasinier, Gerant *(validation provisoire)* |
 | `Achats.Frais.Saisir` | Comptable, Gerant *(Gérant provisoire)* |
+| `Achats.Paiements.Saisir` | Comptable |
 
 ## Tests
 
@@ -511,7 +527,7 @@ sur une machine Linux de GitHub qui dispose de Docker :
 | 23 | Architecture, CI, README, démonstration de l'inventaire | Fait |
 | 24 | Stock : mouvement Revalorisation (RG30) | Fait |
 | 25 | Achats : frais d'approche, répartition, revalorisation des frais tardifs | Fait |
-| 26 | Achats : dettes fournisseurs et paiements | À faire |
+| 26 | Achats : dettes fournisseurs et paiements | Fait |
 | 27 | Module Rapports : ventes et marge, stock, créances et dettes, caisse et anomalies | À faire |
 | 28 | Exports comptables Excel et CSV | À faire |
 | 29 | Client : écrans frais, dettes, rapports, exports | À faire |
@@ -588,6 +604,8 @@ le refus d'une démarque sont couverts par les tests d'intégration.
 - Effet des mouvements `Blocage` et `Deblocage` : refusés tant qu'il n'est pas défini.
 - Frais d'approche : clé de répartition Poids non proposée (pas de poids sur l'article en V1) ; saisie par le
   Comptable (8.3) et, provisoirement, par le Gérant ; un frais saisi après la validation ne se retire plus.
+- Dettes fournisseurs : pas d'échéance de paiement (le dossier n'en fixe pas) ; modes de paiement espèces, Mobile
+  Money, virement et chèque ; dette = marchandise et frais d'approche (choix validés).
 - Revalorisation (RG30) : le supplément porte sur la quantité encore en stock ; la part des frais qui concerne de la
   marchandise déjà vendue n'entre pas dans le CUMP (conservée sur la réception, signalée dans les rapports).
 - Motif de démarque (RG23) : absent du modèle UML ; porté par la déclaration de démarque que le mouvement référence.

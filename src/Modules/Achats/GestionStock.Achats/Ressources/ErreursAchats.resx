@@ -26,4 +26,14 @@
   <data name="Achats.LibelleFraisTropLong" xml:space="preserve"><value>Le libellé du frais dépasse 100 caractères.</value></data>
   <data name="Achats.RepartitionImpossible" xml:space="preserve"><value>Répartition impossible : la valeur des lignes est nulle. Choisissez la clé Quantité.</value></data>
   <data name="Achats.FraisIntrouvable" xml:space="preserve"><value>Frais introuvable sur cette réception.</value></data>
+  <data name="Achats.PaiementSurBrouillon" xml:space="preserve"><value>Une réception en brouillon n'a pas encore de dette : validez-la d'abord.</value></data>
+  <data name="Achats.ModePaiementInvalide" xml:space="preserve"><value>Mode de paiement inconnu (espèces, Mobile Money, virement ou chèque).</value></data>
+  <data name="Achats.MontantPaiementInvalide" xml:space="preserve"><value>Le montant payé doit être positif, avec au plus 4 décimales.</value></data>
+  <data name="Achats.MontantSuperieurAuReste" xml:space="preserve"><value>Le montant dépasse le reste dû.</value></data>
+  <data name="Achats.ReferenceObligatoire" xml:space="preserve"><value>Référence obligatoire pour ce mode de paiement (transaction, virement ou numéro de chèque).</value></data>
+  <data name="Achats.ReferenceTropLongue" xml:space="preserve"><value>La référence dépasse 50 caractères.</value></data>
+  <data name="Achats.PaiementIntrouvable" xml:space="preserve"><value>Paiement introuvable.</value></data>
+  <data name="Achats.PaiementDejaAnnule" xml:space="preserve"><value>Ce paiement est déjà annulé ou est lui-même une annulation.</value></data>
+  <data name="Achats.MotifAnnulationObligatoire" xml:space="preserve"><value>Indiquez le motif de l'annulation.</value></data>
+  <data name="Achats.MotifAnnulationTropLong" xml:space="preserve"><value>Le motif dépasse 200 caractères.</value></data>
 </root>

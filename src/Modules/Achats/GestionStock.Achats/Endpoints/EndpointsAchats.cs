@@ -73,6 +73,23 @@ internal static class EndpointsAchats
         groupe.MapDelete("/receptions/{id:guid}/frais/{fraisId:guid}", (Guid id, Guid fraisId, ServiceReceptions service, CancellationToken annulation) =>
             Executer(async () => TypedResults.Ok(await service.RetirerFraisAsync(id, fraisId, annulation))))
             .RequireAuthorization(Permissions.FraisSaisir);
+
+        // Dettes fournisseurs (décision 27)
+        groupe.MapGet("/dettes", async (Guid? fournisseurId, bool? nonSoldees, ServiceDettes service, CancellationToken annulation) =>
+            TypedResults.Ok(await service.ListerAsync(fournisseurId, nonSoldees ?? false, annulation)))
+            .RequireAuthorization(Permissions.AchatsConsulter);
+
+        groupe.MapGet("/receptions/{id:guid}/dette", (Guid id, ServiceDettes service, CancellationToken annulation) =>
+            Executer(async () => TypedResults.Ok(await service.ObtenirAsync(id, annulation))))
+            .RequireAuthorization(Permissions.AchatsConsulter);
+
+        groupe.MapPost("/receptions/{id:guid}/paiements", (Guid id, SaisiePaiement saisie, ServiceDettes service, CancellationToken annulation) =>
+            Executer(async () => TypedResults.Ok(await service.PayerAsync(id, saisie, annulation))))
+            .RequireAuthorization(Permissions.PaiementsFournisseursSaisir);
+
+        groupe.MapPost("/paiements/{id:guid}/annulation", (Guid id, SaisieAnnulationPaiement saisie, ServiceDettes service, CancellationToken annulation) =>
+            Executer(async () => TypedResults.Ok(await service.AnnulerAsync(id, saisie, annulation))))
+            .RequireAuthorization(Permissions.PaiementsFournisseursSaisir);
     }
 
     /// <summary>Traduit les règles violées en réponses 400 / 404 / 409.</summary>
@@ -86,8 +103,10 @@ internal static class EndpointsAchats
         {
             var statut = erreur.Code switch
             {
-                CodesErreurAchats.ReceptionIntrouvable or CodesErreurAchats.FraisIntrouvable => StatusCodes.Status404NotFound,
-                CodesErreurAchats.ReceptionDejaValidee => StatusCodes.Status409Conflict,
+                CodesErreurAchats.ReceptionIntrouvable or CodesErreurAchats.FraisIntrouvable or CodesErreurAchats.PaiementIntrouvable
+                    => StatusCodes.Status404NotFound,
+                CodesErreurAchats.ReceptionDejaValidee or CodesErreurAchats.PaiementSurBrouillon or CodesErreurAchats.PaiementDejaAnnule
+                    => StatusCodes.Status409Conflict,
                 _ => StatusCodes.Status400BadRequest,
             };
             return ReponsesErreur.Probleme(statut, erreur.Code, Ressources, erreur.Detail);
