@@ -32,6 +32,11 @@ internal static class EndpointsCaisse
         groupe.MapGet("/postes", (ServiceSessions sessions) => TypedResults.Ok(sessions.Postes))
             .RequireAuthorization(Permissions.CaisseVendre);
 
+        // Postes occupés : le caissier bloqué voit qui tient le poste et depuis quand.
+        groupe.MapGet("/postes/occupation", async (ServiceSessions sessions, CancellationToken annulation) =>
+            TypedResults.Ok(await sessions.OccupationAsync(annulation)))
+            .RequireAuthorization(Permissions.CaisseVendre);
+
         groupe.MapPost("/sessions", (OuvertureSession saisie, ServiceSessions sessions, CancellationToken annulation) =>
             Executer(async () =>
             {
@@ -52,6 +57,11 @@ internal static class EndpointsCaisse
         groupe.MapGet("/entete", (IOptions<OptionsEntrepriseRecu> entreprise, IConsultationPrix prix) => TypedResults.Ok(new EnteteRecu(
                 entreprise.Value.Nom, entreprise.Value.Adresse, entreprise.Value.Telephone, entreprise.Value.NumeroContribuable, prix.Regime.Assujetti)))
             .RequireAuthorization(Permissions.TicketsConsulter);
+
+        // Session restée ouverte qui bloque un poste : clôture par le Gérant à la place de son titulaire.
+        groupe.MapPost("/sessions/{id:guid}/cloture", (Guid id, ClotureSession saisie, ServiceSessions sessions, CancellationToken annulation) =>
+            Executer(async () => TypedResults.Ok(await sessions.CloturerAPlaceAsync(id, saisie, annulation))))
+            .RequireAuthorization(Permissions.SessionsCloturer);
 
         // Supervision des sessions (Gérant, Comptable)
         groupe.MapGet("/sessions", async (StatutSession? statut, ServiceSessions sessions, CancellationToken annulation) =>

@@ -438,4 +438,20 @@
   <data name="VenteRapideAjoutee" xml:space="preserve"><value>Added to the till's quick items.</value></data>
   <data name="VenteRapideRetiree" xml:space="preserve"><value>Removed from the till's quick items.</value></data>
   <data name="RechercherArticle" xml:space="preserve"><value>Search for an item</value></data>
+  <data name="Occupe" xml:space="preserve"><value>in use</value></data>
+  <data name="PosteOccupePar" xml:space="preserve"><value>This till is in use by {0}'s session, opened on {1}. Ask them to close it, or ask the manager to close it on their behalf (Till sessions).</value></data>
+  <data name="Zero" xml:space="preserve"><value>Reset to 0</value></data>
+  <data name="MethodeComptage" xml:space="preserve"><value>Counting method</value></data>
+  <data name="CompterParCoupure" xml:space="preserve"><value>Count by note and coin</value></data>
+  <data name="SaisirTotal" xml:space="preserve"><value>Enter the total</value></data>
+  <data name="Billets" xml:space="preserve"><value>Notes</value></data>
+  <data name="Pieces" xml:space="preserve"><value>Coins</value></data>
+  <data name="NombreDeCoupures" xml:space="preserve"><value>Number of {0}</value></data>
+  <data name="TotalCompte" xml:space="preserve"><value>Total counted</value></data>
+  <data name="CloturerAvec" xml:space="preserve"><value>Close with {0}</value></data>
+  <data name="CloturerAPlace" xml:space="preserve"><value>Close on their behalf</value></data>
+  <data name="CloturerSessionDe" xml:space="preserve"><value>Close {0}'s session on {1}</value></data>
+  <data name="CloturerAPlaceAide" xml:space="preserve"><value>Session opened on {0} and left open. Count the drawer: the closing is recorded in your name, and the difference still has to be approved.</value></data>
+  <data name="CompteePar" xml:space="preserve"><value>counted by {0}</value></data>
+  <data name="SessionClotureeAPlace" xml:space="preserve"><value>{1}'s session on {0} closed; difference: {2}. The till is free.</value></data>
 </root>

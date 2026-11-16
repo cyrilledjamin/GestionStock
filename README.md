@@ -219,6 +219,8 @@ Si le port 5432 est déjà pris (PostgreSQL installé sur le poste), choisir un 
 | `GET /api/caisse/postes` | `Caisse.Vendre` | Postes de caisse configurés |
 | `POST /api/caisse/sessions` | `Caisse.Vendre` | `{ numeroCaisse, fondCaisse }` : ouvre la session du caissier connecté |
 | `GET /api/caisse/sessions/courante` | `Caisse.Vendre` | Session ouverte du caissier avec ses totaux (204 s'il n'en a pas) |
+| `GET /api/caisse/postes/occupation` | `Caisse.Vendre` | Postes tenus par une session ouverte : titulaire et heure d'ouverture (le caissier bloqué sait à qui s'adresser) |
+| `POST /api/caisse/sessions/{id}/cloture` | `Caisse.Sessions.Cloturer` | `{ especesComptees }` : le Gérant clôture à la place de son titulaire une session restée ouverte (décision 36) ; auteur enregistré dans `clotureePar`, écart à valider |
 | `POST /api/caisse/sessions/courante/cloture` | `Caisse.Vendre` | `{ especesComptees }` : clôture, écart calculé |
 | `GET /api/caisse/sessions`, `GET /api/caisse/sessions/{id}` | `Caisse.Sessions.Consulter` | Sessions (`?statut=Ouverte|Comptee|Validee`) et leurs totaux |
 | `POST /api/caisse/sessions/{id}/validation` | `Caisse.Sessions.Valider` | Valide une session clôturée et son écart |
@@ -266,9 +268,9 @@ Ouvrir http://localhost:8080 (docker-compose) puis se connecter. Le menu dépend
 | Fournisseurs | Liste, création, modification, désactivation |
 | Articles | Recherche, création, modification, désactivation |
 | Fiche article | Conditionnements, codes-barres (saisis, générés, désactivés), case « Vente rapide » (Gérant) et prix (en vigueur, programmé, nouveau) |
-| Caisse | Ouverture de session (poste, fond) ; plein comptoir pendant la vente (menu en tiroir) ; un seul champ : code-barres ou code article à la touche Entrée, recherche en direct dès qu'il contient une lettre (un résultat unique est ajouté) ; résultats et articles rapides en tuiles ; panier à lignes larges (− / +, remise repliée, ligne choisie pour le pavé) ; pavé numérique (quantité ou espèces reçues), affiché d'office sur écran tactile ; billets rapides (500 à 10 000 XAF, cumulés) et « Compte juste » ; raccourcis F2 (scan), F4 (compte juste), F8 (encaisser), Échap ; le curseur revient au scan après chaque bouton (douchette) ; client et crédit ; paiements combinés avec rendu (une ligne par mode, un nouveau clic sur un mode lui ajoute le reste à payer) ; validation d'un responsable si remise ou plafond dépassé ; reçu 80 mm imprimable et PDF ; remboursement de crédit ; clôture avec écart |
+| Caisse | Ouverture de session : poste occupé signalé (titulaire, heure d'ouverture, à qui s'adresser ; un poste libre est proposé d'abord), fond saisi ou ajouté par billets ; clôture guidée : comptage par billet et pièce (ou total), sans afficher le théorique, l'écart apparaissant après la clôture ; écran du reçu : « Nouvelle vente » a le curseur (Entrée ou F2) ; plein comptoir pendant la vente (menu en tiroir) ; un seul champ : code-barres ou code article à la touche Entrée, recherche en direct dès qu'il contient une lettre (un résultat unique est ajouté) ; résultats et articles rapides en tuiles ; panier à lignes larges (− / +, remise repliée, ligne choisie pour le pavé) ; pavé numérique (quantité ou espèces reçues), affiché d'office sur écran tactile ; billets rapides (500 à 10 000 XAF, cumulés) et « Compte juste » ; raccourcis F2 (scan), F4 (compte juste), F8 (encaisser), Échap ; le curseur revient au scan après chaque bouton (douchette) ; client et crédit ; paiements combinés avec rendu (une ligne par mode, un nouveau clic sur un mode lui ajoute le reste à payer) ; validation d'un responsable si remise ou plafond dépassé ; reçu 80 mm imprimable et PDF ; remboursement de crédit ; clôture avec écart |
 | Tickets de la session, ticket | Recherche par numéro, réimpression, avoir (quantités à rendre, mode de remboursement) |
-| Sessions de caisse | Supervision (Gérant, Comptable) : ventes nettes, espèces théoriques et comptées, écart, validation |
+| Sessions de caisse | Supervision (Gérant, Comptable) : ventes nettes, espèces théoriques et comptées, écart, validation ; « Clôturer à sa place » sur une session ouverte (Gérant, comptage guidé), signalée ensuite « comptée par » |
 | Clients, fiche client | Clients à crédit, impayés, création (Gérant), plafond (Comptable), ventes non soldées, journal |
 | Utilisateurs | Liste (nom complet, matricule, rôles, téléphone, statut ; comptes désactivés sur demande) ; création : prénom, nom, téléphone, matricule saisi ou généré, langue, rôles à cocher, mot de passe provisoire (Administrateur) |
 | Fiche d'un compte | Modification de la fiche et des rôles (le matricule ne change pas) ; mot de passe oublié (nouveau mot de passe provisoire) ; désactivation et réactivation ; journal du compte (date, opération, auteur, détail) |
@@ -555,6 +557,7 @@ Chaque permission est attribuée à des rôles dans
 | `Caisse.Vendre` | Caissier |
 | `Caisse.Tickets.Consulter` | Caissier, Gerant, Comptable |
 | `Caisse.Sessions.Consulter`, `Caisse.Sessions.Valider` | Gerant, Comptable |
+| `Caisse.Sessions.Cloturer` | Gerant *(décision 36 : session restée ouverte)* |
 | `Referentiel.Articles.Gerer` | Gerant, Administrateur *(provisoire)* |
 | `Achats.Consulter` | Gerant, Comptable, Magasinier |
 | `Achats.Fournisseurs.Gerer` | Gerant, Magasinier *(provisoire)* |
@@ -633,7 +636,7 @@ sur une machine Linux de GitHub qui dispose de Docker :
 | 34 | Architecture, CI, README, démonstration de la tranche 5 | Fait |
 | 35 | Design : jetons, composants, icônes, menu en tiroir (responsive), accessibilité | Fait |
 | 36 | Design : caisse, vente (champ unique, articles rapides, pavé numérique, raccourcis) | Fait |
-| 37 | Design : caisse, ouverture, session bloquée (clôture par le Gérant), clôture guidée | À faire |
+| 37 | Design : caisse, ouverture, session bloquée (clôture par le Gérant), clôture guidée | Fait |
 | 38 | Accueil en tableau de bord par rôle | À faire |
 | 39 | Téléphone et tablette : listes en cartes, caisse sur tablette | À faire |
 | 40 | Identité et finitions (nom et logo, unités traduites, quantités) | À faire |

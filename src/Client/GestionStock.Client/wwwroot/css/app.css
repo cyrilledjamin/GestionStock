@@ -149,6 +149,7 @@ td.sortie { color: var(--rouge); font-weight: 600; }
 .message .icone { margin-top: .1em; }
 .message.erreur { background: var(--rouge-clair); color: var(--rouge); }
 .message.succes { background: var(--vert-clair); color: var(--vert); }
+.message.avertissement { background: var(--ambre-clair); color: var(--ambre); }
 .tuiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: var(--e-4); margin: var(--e-4) 0; }
 .tuile { background: var(--surface); border: 1px solid var(--bordure); border-radius: var(--rayon-grand); padding: var(--e-4); display: grid; grid-template-columns: auto 1fr; column-gap: var(--e-3); row-gap: var(--e-1); color: var(--texte); text-decoration: none; box-shadow: var(--ombre); }
 .tuile > .icone { grid-row: span 2; width: 2.5rem; height: 2.5rem; padding: .55rem; border-radius: var(--rayon); background: var(--vert-clair); color: var(--vert); }
@@ -234,6 +235,20 @@ kbd { font-family: var(--police-chasse-fixe); font-size: var(--t-xs); font-weigh
 .code-ajout input[type=number] { width: 6.5rem; }
 .code-ajout input[type=date] { width: 10rem; }
 .fiche-article td { vertical-align: top; }
+
+/* Comptage du tiroir à la clôture (par coupure ou total) */
+.comptage { display: flex; flex-direction: column; gap: var(--e-3); }
+.choix-comptage { display: flex; flex-wrap: wrap; gap: var(--e-2) var(--e-5); }
+.coupures { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: var(--e-3); }
+.coupures fieldset { border: 1px solid var(--bordure); border-radius: var(--rayon); padding: var(--e-2) var(--e-3); margin: 0; display: flex; flex-direction: column; gap: var(--e-1); }
+.coupures legend { padding: 0 var(--e-1); font-size: var(--t-s); color: var(--discret); }
+.coupure { display: grid; grid-template-columns: 5.5rem auto 4.5rem 1fr; align-items: center; gap: var(--e-2); flex-direction: row; color: var(--texte); font-weight: 400; }
+.coupure .valeur, .coupure .montant { text-align: right; font-variant-numeric: tabular-nums; }
+.coupure .fois { color: var(--discret); }
+.coupure input { width: 100%; text-align: center; }
+.coupure .montant { color: var(--discret); font-size: var(--t-s); }
+.total-compte { display: flex; justify-content: space-between; align-items: baseline; padding: var(--e-3); background: var(--vert-clair); border-radius: var(--rayon); }
+.total-compte strong { font-size: var(--t-xl); color: var(--vert); font-variant-numeric: tabular-nums; }
 
 /* Reçu 80 mm : à l'écran dans un cadre, seul élément imprimé */
 .recu-actions { display: flex; gap: var(--e-3); margin: var(--e-4) 0; flex-wrap: wrap; }

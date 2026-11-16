@@ -1,0 +1,23 @@
+@* Une ligne du comptage : coupure × nombre = montant. *@
+
+<label class="coupure">
+    <span class="valeur">@Format.Montant(Valeur)</span>
+    <span class="fois" aria-hidden="true">×</span>
+    <input type="number" min="0" step="1" inputmode="numeric" aria-label="@L["NombreDeCoupures", Format.Montant(Valeur)]"
+           value="@(Nombres.TryGetValue(Valeur, out var nombre) && nombre > 0 ? nombre : null)" @onchange="Changer" />
+    <span class="montant">@Format.Montant(Valeur * (Nombres.TryGetValue(Valeur, out var n) ? Math.Max(0, n) : 0))</span>
+</label>
+
+@code {
+    [Parameter, EditorRequired] public decimal Valeur { get; set; }
+
+    [Parameter, EditorRequired] public Dictionary<decimal, int> Nombres { get; set; } = [];
+
+    [Parameter] public EventCallback Change { get; set; }
+
+    private async Task Changer(ChangeEventArgs e)
+    {
+        Nombres[Valeur] = int.TryParse(e.Value?.ToString(), out var nombre) && nombre > 0 ? nombre : 0;
+        await Change.InvokeAsync();
+    }
+}

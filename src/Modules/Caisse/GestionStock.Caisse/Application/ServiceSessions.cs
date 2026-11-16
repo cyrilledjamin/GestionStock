@@ -38,6 +38,7 @@ internal sealed record SessionDto(
     decimal FondCaisse,
     StatutSession Statut,
     DateTime? ClotureUtc,
+    string? ClotureePar,
     decimal? EspecesComptees,
     decimal? Ecart,
     string? ValideePar,
@@ -46,6 +47,9 @@ internal sealed record SessionDto(
 internal sealed record OuvertureSession(string NumeroCaisse, decimal FondCaisse);
 
 internal sealed record ClotureSession(decimal EspecesComptees);
+
+/// <summary>Poste occupé par une session ouverte : qui la tient et depuis quand (le caissier bloqué sait à qui s'adresser).</summary>
+internal sealed record OccupationPoste(string NumeroCaisse, Guid SessionId, string Caissier, DateTime OuvertureUtc);
 
 /// <summary>Sessions de caisse (UC24, RG36) : ouverture avec fond, clôture par comptage des espèces, validation de l'écart.</summary>
 internal sealed class ServiceSessions(
@@ -108,10 +112,33 @@ internal sealed class ServiceSessions(
         ArgumentNullException.ThrowIfNull(saisie);
         var session = await ExigerCouranteAsync(annulation);
         var totaux = await Totaux(session, annulation);
-        session.Cloturer(saisie.EspecesComptees, totaux.EspecesTheoriques, horloge.MaintenantUtc);
+        session.Cloturer(saisie.EspecesComptees, totaux.EspecesTheoriques, utilisateur.Identifiant, horloge.MaintenantUtc);
         await contexte.SaveChangesAsync(annulation);
         return await VersDto(session, annulation);
     }
+
+    /// <summary>
+    /// Le Gérant clôture à la place de son titulaire une session restée ouverte qui bloque un poste : même comptage et
+    /// même écart, tracés à son nom ; l'écart reste à valider comme pour toute clôture.
+    /// </summary>
+    public async Task<SessionDto> CloturerAPlaceAsync(Guid id, ClotureSession saisie, CancellationToken annulation)
+    {
+        ArgumentNullException.ThrowIfNull(saisie);
+        var session = await contexte.Sessions.SingleOrDefaultAsync(s => s.Id == id, annulation)
+            ?? throw new ExceptionCaisse(CodesErreurCaisse.SessionIntrouvable);
+        var totaux = await Totaux(session, annulation);
+        session.Cloturer(saisie.EspecesComptees, totaux.EspecesTheoriques, utilisateur.Identifiant, horloge.MaintenantUtc);
+        await contexte.SaveChangesAsync(annulation);
+        return await VersDto(session, annulation);
+    }
+
+    /// <summary>Postes occupés par une session ouverte, avec son titulaire et son heure d'ouverture.</summary>
+    public async Task<IReadOnlyList<OccupationPoste>> OccupationAsync(CancellationToken annulation) =>
+        await contexte.Sessions.AsNoTracking()
+            .Where(s => s.Statut == StatutSession.Ouverte)
+            .OrderBy(s => s.NumeroCaisse)
+            .Select(s => new OccupationPoste(s.NumeroCaisse, s.Id, s.Caissier, s.OuvertureUtc))
+            .ToListAsync(annulation);
 
     public async Task<SessionDto> ValiderAsync(Guid id, CancellationToken annulation)
     {
@@ -182,6 +209,6 @@ internal sealed class ServiceSessions(
     }
 
     private async Task<SessionDto> VersDto(SessionCaisse s, CancellationToken annulation) =>
-        new(s.Id, s.NumeroCaisse, s.Caissier, s.OuvertureUtc, s.FondCaisse, s.Statut, s.ClotureUtc, s.EspecesComptees, s.Ecart, s.ValideePar,
+        new(s.Id, s.NumeroCaisse, s.Caissier, s.OuvertureUtc, s.FondCaisse, s.Statut, s.ClotureUtc, s.ClotureePar, s.EspecesComptees, s.Ecart, s.ValideePar,
             await Totaux(s, annulation));
 }

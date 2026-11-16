@@ -438,4 +438,20 @@
   <data name="VenteRapideAjoutee" xml:space="preserve"><value>Ajouté aux articles rapides de la caisse.</value></data>
   <data name="VenteRapideRetiree" xml:space="preserve"><value>Retiré des articles rapides de la caisse.</value></data>
   <data name="RechercherArticle" xml:space="preserve"><value>Rechercher un article</value></data>
+  <data name="Occupe" xml:space="preserve"><value>occupé</value></data>
+  <data name="PosteOccupePar" xml:space="preserve"><value>Ce poste est occupé par la session de {0}, ouverte le {1}. Demandez-lui de la clôturer, ou au Gérant de la clôturer à sa place (Sessions de caisse).</value></data>
+  <data name="Zero" xml:space="preserve"><value>Remettre à 0</value></data>
+  <data name="MethodeComptage" xml:space="preserve"><value>Méthode de comptage</value></data>
+  <data name="CompterParCoupure" xml:space="preserve"><value>Compter par billet et pièce</value></data>
+  <data name="SaisirTotal" xml:space="preserve"><value>Saisir le total</value></data>
+  <data name="Billets" xml:space="preserve"><value>Billets</value></data>
+  <data name="Pieces" xml:space="preserve"><value>Pièces</value></data>
+  <data name="NombreDeCoupures" xml:space="preserve"><value>Nombre de {0}</value></data>
+  <data name="TotalCompte" xml:space="preserve"><value>Total compté</value></data>
+  <data name="CloturerAvec" xml:space="preserve"><value>Clôturer avec {0}</value></data>
+  <data name="CloturerAPlace" xml:space="preserve"><value>Clôturer à sa place</value></data>
+  <data name="CloturerSessionDe" xml:space="preserve"><value>Clôturer la session de {0} sur {1}</value></data>
+  <data name="CloturerAPlaceAide" xml:space="preserve"><value>Session ouverte le {0} et restée ouverte. Comptez le tiroir : la clôture est enregistrée à votre nom, et l'écart reste à valider.</value></data>
+  <data name="CompteePar" xml:space="preserve"><value>comptée par {0}</value></data>
+  <data name="SessionClotureeAPlace" xml:space="preserve"><value>Session de {1} sur {0} clôturée ; écart : {2}. Le poste est libre.</value></data>
 </root>

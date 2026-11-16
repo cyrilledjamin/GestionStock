@@ -220,6 +220,10 @@ namespace GestionStock.Caisse.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("cloture_utc");
 
+                    b.Property<string>("ClotureePar")
+                        .HasColumnType("text")
+                        .HasColumnName("cloturee_par");
+
                     b.Property<decimal?>("Ecart")
                         .HasPrecision(19, 4)
                         .HasColumnType("numeric(19,4)")

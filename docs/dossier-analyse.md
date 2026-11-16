@@ -611,6 +611,9 @@ Comptee --> Validee : écart validé par le Responsable
 Validee --> [*]
 ```
 
+Le comptage est fait par le titulaire de la session ; une session restée ouverte qui bloque un poste peut être comptée
+et clôturée par le Gérant (décision 36), avec son nom et l'heure enregistrés.
+
 ---
 
 ## 6. Processus métier
@@ -926,12 +929,19 @@ Infrastructure : onduleurs pour le serveur, les PC, les imprimantes et le résea
 | 33 | Rapports V1 | Ventes et marge ; stock et valeur ; créances et dettes ; caisse et anomalies. Autres rapports à la demande |
 | 34 | Support | Installation et formation sur place, puis support à distance (WhatsApp, prise en main), mises à jour automatiques, guide bilingue |
 
+### 8.2 bis Décisions du 16/11/2026 (tranche « design » de l'interface)
+
+| # | Sujet | Décision |
+| --- | --- | --- |
+| 36 | Session restée ouverte | Seul le titulaire clôture sa session ; une session restée ouverte qui bloque un poste peut être comptée et clôturée par le Gérant à sa place. L'auteur et l'heure de la clôture sont enregistrés (ENF03) ; l'écart reste à valider comme pour toute clôture (RG36). L'Administrateur ne le peut pas (aucune opération de vente) : il peut réinitialiser le mot de passe du titulaire |
+| 37 | Articles rapides de la caisse | Le Gérant choisit les conditionnements proposés en tuiles à la caisse (articles sans code-barres, vente au poids) ; un conditionnement désactivé en sort |
+
 ### 8.3 Rôles et droits (V1)
 
 | Rôle | Droits |
 | --- | --- |
 | Administrateur | Utilisateurs, rôles, paramètres, fonctionnalités activables, sauvegardes. Aucune opération de vente |
-| Gérant | Prix, clients, seuils, validations (écarts de caisse, remises hors plafond), tous les rapports |
+| Gérant | Prix, clients, seuils, validations (écarts de caisse, remises hors plafond), clôture d'une session de caisse restée ouverte (décision 36), articles rapides de la caisse (décision 37), tous les rapports |
 | Comptable | Lecture de tout, exports, frais d'approche, paiements fournisseurs, validation des clôtures de caisse, des écarts d'inventaire et de la démarque, gestion des plafonds de crédit. Ni vente ni modification de prix |
 | Caissier | Vente, avoir et remise sous plafond, remboursement de crédit, sa propre caisse |
 | Magasinier | Réception, inventaire, déclaration de démarque (validée par le Comptable ou le Gérant) |
