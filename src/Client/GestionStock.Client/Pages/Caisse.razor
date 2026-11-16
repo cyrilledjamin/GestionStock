@@ -20,14 +20,29 @@ else if (_session is null)
             <select @bind="_poste">
                 @foreach (var poste in _postes)
                 {
-                    <option value="@poste">@poste</option>
+                    <option value="@poste">@poste@(Occupation(poste) is not null ? $" — {L["Occupe"]}" : "")</option>
                 }
             </select>
         </label>
+        @if (Occupation(_poste) is { } occupation)
+        {
+            @* Poste bloqué par une session restée ouverte : qui la tient, depuis quand, et à qui s'adresser (décision 36). *@
+            <div class="message avertissement" role="status">
+                <Icone Nom="erreur" />
+                <span>@L["PosteOccupePar", occupation.Caissier, Format.Date(occupation.OuvertureUtc)]</span>
+            </div>
+        }
         <label>@L["FondCaisse"]
             <input type="number" min="0" step="1" @bind="_fond" />
         </label>
-        <div class="actions"><button type="submit" class="principal">@L["OuvrirSession"]</button></div>
+        <div class="billets">
+            @foreach (var billet in VenteEnCours.Billets)
+            {
+                <button type="button" @onclick="() => _fond += billet">+ @Format.Montant(billet)</button>
+            }
+            <button type="button" @onclick="() => _fond = 0">@L["Zero"]</button>
+        </div>
+        <div class="actions"><button type="submit" class="principal" disabled="@(Occupation(_poste) is not null)">@L["OuvrirSession"]</button></div>
     </form>
 }
 else if (_dernierTicket is not null)
@@ -38,7 +53,8 @@ else if (_dernierTicket is not null)
         <div class="rendu-grand">@L["Rendu"] : @Format.Montant(_dernierTicket.Rendu)</div>
     }
     <RecuTicket Ticket="_dernierTicket">
-        <button class="valider" @onclick="NouvelleVente">@L["NouvelleVente"]</button>
+        @* Le curseur arrive sur ce bouton : Entrée (ou F2) lance la vente suivante. *@
+        <button id="nouvelle-vente" class="valider" @onclick="NouvelleVente">@L["NouvelleVente"] <kbd>F2</kbd></button>
     </RecuTicket>
 }
 else
@@ -62,11 +78,9 @@ else
             <form class="fiche" @onsubmit="Cloturer">
                 <h2>@L["Cloturer"]</h2>
                 <p class="discret">@L["ClotureAide"]</p>
-                <label>@L["EspecesComptees"]
-                    <input type="number" min="0" step="1" @bind="_especesComptees" required />
-                </label>
+                <ComptageEspeces @bind-Total="_especesComptees" />
                 <div class="actions">
-                    <button type="submit" class="principal">@L["Cloturer"]</button>
+                    <button type="submit" class="principal">@L["CloturerAvec", Format.Montant(_especesComptees)]</button>
                     <button type="button" @onclick="() => _panneau = Panneau.Aucun">@L["Annuler"]</button>
                 </div>
             </form>
@@ -276,7 +290,12 @@ else
     private string _modeRemboursement = ModesPaiement.Especes;
     private string? _referenceRemboursement;
 
+    private List<OccupationPoste> _occupations = [];
+    private bool _focaliserNouvelleVente;
+
     private bool PeutEncaisser => !_enCours && !_vente.EstVide && _vente.Reste <= 0;
+
+    private OccupationPoste? Occupation(string poste) => _occupations.FirstOrDefault(o => o.NumeroCaisse == poste);
 
     private string TitrePave => _cible == CiblePave.Quantite && _ligneChoisie is { } ligne
         ? L["PaveQuantite", Format.Libelle(Article(ligne.Vendable))]
@@ -294,7 +313,23 @@ else
         _poste = _postes.FirstOrDefault() ?? "";
         await ChargerSession();
         await ChargerRapides();
+        await ChargerOccupations();
         _charge = true;
+    }
+
+    /// <summary>Postes tenus par une session ouverte : le poste proposé d'abord est un poste libre.</summary>
+    private async Task ChargerOccupations()
+    {
+        if (_session is not null)
+        {
+            return;
+        }
+
+        _occupations = (await Api.GetAsync<List<OccupationPoste>>("api/caisse/postes/occupation")).Valeur ?? [];
+        if (Occupation(_poste) is not null && _postes.FirstOrDefault(p => Occupation(p) is null) is { } libre)
+        {
+            _poste = libre;
+        }
     }
 
     /// <summary>
@@ -319,14 +354,32 @@ else
             _focaliserScan = false;
             await Js.InvokeVoidAsync("gestionStock.focaliser", "scan");
         }
+
+        if (_focaliserNouvelleVente && _dernierTicket is not null)
+        {
+            _focaliserNouvelleVente = false;
+            await Js.InvokeVoidAsync("gestionStock.focaliser", "nouvelle-vente");
+        }
     }
 
     /// <summary>Raccourcis clavier du comptoir, relayés par l'écouteur de <c>outils.js</c>.</summary>
     [JSInvokable]
     public async Task Raccourci(string touche)
     {
-        if (_session is null || _dernierTicket is not null)
+        if (_session is null)
         {
+            return;
+        }
+
+        if (_dernierTicket is not null)
+        {
+            // Écran du reçu : F2 lance la vente suivante (comme Entrée sur le bouton, qui a le curseur).
+            if (touche == "F2")
+            {
+                NouvelleVente();
+                StateHasChanged();
+            }
+
             return;
         }
 
@@ -375,6 +428,12 @@ else
         _erreur = resultat.Erreur;
         _session = resultat.Valeur ?? _session;
         _focaliserScan = true;
+        if (resultat.Code == "Caisse.PosteOccupe")
+        {
+            // Poste pris entre-temps : on montre qui l'occupe.
+            _erreur = null;
+            await ChargerOccupations();
+        }
     }
 
     /// <summary>
@@ -539,6 +598,7 @@ else
         if (resultat.Valeur is { } ticket)
         {
             _dernierTicket = ticket;
+            _focaliserNouvelleVente = true;
             await ChargerSession();
         }
     }
@@ -567,7 +627,9 @@ else
             _panneau = Panneau.Aucun;
             _session = null;
             _erreur = null;
+            _especesComptees = 0;
             _succes = L["SessionCloturee", Format.Montant(session.Totaux.EspecesTheoriques), Format.Montant(session.Ecart ?? 0)];
+            await ChargerOccupations();
         }
     }
 

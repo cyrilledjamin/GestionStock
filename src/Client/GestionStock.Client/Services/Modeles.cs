@@ -241,6 +241,7 @@ public static class Permissions
     public const string TicketsConsulter = "Caisse.Tickets.Consulter";
     public const string SessionsConsulter = "Caisse.Sessions.Consulter";
     public const string SessionsValider = "Caisse.Sessions.Valider";
+    public const string SessionsCloturer = "Caisse.Sessions.Cloturer";
     public const string InventaireConsulter = "Inventaire.Consulter";
     public const string InventaireCompter = "Inventaire.Compter";
     public const string InventaireValider = "Inventaire.Valider";
@@ -313,10 +314,14 @@ public sealed record SessionCaisse(
     decimal FondCaisse,
     string Statut,
     DateTime? ClotureUtc,
+    string? ClotureePar,
     decimal? EspecesComptees,
     decimal? Ecart,
     string? ValideePar,
     TotauxSession Totaux);
+
+/// <summary>Poste tenu par une session ouverte (le caissier bloqué voit qui l'occupe et depuis quand).</summary>
+public sealed record OccupationPoste(string NumeroCaisse, Guid SessionId, string Caissier, DateTime OuvertureUtc);
 
 public sealed record LigneTicket(
     Guid Id,

@@ -1,0 +1,66 @@
+@* Comptage du tiroir à la clôture : nombre de billets et de pièces par coupure, ou total saisi directement.
+   Le comptage est fait sans afficher les espèces théoriques : l'écart n'apparaît qu'après la clôture. *@
+
+<div class="comptage">
+    <div class="choix-comptage" role="radiogroup" aria-label="@L["MethodeComptage"]">
+        <label class="case"><input type="radio" name="methode-comptage" checked="@_parCoupure" @onchange="() => Basculer(true)" /> @L["CompterParCoupure"]</label>
+        <label class="case"><input type="radio" name="methode-comptage" checked="@(!_parCoupure)" @onchange="() => Basculer(false)" /> @L["SaisirTotal"]</label>
+    </div>
+
+    @if (_parCoupure)
+    {
+        <div class="coupures">
+            <fieldset>
+                <legend>@L["Billets"]</legend>
+                @foreach (var coupure in Coupures.Billets)
+                {
+                    <Coupure Valeur="coupure" Nombres="_nombres" Change="Recalculer" />
+                }
+            </fieldset>
+            <fieldset>
+                <legend>@L["Pieces"]</legend>
+                @foreach (var coupure in Coupures.Pieces)
+                {
+                    <Coupure Valeur="coupure" Nombres="_nombres" Change="Recalculer" />
+                }
+            </fieldset>
+        </div>
+    }
+    else
+    {
+        <label>@L["EspecesComptees"]
+            <input type="number" min="0" step="1" value="@Total" @onchange="SaisirTotal" />
+        </label>
+    }
+
+    <div class="total-compte">@L["TotalCompte"] <strong>@Format.Montant(Total)</strong></div>
+</div>
+
+@code {
+    /// <summary>Total compté, remis au parent à chaque changement.</summary>
+    [Parameter] public decimal Total { get; set; }
+
+    [Parameter] public EventCallback<decimal> TotalChanged { get; set; }
+
+    private readonly Dictionary<decimal, int> _nombres = [];
+    private bool _parCoupure = true;
+
+    private async Task Recalculer() => await TotalChanged.InvokeAsync(Coupures.Total(_nombres));
+
+    private async Task Basculer(bool parCoupure)
+    {
+        _parCoupure = parCoupure;
+        if (parCoupure)
+        {
+            await Recalculer();
+        }
+    }
+
+    private async Task SaisirTotal(ChangeEventArgs e)
+    {
+        var total = decimal.TryParse(e.Value?.ToString(), System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.InvariantCulture, out var valeur) && valeur > 0
+            ? decimal.Round(valeur, 0)
+            : 0m;
+        await TotalChanged.InvokeAsync(total);
+    }
+}

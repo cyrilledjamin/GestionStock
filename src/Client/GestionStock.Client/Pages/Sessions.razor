@@ -16,6 +16,21 @@
 </div>
 
 <Message Texte="@_erreur" />
+<Message Texte="@_succes" Erreur="false" />
+
+@if (_aCloturer is { } aCloturer)
+{
+    @* Session restée ouverte qui bloque un poste : le Gérant la compte et la clôture à la place de son titulaire (décision 36). *@
+    <form class="fiche etroite" @onsubmit="CloturerAPlace">
+        <h2>@L["CloturerSessionDe", aCloturer.Caissier, aCloturer.NumeroCaisse]</h2>
+        <p class="discret">@L["CloturerAPlaceAide", Format.Date(aCloturer.OuvertureUtc)]</p>
+        <ComptageEspeces @bind-Total="_especesComptees" />
+        <div class="actions">
+            <button type="submit" class="principal">@L["CloturerAvec", Format.Montant(_especesComptees)]</button>
+            <button type="button" @onclick="() => _aCloturer = null">@L["Annuler"]</button>
+        </div>
+    </form>
+}
 
 <table>
     <thead>
@@ -35,11 +50,22 @@
                 <td class="nombre">@Format.Montant(session.Totaux.EspecesTheoriques)</td>
                 <td class="nombre">@(session.EspecesComptees is { } comptees ? Format.Montant(comptees) : "")</td>
                 <td class="nombre">@(session.Ecart is { } ecart ? Format.Montant(ecart) : "")</td>
-                <td>@L[$"StatutSession.{session.Statut}"] @if (session.ValideePar is not null) { <small class="discret">(@session.ValideePar)</small> }</td>
+                <td>
+                    @L[$"StatutSession.{session.Statut}"]
+                    @if (session.ClotureePar is { } par && par != session.Caissier)
+                    {
+                        <small class="pastille brouillon">@L["CompteePar", par]</small>
+                    }
+                    @if (session.ValideePar is not null) { <small class="discret">(@session.ValideePar)</small> }
+                </td>
                 <td>
                     @if (session.Statut == "Comptee" && Session.A(Permissions.SessionsValider))
                     {
                         <button class="lien" @onclick="() => Valider(session.Id)">@L["ValiderEcart"]</button>
+                    }
+                    else if (session.Statut == "Ouverte" && Session.A(Permissions.SessionsCloturer))
+                    {
+                        <button class="lien" @onclick="() => Preparer(session)">@L["CloturerAPlace"]</button>
                     }
                 </td>
             </tr>
@@ -55,6 +81,9 @@
     private List<SessionCaisse> _sessions = [];
     private string _statut = "";
     private string? _erreur;
+    private string? _succes;
+    private SessionCaisse? _aCloturer;
+    private decimal _especesComptees;
 
     protected override Task OnInitializedAsync() => Charger();
 
@@ -64,6 +93,27 @@
         var resultat = await Api.GetAsync<List<SessionCaisse>>(url);
         _sessions = resultat.Valeur ?? [];
         _erreur = resultat.Erreur;
+    }
+
+    private void Preparer(SessionCaisse session)
+    {
+        _aCloturer = session;
+        _especesComptees = 0;
+        _succes = null;
+        _erreur = null;
+    }
+
+    private async Task CloturerAPlace()
+    {
+        var session = _aCloturer!;
+        var resultat = await Api.PostAsync<SessionCaisse>($"api/caisse/sessions/{session.Id}/cloture", new { EspecesComptees = _especesComptees });
+        _erreur = resultat.Erreur;
+        if (resultat.Valeur is { } cloturee)
+        {
+            _succes = L["SessionClotureeAPlace", cloturee.NumeroCaisse, cloturee.Caissier, Format.Montant(cloturee.Ecart ?? 0)];
+            _aCloturer = null;
+            await Charger();
+        }
     }
 
     private async Task Valider(Guid id)

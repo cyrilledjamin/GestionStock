@@ -263,7 +263,7 @@ public sealed class CaisseTests(ApiDeTest api)
         Assert.Equal(5500m, avantCloture.Totaux.Credit);
         Assert.Equal(1, avantCloture.Totaux.NombreAvoirs);
         Assert.Equal(HttpStatusCode.Conflict, validationPrematuree.StatusCode);
-        Assert.Equal(("Comptee", -100m), (cloture.Statut, cloture.Ecart));
+        Assert.Equal(("Comptee", -100m, b.IdentifiantCaissier), (cloture.Statut, cloture.Ecart, cloture.ClotureePar));
         Assert.Equal(HttpStatusCode.Forbidden, parLeCaissier.StatusCode);
         Assert.Equal("Validee", validee.Statut);
         Assert.Equal(HttpStatusCode.NoContent, apres.StatusCode);
@@ -282,6 +282,36 @@ public sealed class CaisseTests(ApiDeTest api)
         Assert.Equal("Caisse.SessionDejaOuverte", (await IdentiteTests.LireProblemeAsync(deuxieme)).Code);
         Assert.Equal("Caisse.PosteOccupe", (await IdentiteTests.LireProblemeAsync(posteOccupe)).Code);
         Assert.Equal("Caisse.PosteInconnu", (await IdentiteTests.LireProblemeAsync(posteInconnu)).Code);
+    }
+
+    [Fact]
+    public async Task Le_gerant_cloture_a_sa_place_une_session_restee_ouverte_qui_bloque_le_poste()
+    {
+        var b = await BoutiqueAsync(fond: 1000m);
+        await VendreAsync(b, [(b.Carton, 1m)], Especes(6000)); // théorique : 1 000 + 5 500
+        using var autreCaissier = await api.ClientAvecRoleAsync(Roles.Caissier);
+        using var comptable = await api.ClientAvecRoleAsync(Roles.Comptable);
+        var oubliee = (await b.Caissier.GetFromJsonAsync<Session>("/api/caisse/sessions/courante", Annulation))!;
+
+        var bloque = await autreCaissier.PostAsJsonAsync("/api/caisse/sessions", new { numeroCaisse = b.Poste, fondCaisse = 0 }, Annulation);
+        var occupation = await autreCaissier.GetFromJsonAsync<List<Occupation>>("/api/caisse/postes/occupation", Annulation);
+        var parLeComptable = await comptable.PostAsJsonAsync($"/api/caisse/sessions/{oubliee.Id}/cloture", new { especesComptees = 6400 }, Annulation);
+        var parUnCaissier = await autreCaissier.PostAsJsonAsync($"/api/caisse/sessions/{oubliee.Id}/cloture", new { especesComptees = 6400 }, Annulation);
+        var cloture = await Lire<Session>(await b.Gerant.PostAsJsonAsync($"/api/caisse/sessions/{oubliee.Id}/cloture", new { especesComptees = 6400 }, Annulation));
+        var deuxFois = await b.Gerant.PostAsJsonAsync($"/api/caisse/sessions/{oubliee.Id}/cloture", new { especesComptees = 6400 }, Annulation);
+        var reprise = await autreCaissier.PostAsJsonAsync("/api/caisse/sessions", new { numeroCaisse = b.Poste, fondCaisse = 0 }, Annulation);
+        var titulaire = await b.Caissier.GetAsync("/api/caisse/sessions/courante", Annulation);
+        var validee = await Lire<Session>(await comptable.PostAsync($"/api/caisse/sessions/{oubliee.Id}/validation", null, Annulation));
+
+        Assert.Equal("Caisse.PosteOccupe", (await IdentiteTests.LireProblemeAsync(bloque)).Code);
+        Assert.Contains(occupation!, o => o.NumeroCaisse == b.Poste && o.SessionId == oubliee.Id && o.Caissier == b.IdentifiantCaissier);
+        Assert.Equal(HttpStatusCode.Forbidden, parLeComptable.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, parUnCaissier.StatusCode);
+        Assert.Equal(("Comptee", -100m, b.IdentifiantGerant), (cloture.Statut, cloture.Ecart, cloture.ClotureePar));
+        Assert.Equal((HttpStatusCode.Conflict, "Caisse.AucuneSessionOuverte"), (deuxFois.StatusCode, (await IdentiteTests.LireProblemeAsync(deuxFois)).Code));
+        Assert.Equal(HttpStatusCode.Created, reprise.StatusCode);
+        Assert.Equal(HttpStatusCode.NoContent, titulaire.StatusCode);
+        Assert.Equal("Validee", validee.Statut);
     }
 
     // --- Reçu ----------------------------------------------------------------------------------------------------
@@ -411,7 +441,9 @@ public sealed class CaisseTests(ApiDeTest api)
 
     private sealed record Totaux(int NombreAvoirs, decimal Credit, decimal EspecesTheoriques);
 
-    private sealed record Session(Guid Id, string Statut, decimal? Ecart, Totaux Totaux);
+    private sealed record Session(Guid Id, string Statut, decimal? Ecart, string? ClotureePar, Totaux Totaux);
+
+    private sealed record Occupation(string NumeroCaisse, Guid SessionId, string Caissier, DateTime OuvertureUtc);
 
     private sealed record Mouvement(string Type, decimal Variation, Guid DocumentId);
 

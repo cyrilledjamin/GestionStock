@@ -71,6 +71,9 @@ public static class Permissions
     /// <summary>Valider la clôture d'une session et son écart (RG36).</summary>
     public const string SessionsValider = "Caisse.Sessions.Valider";
 
+    /// <summary>Clôturer à la place de son titulaire une session restée ouverte qui bloque un poste (décision du 16/11/2026).</summary>
+    public const string SessionsCloturer = "Caisse.Sessions.Cloturer";
+
     /// <summary>Consulter les inventaires et les déclarations de démarque.</summary>
     public const string InventaireConsulter = "Inventaire.Consulter";
 

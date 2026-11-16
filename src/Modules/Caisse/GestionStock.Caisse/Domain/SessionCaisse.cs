@@ -37,6 +37,12 @@ internal sealed class SessionCaisse
 
     public decimal? EspecesComptees { get; private set; }
 
+    /// <summary>
+    /// Qui a compté et clôturé : le caissier titulaire, ou le Gérant qui clôture à sa place une session restée ouverte
+    /// (trace ENF03 avec <see cref="ClotureUtc"/>). Vide pour les sessions clôturées avant l'étape 37.
+    /// </summary>
+    public string? ClotureePar { get; private set; }
+
     /// <summary>Espèces comptées moins espèces théoriques : négatif s'il manque de l'argent.</summary>
     public decimal? Ecart { get; private set; }
 
@@ -62,9 +68,13 @@ internal sealed class SessionCaisse
         };
     }
 
-    /// <summary>Clôture par comptage des espèces : l'écart est calculé et enregistré (RG36).</summary>
-    public void Cloturer(decimal especesComptees, decimal especesTheoriques, DateTime maintenantUtc)
+    /// <summary>
+    /// Clôture par comptage des espèces : l'écart est calculé et enregistré (RG36), avec l'auteur du comptage. Le
+    /// titulaire clôture sa session ; le Gérant peut clôturer à sa place une session restée ouverte.
+    /// </summary>
+    public void Cloturer(decimal especesComptees, decimal especesTheoriques, string cloturePar, DateTime maintenantUtc)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(cloturePar);
         if (Statut != StatutSession.Ouverte)
         {
             throw new ExceptionCaisse(CodesErreurCaisse.AucuneSessionOuverte);
@@ -78,6 +88,7 @@ internal sealed class SessionCaisse
         EspecesComptees = especesComptees;
         EspecesTheoriques = especesTheoriques;
         Ecart = especesComptees - especesTheoriques;
+        ClotureePar = cloturePar;
         ClotureUtc = maintenantUtc;
         Statut = StatutSession.Comptee;
     }
