@@ -36,7 +36,7 @@ public static class ExtensionsInfrastructure
                     $"Chaîne de connexion « {NomChaineConnexion} » absente : définir ConnectionStrings__{NomChaineConnexion}.");
             }
 
-            return NpgsqlDataSource.Create(chaine);
+            return NpgsqlDataSource.Create(ChaineConnexion.Preparer(chaine));
         });
         services.TryAddScoped<ConnexionPartagee>();
         services.TryAddScoped<IUniteDeTravail, UniteDeTravail>();
