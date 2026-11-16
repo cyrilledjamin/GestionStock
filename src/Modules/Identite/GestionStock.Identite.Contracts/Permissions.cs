@@ -33,6 +33,9 @@ public static class Permissions
     /// <summary>Enregistrer ou annuler un paiement fournisseur (décision 27).</summary>
     public const string PaiementsFournisseursSaisir = "Achats.Paiements.Saisir";
 
+    /// <summary>Consulter les rapports (décision 33) : ventes et marge, stock, créances et dettes, caisse.</summary>
+    public const string RapportsConsulter = "Rapports.Consulter";
+
     /// <summary>Consulter les prix de vente et le régime de TVA.</summary>
     public const string PrixConsulter = "Prix.Consulter";
 

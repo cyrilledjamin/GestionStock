@@ -20,13 +20,13 @@ public sealed class MigrationsTests(BasePostgres basePostgres)
     }
 
     [Fact]
-    public async Task Le_schema_stock_contient_ses_tables_et_son_historique_de_migrations()
+    public async Task Le_schema_stock_contient_ses_tables_ses_vues_de_lecture_et_son_historique_de_migrations()
     {
         basePostgres.ExigerDocker();
         var source = basePostgres.Services.GetRequiredService<NpgsqlDataSource>();
 
         await using var commande = source.CreateCommand(
-            "SELECT table_name FROM information_schema.tables WHERE table_schema = 'stock' ORDER BY table_name");
+            "SELECT table_name || ':' || table_type FROM information_schema.tables WHERE table_schema = 'stock' ORDER BY table_name");
         await using var lecteur = await commande.ExecuteReaderAsync(TestContext.Current.CancellationToken);
         var tables = new List<string>();
         while (await lecteur.ReadAsync(TestContext.Current.CancellationToken))
@@ -34,7 +34,15 @@ public sealed class MigrationsTests(BasePostgres basePostgres)
             tables.Add(lecteur.GetString(0));
         }
 
-        string[] attendues = ["__ef_migrations_history", "mouvement_stock", "stock_emplacement", "stock_site"];
+        string[] attendues =
+        [
+            "__ef_migrations_history:BASE TABLE",
+            "mouvement_stock:BASE TABLE",
+            "stock_emplacement:BASE TABLE",
+            "stock_site:BASE TABLE",
+            "v_mouvements:VIEW",
+            "v_soldes:VIEW",
+        ];
         Assert.Equal(attendues, tables);
     }
 
