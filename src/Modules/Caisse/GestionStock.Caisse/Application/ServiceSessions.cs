@@ -42,7 +42,8 @@ internal sealed record SessionDto(
     decimal? EspecesComptees,
     decimal? Ecart,
     string? ValideePar,
-    TotauxSession Totaux);
+    TotauxSession Totaux,
+    long DernierNumeroPoste);
 
 internal sealed record OuvertureSession(string NumeroCaisse, decimal FondCaisse);
 
@@ -233,5 +234,6 @@ internal sealed class ServiceSessions(
 
     private async Task<SessionDto> VersDto(SessionCaisse s, CancellationToken annulation) =>
         new(s.Id, s.NumeroCaisse, s.Caissier, s.OuvertureUtc, s.FondCaisse, s.Statut, s.ClotureUtc, s.ClotureePar, s.EspecesComptees, s.Ecart, s.ValideePar,
-            await Totaux(s, annulation));
+            await Totaux(s, annulation),
+            await contexte.Compteurs.AsNoTracking().Where(c => c.NumeroCaisse == s.NumeroCaisse).Select(c => c.DernierNumero).SingleOrDefaultAsync(annulation));
 }

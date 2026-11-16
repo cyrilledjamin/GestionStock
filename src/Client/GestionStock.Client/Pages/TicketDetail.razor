@@ -1,6 +1,8 @@
 @page "/caisse/tickets/{Id:guid}"
 @inject Api Api
 @inject Session Session
+@inject CaisseHorsLigne HorsLigne
+@inject EtatConnexion Connexion
 
 <PageTitle>@(_ticket?.Numero ?? L["Ticket"]) · GestionStock</PageTitle>
 
@@ -75,11 +77,89 @@ else if (_ticket is not null)
         var resultat = await Api.GetAsync<TicketCaisse>($"api/caisse/tickets/{Id}");
         _erreur = resultat.Erreur;
         _ticket = resultat.Valeur;
+        if (resultat.Code == Api.CodeHorsLigne && await HorsLigne.SessionGardeeAsync() is { } session)
+        {
+            // Hors ligne (7.8) : le ticket est cherché parmi ceux de la session gardés sur le poste.
+            _session = session;
+            _ticket = (await HorsLigne.TicketsAsync(session.Id)).FirstOrDefault(t => t.Id == Id || t.IdIdempotence == Id);
+            _erreur = _ticket is null ? L["TicketHorsPoste"].Value : null;
+        }
+
         _aRendre = _ticket?.Lignes.ToDictionary(l => l.Id, _ => 0m) ?? [];
+    }
+
+    private SessionCaisse? _session;
+
+    /// <summary>
+    /// Avoir sans serveur (7.8) : sur un ticket de la session sans part à crédit (la dette à annuler exige le
+    /// serveur). Le ticket d'origine est désigné par son identifiant, ou par son idempotence s'il a été fait hors ligne,
+    /// et ses lignes par leur rang ; l'avoir est numéroté par le poste et part avec la file.
+    /// </summary>
+    private async Task FaireAvoirHorsLigne()
+    {
+        var session = _session ?? await HorsLigne.SessionGardeeAsync();
+        if (session is null || _ticket is null)
+        {
+            _erreur = L["TicketHorsPoste"];
+            return;
+        }
+
+        if (TicketLocal.AUnePartACredit(_ticket))
+        {
+            _erreur = L["AvoirCreditEnLigne"];
+            return;
+        }
+
+        if (_mode == ModesPaiement.MobileMoney && string.IsNullOrWhiteSpace(_reference))
+        {
+            _erreur = L["ReferenceMobileMoney"];
+            return;
+        }
+
+        var rendus = _ticket.Lignes.Where(l => _aRendre.GetValueOrDefault(l.Id) > 0).ToDictionary(l => l.Ordre, l => _aRendre[l.Id]);
+        if (rendus.Count == 0 || _ticket.Lignes.Any(l => _aRendre.GetValueOrDefault(l.Id) > l.Quantite - l.QuantiteRendue))
+        {
+            _erreur = L["QuantiteARendreInvalide"];
+            return;
+        }
+
+        var maintenant = DateTime.UtcNow;
+        var numero = TicketLocal.Numero(session.NumeroCaisse, await HorsLigne.ProchainNumeroAsync(session.NumeroCaisse));
+        var avoir = TicketLocal.Avoir(_ticket, rendus, _idIdempotence, numero, maintenant, Session.Profil!.Identifiant,
+            $"{Session.Profil.NomComplet} ({Session.Profil.Identifiant})", _mode, _reference);
+        var duServeur = _ticket.Id != _ticket.IdIdempotence;
+        var corps = new
+        {
+            IdIdempotence = _idIdempotence,
+            TicketOrigineId = duServeur ? _ticket.Id : (Guid?)null,
+            TicketOrigineIdIdempotence = duServeur ? (Guid?)null : _ticket.IdIdempotence,
+            Lignes = rendus.Select(r => new { OrdreOrigine = r.Key, Quantite = r.Value }).ToList(),
+            ModeRemboursement = _mode,
+            Reference = _reference,
+            HorsLigne = new { SessionId = session.Id, Numero = TicketLocal.Rang(numero), DateUtc = maintenant },
+        };
+        await HorsLigne.AjouterAsync(new OperationEnAttente(
+            CaisseHorsLigne.NouvelleCle(), OperationEnAttente.Avoir, _idIdempotence, Session.Profil.Identifiant, session.Id, "api/caisse/avoirs",
+            System.Text.Json.JsonSerializer.SerializeToElement(corps, System.Text.Json.JsonSerializerOptions.Web), null, 0m,
+            $"{numero} · -{Format.Montant(avoir.TotalTtc)}", maintenant));
+
+        // Quantités rendues notées sur le ticket d'origine du poste : pas deux avoirs pour la même marchandise.
+        await HorsLigne.GarderTicketAsync(session.Id, _ticket with
+        {
+            Lignes = [.. _ticket.Lignes.Select(l => l with { QuantiteRendue = l.QuantiteRendue + rendus.GetValueOrDefault(l.Ordre) })],
+        });
+        await HorsLigne.GarderTicketAsync(session.Id, avoir);
+        _avoir = avoir;
     }
 
     private async Task FaireAvoir()
     {
+        if (!Connexion.EnLigne)
+        {
+            await FaireAvoirHorsLigne();
+            return;
+        }
+
         _enCours = true;
         var resultat = await Api.PostAsync<TicketCaisse>("api/caisse/avoirs", new
         {
@@ -90,6 +170,12 @@ else if (_ticket is not null)
             Reference = _reference,
         });
         _enCours = false;
+        if (resultat.Code == Api.CodeHorsLigne)
+        {
+            await FaireAvoirHorsLigne();
+            return;
+        }
+
         _erreur = resultat.Erreur;
         _avoir = resultat.Valeur;
     }

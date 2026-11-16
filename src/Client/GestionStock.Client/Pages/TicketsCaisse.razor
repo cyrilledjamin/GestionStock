@@ -1,6 +1,7 @@
 @page "/caisse/tickets"
 @inject Api Api
 @inject NavigationManager Navigation
+@inject CaisseHorsLigne HorsLigne
 
 <PageTitle>@L["TicketsDuJour"] · GestionStock</PageTitle>
 
@@ -42,6 +43,13 @@
     protected override async Task OnInitializedAsync()
     {
         var session = await Api.GetAsync<SessionCaisse>("api/caisse/sessions/courante");
+        if (session.Code == Api.CodeHorsLigne)
+        {
+            // Hors ligne (7.8) : tickets de la session gardés sur le poste, y compris ceux pas encore envoyés.
+            _tickets = await HorsLigne.SessionGardeeAsync() is { } gardee ? await HorsLigne.TicketsAsync(gardee.Id) : [];
+            return;
+        }
+
         _erreur = session.Erreur;
         if (session.Valeur is { } courante)
         {

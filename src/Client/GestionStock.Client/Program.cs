@@ -17,6 +17,7 @@ builder.Services.AddScoped<Boutique>();
 builder.Services.AddScoped<EtatConnexion>();
 builder.Services.AddScoped<StockageLocal>();
 builder.Services.AddScoped<CacheCaisse>();
+builder.Services.AddScoped<CaisseHorsLigne>();
 builder.Services.AddLocalization(options => options.ResourcesPath = "Ressources");
 
 var hote = builder.Build();
@@ -31,4 +32,9 @@ CultureInfo.DefaultThreadCurrentUICulture = culture;
 await hote.Services.GetRequiredService<EtatConnexion>().DemarrerAsync();
 await hote.Services.GetRequiredService<Session>().InitialiserAsync();
 await hote.Services.GetRequiredService<Boutique>().ChargerAsync();
+
+// Opérations faites hors ligne et pas encore envoyées (7.8) : relues du poste, envoyées si le serveur répond.
+var horsLigne = hote.Services.GetRequiredService<CaisseHorsLigne>();
+await horsLigne.ChargerAsync();
+_ = horsLigne.SynchroniserAsync();
 await hote.RunAsync();

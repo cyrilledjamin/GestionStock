@@ -3,6 +3,10 @@
 @inject IJSRuntime Js
 @inject CacheCaisse Cache
 @inject StockageLocal Stockage
+@inject CaisseHorsLigne HorsLigne
+@inject EtatConnexion Connexion
+@inject Session Session
+@inject Boutique Boutique
 @implements IAsyncDisposable
 
 <PageTitle>@L["Caisse"] · GestionStock</PageTitle>
@@ -428,17 +432,48 @@ else
         StateHasChanged();
     }
 
+    /// <summary>
+    /// Session ouverte du caissier. En ligne, elle est gardée sur le poste avec le dernier numéro de son poste et ses
+    /// tickets ; serveur injoignable, la caisse reprend celle du poste (7.8). L'ouverture, elle, exige le serveur
+    /// (décision 40).
+    /// </summary>
     private async Task ChargerSession()
     {
         var resultat = await Api.GetAsync<SessionCaisse>("api/caisse/sessions/courante");
+        if (resultat.Code == Api.CodeHorsLigne)
+        {
+            _session = await HorsLigne.SessionGardeeAsync();
+            _erreur = _session is null ? L["OuvertureHorsLigne"].Value : null;
+            return;
+        }
+
         _session = resultat.Valeur;
         _erreur = resultat.Erreur;
+        if (_session is { } session)
+        {
+            await HorsLigne.GarderSessionAsync(session);
+            if ((await Api.GetAsync<List<TicketCaisse>>($"api/caisse/sessions/{session.Id}/tickets")).Valeur is { } tickets)
+            {
+                await HorsLigne.GarderTicketsAsync(session.Id, tickets);
+            }
+        }
     }
 
     /// <summary>Articles rapides choisis par le Gérant, avec leur prix lu une fois à l'ouverture de l'écran.</summary>
     private async Task ChargerRapides()
     {
-        _rapides = (await Api.GetAsync<List<ArticleVendable>>("api/referentiel/vendables/rapides")).Valeur ?? [];
+        var rapides = await Api.GetAsync<List<ArticleVendable>>("api/referentiel/vendables/rapides");
+        if (rapides.Code == Api.CodeHorsLigne)
+        {
+            await Cache.ChargerAsync();
+            _rapides = Cache.Catalogue?.Rapides.ToList() ?? [];
+            _prixRapides = _rapides
+                .Select(v => (v.ConditionnementId, Prix: Cache.Catalogue!.Prix(v.ConditionnementId, Format.JourDouala(DateTime.UtcNow))))
+                .Where(p => p.Prix is not null).ToDictionary(p => p.ConditionnementId, p => p.Prix!.Value);
+            return;
+        }
+
+        _rapides = rapides.Valeur ?? [];
         var prix = await Task.WhenAll(_rapides.Select(async v =>
             (v.ConditionnementId, Prix: (await Api.GetAsync<PrixApplicable>($"api/prix/conditionnements/{v.ConditionnementId}")).Valeur)));
         _prixRapides = prix.Where(p => p.Prix is not null).ToDictionary(p => p.ConditionnementId, p => p.Prix!.PrixTtc);
@@ -450,6 +485,12 @@ else
         _erreur = resultat.Erreur;
         _session = resultat.Valeur ?? _session;
         _focaliserScan = true;
+        if (resultat.Valeur is { } ouverte)
+        {
+            // Gardée aussitôt sur le poste : une coupure juste après l'ouverture n'empêche pas de vendre (7.8).
+            await HorsLigne.GarderSessionAsync(ouverte);
+        }
+
         if (resultat.Code == "Caisse.PosteOccupe")
         {
             // Poste pris entre-temps : on montre qui l'occupe.
@@ -496,7 +537,17 @@ else
 
         _rechercheDifferee?.Cancel();
         var texte = _saisie.Trim();
-        var scan = await Api.GetAsync<ArticleVendable>($"api/referentiel/scan/{Uri.EscapeDataString(texte)}");
+        var scan = Connexion.EnLigne
+            ? await Api.GetAsync<ArticleVendable>($"api/referentiel/scan/{Uri.EscapeDataString(texte)}")
+            : new Resultat<ArticleVendable>(default, null, Api.CodeHorsLigne);
+        if (scan.Code == Api.CodeHorsLigne)
+        {
+            await Cache.ChargerAsync();
+            scan = Cache.Catalogue?.Resoudre(texte) is { } local
+                ? new Resultat<ArticleVendable>(local, null)
+                : new Resultat<ArticleVendable>(default, L["CodeInconnuHorsLigne", texte]);
+        }
+
         if (scan.Valeur is { } vendable)
         {
             await Ajouter(vendable);
@@ -514,8 +565,19 @@ else
         _erreur = trouves.Count == 0 ? scan.Erreur : null;
     }
 
-    private async Task<List<ArticleVendable>> Rechercher(string texte) =>
-        (await Api.GetAsync<List<ArticleVendable>>($"api/referentiel/vendables?recherche={Uri.EscapeDataString(texte)}")).Valeur ?? [];
+    private async Task<List<ArticleVendable>> Rechercher(string texte)
+    {
+        var trouves = Connexion.EnLigne
+            ? await Api.GetAsync<List<ArticleVendable>>($"api/referentiel/vendables?recherche={Uri.EscapeDataString(texte)}")
+            : new Resultat<List<ArticleVendable>>(default, null, Api.CodeHorsLigne);
+        if (trouves.Code != Api.CodeHorsLigne)
+        {
+            return trouves.Valeur ?? [];
+        }
+
+        await Cache.ChargerAsync();
+        return Cache.Catalogue?.Rechercher(texte).ToList() ?? [];
+    }
 
     private async Task Ajouter(ArticleVendable vendable)
     {
@@ -532,15 +594,24 @@ else
         }
 
         // Le prix affiché vient de l'application ; le serveur le relit à l'encaissement (RG37).
-        var prix = await Api.GetAsync<PrixApplicable>($"api/prix/conditionnements/{vendable.ConditionnementId}");
-        if (prix.Valeur is null)
+        var prix = Connexion.EnLigne
+            ? await Api.GetAsync<PrixApplicable>($"api/prix/conditionnements/{vendable.ConditionnementId}")
+            : new Resultat<PrixApplicable>(default, null, Api.CodeHorsLigne);
+        decimal? prixTtc = prix.Valeur?.PrixTtc;
+        if (prix.Code == Api.CodeHorsLigne)
         {
-            _erreur = prix.Erreur ?? L["PrixAbsentArticle", vendable.CodeArticle];
+            await Cache.ChargerAsync();
+            prixTtc = Cache.Catalogue?.Prix(vendable.ConditionnementId, Format.JourDouala(DateTime.UtcNow));
+        }
+
+        if (prixTtc is not { } prixDuJour)
+        {
+            _erreur = prix.Code == Api.CodeHorsLigne || prix.Erreur is null ? L["PrixAbsentArticle", vendable.CodeArticle] : prix.Erreur;
             return;
         }
 
         _erreur = null;
-        _ligneChoisie = _vente.Ajouter(vendable, prix.Valeur.PrixTtc);
+        _ligneChoisie = _vente.Ajouter(vendable, prixDuJour);
     }
 
     private void Choisir(LignePanier ligne)
@@ -605,6 +676,12 @@ else
 
     private async Task Encaisser()
     {
+        if (!Connexion.EnLigne)
+        {
+            await EncaisserHorsLigne();
+            return;
+        }
+
         _enCours = true;
         var demande = new
         {
@@ -616,6 +693,12 @@ else
         };
         var resultat = await Api.PostAsync<TicketCaisse>("api/caisse/tickets", demande);
         _enCours = false;
+        if (resultat.Code == Api.CodeHorsLigne)
+        {
+            await EncaisserHorsLigne();
+            return;
+        }
+
         _erreur = resultat.Erreur;
         _validationNecessaire |= resultat.Code is "Caisse.PlafondDepasse" or "Caisse.RemiseNonValidee" or "Caisse.ValidationRefusee";
         _validationMotDePasse = "";
@@ -623,8 +706,89 @@ else
         {
             _dernierTicket = ticket;
             _focaliserNouvelleVente = true;
+            await HorsLigne.NoterNumeroAsync(_session!.NumeroCaisse, TicketLocal.Rang(ticket.Numero));
+            await HorsLigne.GarderTicketAsync(_session.Id, ticket);
             await ChargerSession();
         }
+    }
+
+    /// <summary>
+    /// Vente sans serveur (7.8) : contrôles que le serveur ferait (paiement, rendu en espèces, référence Mobile Money),
+    /// remise et dépassement de plafond refusés (décision 39), plafond lu sur le dernier solde connu moins le crédit
+    /// déjà en file ; puis numéro du poste, mise en file, et seulement ensuite le reçu.
+    /// </summary>
+    private async Task EncaisserHorsLigne()
+    {
+        _erreur = ControleHorsLigne();
+        if (_erreur is not null || _session is not { } session)
+        {
+            return;
+        }
+
+        var maintenant = DateTime.UtcNow;
+        var numero = TicketLocal.Numero(session.NumeroCaisse, await HorsLigne.ProchainNumeroAsync(session.NumeroCaisse));
+        var ticket = TicketLocal.Vente(_vente, _idIdempotence, numero, maintenant, Session.Profil!.Identifiant,
+            $"{Session.Profil.NomComplet} ({Session.Profil.Identifiant})", _client?.Id, await TauxTvaAsync());
+        var corps = new
+        {
+            IdIdempotence = _idIdempotence,
+            ClientId = _client?.Id,
+            Lignes = _vente.Lignes.Select(l => new { l.Vendable.ConditionnementId, l.Quantite, l.Remise, l.Vendable.CodeScanne, PrixUnitaire = l.Prix }).ToList(),
+            Paiements = _vente.Paiements.Where(p => p.Montant > 0).Select(p => new { p.Mode, p.Montant, p.Reference }).ToList(),
+            HorsLigne = new { SessionId = session.Id, Numero = TicketLocal.Rang(numero), DateUtc = maintenant },
+        };
+        await HorsLigne.AjouterAsync(new OperationEnAttente(
+            CaisseHorsLigne.NouvelleCle(), OperationEnAttente.Vente, _idIdempotence, Session.Profil.Identifiant, session.Id, "api/caisse/tickets",
+            System.Text.Json.JsonSerializer.SerializeToElement(corps, System.Text.Json.JsonSerializerOptions.Web), _client?.Id,
+            _vente.Paiements.Where(p => p.Mode == ModesPaiement.Credit).Sum(p => p.Montant), $"{numero} · {Format.Montant(ticket.TotalTtc)}", maintenant));
+        await HorsLigne.GarderTicketAsync(session.Id, ticket);
+        _session = session with { Totaux = session.Totaux with { NombreVentes = session.Totaux.NombreVentes + 1, Ventes = session.Totaux.Ventes + ticket.TotalTtc } };
+        _dernierTicket = ticket;
+        _focaliserNouvelleVente = true;
+    }
+
+    /// <summary>Contrôles du serveur faits sur le poste : une vente mise en file ne doit pas être refusée au retour du réseau.</summary>
+    private string? ControleHorsLigne()
+    {
+        if (_vente.Lignes.Any(l => l.Remise > 0) || !string.IsNullOrWhiteSpace(_validationIdentifiant))
+        {
+            return L["RemiseHorsLigne"];
+        }
+
+        var paye = _vente.Paiements.Where(p => p.Montant > 0).ToList();
+        if (paye.Sum(p => p.Montant) < _vente.Total)
+        {
+            return L["ResteAPayer"] + " : " + Format.Montant(_vente.Reste);
+        }
+
+        if (paye.Sum(p => p.Montant) - _vente.Total > paye.Where(p => p.Mode == ModesPaiement.Especes).Sum(p => p.Montant))
+        {
+            return L["RenduSansEspeces"];
+        }
+
+        if (paye.Any(p => p.Mode == ModesPaiement.MobileMoney && string.IsNullOrWhiteSpace(p.Reference)))
+        {
+            return L["ReferenceMobileMoney"];
+        }
+
+        var credit = paye.Where(p => p.Mode == ModesPaiement.Credit).Sum(p => p.Montant);
+        if (credit > 0)
+        {
+            var client = _client is null ? null : Cache.Clients.FirstOrDefault(c => c.Id == _client.Id) ?? _client;
+            if (client is null || credit > PlafondHorsLigne.Disponible(client, HorsLigne.EnAttente))
+            {
+                return L["PlafondHorsLigne"];
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>Taux de TVA appliqué (régime de l'entreprise, RG37), lu dans la grille gardée sur le poste.</summary>
+    private async Task<decimal> TauxTvaAsync()
+    {
+        var grille = await Stockage.LireAsync<GrillePrix>(StockageLocal.Cache, "grille");
+        return grille is { Assujetti: true } ? grille.TauxTva : 0m;
     }
 
     private void NouvelleVente()
@@ -644,7 +808,15 @@ else
 
     private async Task Cloturer()
     {
-        var resultat = await Api.PostAsync<SessionCaisse>("api/caisse/sessions/courante/cloture", new { EspecesComptees = _especesComptees });
+        await HorsLigne.SynchroniserAsync();
+        if (!Connexion.EnLigne || HorsLigne.EnAttente.Count > 0)
+        {
+            _erreur = L["ClotureAttendSynchro", HorsLigne.EnAttente.Count];
+            return;
+        }
+
+        var dernier = await HorsLigne.DernierNumeroAsync(_session!.NumeroCaisse);
+        var resultat = await Api.PostAsync<SessionCaisse>("api/caisse/sessions/courante/cloture", new { EspecesComptees = _especesComptees, DernierNumero = dernier > 0 ? dernier : (long?)null });
         _erreur = resultat.Erreur;
         if (resultat.Valeur is { } session)
         {
@@ -659,14 +831,35 @@ else
 
     private async Task Rembourser()
     {
-        var resultat = await Api.PostAsync<RemboursementCredit>("api/caisse/remboursements", new
+        var idIdempotence = Guid.NewGuid();
+        var demande = new
         {
-            IdIdempotence = Guid.NewGuid(),
+            IdIdempotence = idIdempotence,
             ClientId = _clientRemboursement!.Id,
             Mode = _modeRemboursement,
             Montant = _montantRemboursement,
             Reference = _referenceRemboursement,
-        });
+        };
+        var resultat = Connexion.EnLigne
+            ? await Api.PostAsync<RemboursementCredit>("api/caisse/remboursements", demande)
+            : new Resultat<RemboursementCredit>(default, null, Api.CodeHorsLigne);
+        if (resultat.Code == Api.CodeHorsLigne && _session is { } session)
+        {
+            // Hors ligne (7.8) : le remboursement part avec la file ; il diminue déjà la dette connue du poste.
+            var maintenant = DateTime.UtcNow;
+            await HorsLigne.AjouterAsync(new OperationEnAttente(
+                CaisseHorsLigne.NouvelleCle(), OperationEnAttente.Remboursement, idIdempotence, Session.Profil!.Identifiant, session.Id, "api/caisse/remboursements",
+                System.Text.Json.JsonSerializer.SerializeToElement(new { demande.IdIdempotence, demande.ClientId, demande.Mode, demande.Montant, demande.Reference, HorsLigne = new { SessionId = session.Id, Numero = (long?)null, DateUtc = maintenant } }, System.Text.Json.JsonSerializerOptions.Web),
+                _clientRemboursement.Id, -_montantRemboursement, $"{_clientRemboursement.Nom} · {Format.Montant(_montantRemboursement)}", maintenant));
+            _succes = L["RemboursementEnAttente", Format.Montant(_montantRemboursement), _clientRemboursement.Nom];
+            _erreur = null;
+            _panneau = Panneau.Aucun;
+            _clientRemboursement = null;
+            _montantRemboursement = 0;
+            _referenceRemboursement = null;
+            return;
+        }
+
         _erreur = resultat.Erreur;
         if (resultat.Valeur is { } remboursement)
         {

@@ -332,6 +332,18 @@ la grille de prix et les clients à crédit avec leur dernier solde, rafraîchis
 (`CacheCaisse`). Un serveur injoignable fait passer le poste hors ligne (bandeau sur toutes les pages) ; une sonde
 `/health` toutes les 10 secondes détecte son retour. Un rechargement de page pendant la coupure garde le caissier
 connecté (profil de l'onglet) ; un onglet fermé ou un PC redémarré exige le serveur pour se reconnecter (décision 41).
+Une nouvelle version s'active dès son installation et s'applique au chargement suivant de la page, jamais au milieu
+d'une vente.
+
+**Caisse hors ligne** (7.8, ENF08, décisions 38 à 41) : la session ouverte (avec le dernier numéro de son poste) et ses
+tickets sont gardés sur le poste. Serveur injoignable, la caisse continue : scan, recherche et prix du jour lus sur le
+poste ; l'encaissement numérote le ticket à la suite du poste (RG34), le met **en file** dans IndexedDB puis imprime le
+reçu ; avoir (sur un ticket de la session sans part à crédit) et remboursement de crédit aussi. Avant la mise en file,
+le poste fait les contrôles du serveur (paiement, rendu en espèces, référence Mobile Money) ; remise et validation par un
+responsable sont refusées, et le crédit doit tenir dans le plafond (dernier solde connu, crédit en file compris). La
+file part dans l'ordre dès que le serveur répond (`CaisseHorsLigne`), sous le compte de son caissier seulement ; une
+opération refusée reste en file avec son message. Un bandeau indique le nombre d'opérations en attente. La clôture
+attend que la file soit vide, et le serveur la refuse tant que le dernier numéro du poste n'est pas arrivé (RG36).
 Vérifié dans Chromium : le navigateur intégré de l'outil de développement refuse les service workers.
 
 ## Référentiel
@@ -697,7 +709,7 @@ sur une machine Linux de GitHub qui dispose de Docker :
 | 42 | Hors ligne : catalogue et grille de prix de la caisse, compression des réponses | Fait |
 | 43 | Hors ligne : tickets du terrain côté serveur, anomalies, clôture gardée | Fait |
 | 44 | Hors ligne : application installable (PWA), stockage du poste, état de connexion | Fait |
-| 45 | Hors ligne : vente, avoir, remboursement en file, synchronisation | À faire |
+| 45 | Hors ligne : vente, avoir, remboursement en file, synchronisation | Fait |
 | 46 | Anomalies de synchronisation à traiter | À faire |
 | 47 | Vérification, CI, README, démonstration de la tranche 7 | À faire |
 

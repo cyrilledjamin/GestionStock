@@ -2,6 +2,7 @@
 @inject Api Api
 @inject IJSRuntime Js
 @inject Boutique Boutique
+@inject CacheCaisse Cache
 
 @if (Ticket is not null)
 {
@@ -88,7 +89,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _entete = (await Api.GetAsync<EnteteRecu>("api/caisse/entete")).Valeur;
+        _entete = (await Api.GetAsync<EnteteRecu>("api/caisse/entete")).Valeur ?? Cache.Entete;
     }
 
     protected override async Task OnParametersSetAsync()
@@ -98,6 +99,7 @@
             : null;
         _client = Ticket?.ClientId is { } client
             ? (await Api.GetAsync<FicheClient>($"api/credit/clients/{client}")).Valeur?.Client.Nom
+              ?? Cache.Clients.FirstOrDefault(c => c.Id == client)?.Nom
             : null;
     }
 

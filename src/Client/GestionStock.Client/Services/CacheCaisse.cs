@@ -11,12 +11,16 @@ public sealed class CacheCaisse(Api api, StockageLocal stockage)
     private const string CleGrille = "grille";
     private const string CleClients = "clients";
     private const string CleDate = "cache-date";
+    private const string CleEntete = "entete";
 
     /// <summary>Catalogue prêt à l'emploi, ou null tant que le poste n'a jamais rien reçu.</summary>
     public CatalogueLocal? Catalogue { get; private set; }
 
     /// <summary>Clients à crédit avec leur dernier solde connu (contrôle du plafond hors ligne, 7.8).</summary>
     public IReadOnlyList<ClientCredit> Clients { get; private set; } = [];
+
+    /// <summary>En-tête du reçu (identité de l'entreprise, régime de TVA), pour imprimer un reçu hors ligne.</summary>
+    public EnteteRecu? Entete { get; private set; }
 
     /// <summary>Date de la dernière mise à jour réussie, affichée hors ligne (« données du … »).</summary>
     public DateTime? MiseAJourUtc { get; private set; }
@@ -35,6 +39,7 @@ public sealed class CacheCaisse(Api api, StockageLocal stockage)
         {
             Catalogue = new CatalogueLocal(catalogue, grille);
             Clients = await stockage.LireAsync<List<ClientCredit>>(StockageLocal.Cache, CleClients) ?? [];
+            Entete = await stockage.LireAsync<EnteteRecu>(StockageLocal.Cache, CleEntete);
             MiseAJourUtc = await stockage.LireAsync<DateTime?>(StockageLocal.Cache, CleDate);
         }
     }
@@ -45,6 +50,7 @@ public sealed class CacheCaisse(Api api, StockageLocal stockage)
         var catalogue = await api.GetAsync<CatalogueCaisse>("api/referentiel/catalogue-caisse");
         var grille = await api.GetAsync<GrillePrix>("api/prix/grille");
         var clients = await api.GetAsync<List<ClientCredit>>("api/credit/clients");
+        var entete = await api.GetAsync<EnteteRecu>("api/caisse/entete");
         if (catalogue.Valeur is null || grille.Valeur is null)
         {
             await ChargerAsync();
@@ -53,11 +59,16 @@ public sealed class CacheCaisse(Api api, StockageLocal stockage)
 
         Catalogue = new CatalogueLocal(catalogue.Valeur, grille.Valeur);
         Clients = clients.Valeur ?? Clients;
+        Entete = entete.Valeur ?? Entete;
         MiseAJourUtc = DateTime.UtcNow;
         await stockage.EcrireAsync(StockageLocal.Cache, CleCatalogue, catalogue.Valeur);
         await stockage.EcrireAsync(StockageLocal.Cache, CleGrille, grille.Valeur);
         await stockage.EcrireAsync(StockageLocal.Cache, CleClients, Clients);
         await stockage.EcrireAsync(StockageLocal.Cache, CleDate, MiseAJourUtc);
+        if (Entete is not null)
+        {
+            await stockage.EcrireAsync(StockageLocal.Cache, CleEntete, Entete);
+        }
         return true;
     }
 }
