@@ -32,7 +32,7 @@
     </form>
 }
 
-<table>
+<table class="cartes">
     <thead>
         <tr>
             <th>@L["Poste"]</th><th>@L["Caissier"]</th><th>@L["Ouverture"]</th><th class="nombre">@L["Ventes"]</th>
@@ -43,14 +43,14 @@
         @foreach (var session in _sessions)
         {
             <tr class="@(session.Ecart < 0 ? "negatif" : "")">
-                <td>@session.NumeroCaisse</td>
-                <td>@session.Caissier</td>
-                <td class="court">@Format.Date(session.OuvertureUtc)</td>
-                <td class="nombre">@Format.Montant(session.Totaux.Ventes - session.Totaux.Avoirs)</td>
-                <td class="nombre">@Format.Montant(session.Totaux.EspecesTheoriques)</td>
-                <td class="nombre">@(session.EspecesComptees is { } comptees ? Format.Montant(comptees) : "")</td>
-                <td class="nombre">@(session.Ecart is { } ecart ? Format.Montant(ecart) : "")</td>
-                <td>
+                <td data-label="@L["Poste"]">@session.NumeroCaisse</td>
+                <td data-label="@L["Caissier"]">@session.Caissier</td>
+                <td data-label="@L["Ouverture"]" class="court">@Format.Date(session.OuvertureUtc)</td>
+                <td data-label="@L["Ventes"]" class="nombre">@Format.Montant(session.Totaux.Ventes - session.Totaux.Avoirs)</td>
+                <td data-label="@L["EspecesTheoriques"]" class="nombre">@Format.Montant(session.Totaux.EspecesTheoriques)</td>
+                <td data-label="@L["EspecesComptees"]" class="nombre">@(session.EspecesComptees is { } comptees ? Format.Montant(comptees) : "")</td>
+                <td data-label="@L["Ecart"]" class="nombre">@(session.Ecart is { } ecart ? Format.Montant(ecart) : "")</td>
+                <td data-label="@L["Statut"]">
                     @L[$"StatutSession.{session.Statut}"]
                     @if (session.ClotureePar is { } par && par != session.Caissier)
                     {

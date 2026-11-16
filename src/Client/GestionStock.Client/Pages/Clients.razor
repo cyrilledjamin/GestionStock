@@ -34,17 +34,17 @@
     </form>
 }
 
-<table>
+<table class="cartes">
     <thead><tr><th>@L["Nom"]</th><th>@L["Telephone"]</th><th class="nombre">@L["Plafond"]</th><th class="nombre">@L["SoldeDu"]</th><th class="nombre">@L["EnRetard"]</th></tr></thead>
     <tbody>
         @foreach (var client in _clients)
         {
             <tr class="@(client.Actif ? "" : "inactif") @(client.MontantEnRetard > 0 ? "negatif" : "")">
-                <td><a href="clients/@client.Id">@client.Nom</a></td>
-                <td>@client.Telephone</td>
-                <td class="nombre">@Format.Montant(client.PlafondCredit)</td>
-                <td class="nombre">@Format.Montant(client.SoldeDu)</td>
-                <td class="nombre">@(client.MontantEnRetard > 0 ? Format.Montant(client.MontantEnRetard) : "")</td>
+                <td data-label="@L["Nom"]"><a href="clients/@client.Id">@client.Nom</a></td>
+                <td data-label="@L["Telephone"]">@client.Telephone</td>
+                <td data-label="@L["Plafond"]" class="nombre">@Format.Montant(client.PlafondCredit)</td>
+                <td data-label="@L["SoldeDu"]" class="nombre">@Format.Montant(client.SoldeDu)</td>
+                <td data-label="@L["EnRetard"]" class="nombre">@(client.MontantEnRetard > 0 ? Format.Montant(client.MontantEnRetard) : "")</td>
             </tr>
         }
         @if (_clients.Count == 0)

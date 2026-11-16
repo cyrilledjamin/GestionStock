@@ -25,6 +25,7 @@
     --focus: #1a73e8;
     --pointille-recu: #999999;
     --voile: rgba(16, 24, 20, .4);
+    --ombre-barre: rgba(16, 24, 20, .08);
 
     /* Typographie : texte de base 16 px, échelle 1.2 */
     --police: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -333,6 +334,39 @@ kbd { font-family: var(--police-chasse-fixe); font-size: var(--t-xs); font-weigh
     .indicateurs { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--e-2); }
     .indicateur { padding: var(--e-3); }
     .indicateur strong { font-size: var(--t-l); }
+}
+
+/* Barre de total de la caisse : sur tablette et téléphone, l'encaissement passe sous le panier ; le total, le reste et
+   l'accès au paiement restent visibles en bas de l'écran pendant le scan. */
+.barre-total { display: none; }
+
+@media (max-width: 1000px) {
+    /* Fixée à la fenêtre (le conteneur .contenu défile horizontalement, ce qui rendrait « sticky » inopérant) ;
+       la vente réserve sa hauteur en bas pour ne rien masquer. */
+    .barre-total { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 4; align-items: center; justify-content: space-between; gap: var(--e-3); padding: var(--e-2) var(--e-4); background: var(--surface); border-top: 1px solid var(--bordure); box-shadow: 0 -4px 12px var(--ombre-barre); }
+    .vente { padding-bottom: 5rem; }
+    .barre-total .montants { display: flex; flex-direction: column; line-height: 1.2; }
+    .barre-total .montants strong { font-size: var(--t-xl); color: var(--vert); font-variant-numeric: tabular-nums; }
+    .barre-total .montants small { color: var(--discret); }
+}
+
+/* Listes en cartes sur téléphone : chaque ligne devient une carte, chaque cellule garde l'intitulé de sa colonne. */
+@media (max-width: 760px) {
+    .contenu table.cartes { display: block; overflow: visible; border: none; background: none; box-shadow: none; }
+    table.cartes thead { display: none; }
+    table.cartes tbody, table.cartes tfoot { display: flex; flex-direction: column; gap: var(--e-2); }
+    table.cartes tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--e-2) var(--e-3); padding: var(--e-3); background: var(--surface); border: 1px solid var(--bordure); border-radius: var(--rayon-grand); box-shadow: var(--ombre); }
+    table.cartes tbody tr:hover td { background: none; }
+    table.cartes td, table.cartes th { display: block; padding: 0; border: none; text-align: left; white-space: normal; }
+    table.cartes td:first-child { grid-column: 1 / -1; font-weight: 600; font-size: var(--t-l); }
+    table.cartes td[data-label]:not(:first-child)::before { content: attr(data-label); display: block; font-size: var(--t-xs); color: var(--discret); font-weight: 400; }
+    table.cartes td:empty { display: none; }
+    table.cartes td.vide { grid-column: 1 / -1; }
+    table.cartes td.actions-ligne { grid-column: 1 / -1; text-align: left; }
+    table.cartes tr.negatif, table.cartes tr.negatif td { background: var(--rouge-clair); }
+    table.cartes tfoot tr { display: flex; justify-content: space-between; }
+    .entete-caisse .actions { flex-wrap: nowrap; overflow-x: auto; width: 100%; }
+    .entete-caisse .actions > * { flex: 0 0 auto; min-height: 2.5rem; font-size: var(--t-s); }
 }
 
 @media (prefers-reduced-motion: reduce) { .menu { transition: none; } }

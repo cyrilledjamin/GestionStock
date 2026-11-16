@@ -15,7 +15,7 @@
 
 <Message Texte="@_erreur" />
 
-<table>
+<table class="cartes">
     <thead>
         <tr><th>@L["Numero"]</th><th>@L["Date"]</th><th>@L["Fournisseur"]</th><th>@L["BonLivraison"]</th><th class="nombre">@L["Lignes"]</th><th class="nombre">@L["Valeur"]</th><th>@L["Statut"]</th></tr>
     </thead>
@@ -23,13 +23,13 @@
         @foreach (var reception in _receptions)
         {
             <tr>
-                <td class="court"><a href="receptions/@reception.Id">@reception.Numero</a></td>
-                <td class="court">@Format.Date(reception.DateValidationUtc ?? reception.DateCreationUtc)</td>
-                <td>@reception.Fournisseur</td>
-                <td class="court">@reception.NumeroBonLivraison</td>
-                <td class="nombre">@reception.NombreLignes</td>
-                <td class="nombre">@Format.Montant(reception.Valeur)</td>
-                <td><span class="pastille @reception.Statut.ToLowerInvariant()">@L[$"Statut.{reception.Statut}"]</span></td>
+                <td data-label="@L["Numero"]" class="court"><a href="receptions/@reception.Id">@reception.Numero</a></td>
+                <td data-label="@L["Date"]" class="court">@Format.Date(reception.DateValidationUtc ?? reception.DateCreationUtc)</td>
+                <td data-label="@L["Fournisseur"]">@reception.Fournisseur</td>
+                <td data-label="@L["BonLivraison"]" class="court">@reception.NumeroBonLivraison</td>
+                <td data-label="@L["Lignes"]" class="nombre">@reception.NombreLignes</td>
+                <td data-label="@L["Valeur"]" class="nombre">@Format.Montant(reception.Valeur)</td>
+                <td data-label="@L["Statut"]"><span class="pastille @reception.Statut.ToLowerInvariant()">@L[$"Statut.{reception.Statut}"]</span></td>
             </tr>
         }
         @if (_receptions.Count == 0)

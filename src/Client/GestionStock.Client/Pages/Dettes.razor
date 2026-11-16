@@ -20,17 +20,17 @@
     </div>
 
     <h2>@L["ParFournisseur"]</h2>
-    <table>
+    <table class="cartes">
         <thead><tr><th>@L["Fournisseur"]</th><th class="nombre">@L["Receptions"]</th><th class="nombre">@L["MontantDu"]</th><th class="nombre">@L["MontantPaye"]</th><th class="nombre">@L["ResteDu"]</th></tr></thead>
         <tbody>
             @foreach (var fournisseur in _dettes.Fournisseurs)
             {
                 <tr>
-                    <td>@fournisseur.Fournisseur</td>
-                    <td class="nombre">@fournisseur.NombreReceptions</td>
-                    <td class="nombre">@Format.Montant(fournisseur.MontantDu)</td>
-                    <td class="nombre">@Format.Montant(fournisseur.MontantPaye)</td>
-                    <td class="nombre"><strong>@Format.Montant(fournisseur.ResteDu)</strong></td>
+                    <td data-label="@L["Fournisseur"]">@fournisseur.Fournisseur</td>
+                    <td data-label="@L["Receptions"]" class="nombre">@fournisseur.NombreReceptions</td>
+                    <td data-label="@L["MontantDu"]" class="nombre">@Format.Montant(fournisseur.MontantDu)</td>
+                    <td data-label="@L["MontantPaye"]" class="nombre">@Format.Montant(fournisseur.MontantPaye)</td>
+                    <td data-label="@L["ResteDu"]" class="nombre"><strong>@Format.Montant(fournisseur.ResteDu)</strong></td>
                 </tr>
             }
             @if (_dettes.Fournisseurs.Count == 0)
@@ -41,20 +41,20 @@
     </table>
 
     <h2>@L["ParReception"]</h2>
-    <table>
+    <table class="cartes">
         <thead><tr><th>@L["Numero"]</th><th>@L["Date"]</th><th>@L["Fournisseur"]</th><th>@L["BonLivraison"]</th><th class="nombre">@L["MontantDu"]</th><th class="nombre">@L["MontantPaye"]</th><th class="nombre">@L["ResteDu"]</th><th>@L["Statut"]</th></tr></thead>
         <tbody>
             @foreach (var dette in _dettes.Receptions)
             {
                 <tr>
-                    <td class="court"><a href="receptions/@dette.ReceptionId">@dette.Numero</a></td>
-                    <td class="court">@Format.Date(dette.DateValidationUtc)</td>
-                    <td>@dette.Fournisseur</td>
-                    <td>@dette.NumeroBonLivraison</td>
-                    <td class="nombre">@Format.Montant(dette.MontantDu)</td>
-                    <td class="nombre">@Format.Montant(dette.MontantPaye)</td>
-                    <td class="nombre">@Format.Montant(dette.ResteDu)</td>
-                    <td><span class="pastille @(dette.Statut == "Payee" ? "validee" : "brouillon")">@L[$"StatutDette.{dette.Statut}"]</span></td>
+                    <td data-label="@L["Numero"]" class="court"><a href="receptions/@dette.ReceptionId">@dette.Numero</a></td>
+                    <td data-label="@L["Date"]" class="court">@Format.Date(dette.DateValidationUtc)</td>
+                    <td data-label="@L["Fournisseur"]">@dette.Fournisseur</td>
+                    <td data-label="@L["BonLivraison"]">@dette.NumeroBonLivraison</td>
+                    <td data-label="@L["MontantDu"]" class="nombre">@Format.Montant(dette.MontantDu)</td>
+                    <td data-label="@L["MontantPaye"]" class="nombre">@Format.Montant(dette.MontantPaye)</td>
+                    <td data-label="@L["ResteDu"]" class="nombre">@Format.Montant(dette.ResteDu)</td>
+                    <td data-label="@L["Statut"]"><span class="pastille @(dette.Statut == "Payee" ? "validee" : "brouillon")">@L[$"StatutDette.{dette.Statut}"]</span></td>
                 </tr>
             }
             @if (_dettes.Receptions.Count == 0)
