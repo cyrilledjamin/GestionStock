@@ -452,6 +452,7 @@ lecture (section 7, CQRS côté lecture). Un test d'architecture vérifie qu'auc
 
 | Module | Vues |
 | --- | --- |
+| Identite | `v_utilisateurs` (matricule, prénom, nom, désignation « Prénom Nom (matricule) », actif) |
 | Referentiel | `v_articles` |
 | Caisse | `v_tickets`, `v_lignes_vendues`, `v_paiements` (encaissé = espèces moins le rendu), `v_remboursements_credit`, `v_sessions` |
 | Credit | `v_clients`, `v_operations`, `v_ventes_credit` (reste dû par vente) |
@@ -460,7 +461,8 @@ lecture (section 7, CQRS côté lecture). Un test d'architecture vérifie qu'auc
 
 Période en jours de Douala (`du`, `au` inclus, une année au plus ; aujourd'hui par défaut). Un avoir vient en
 déduction ; le coût des ventes est celui des mouvements de stock du ticket (CUMP du moment) ; marge = CA HT − coût.
-Montants calculés à 4 décimales, arrondis à l'unité à l'affichage (RG32).
+Montants calculés à 4 décimales, arrondis à l'unité à l'affichage (RG32). Le personnel (caissiers, validations,
+auteurs) y est désigné par « Prénom Nom (matricule) » ; les documents gardent, eux, le matricule tracé.
 
 ### Exports comptables (UC16)
 
@@ -605,7 +607,7 @@ sur une machine Linux de GitHub qui dispose de Docker :
 | 29 | Client : écrans frais, dettes, rapports, exports | Fait |
 | 30 | Architecture, CI, README, démonstration de la tranche 4 | Fait |
 | 31 | Identité : fiche du personnel, matricule, plusieurs rôles, désactivation, mot de passe provisoire | Fait |
-| 32 | Noms complets du personnel dans les rapports et les exports | À faire |
+| 32 | Noms complets du personnel dans les rapports et les exports | Fait |
 | 33 | Client : écrans des comptes et « Mon compte » | À faire |
 | 34 | Architecture, CI, README, démonstration de la tranche 5 | À faire |
 

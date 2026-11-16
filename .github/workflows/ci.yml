@@ -76,9 +76,9 @@ jobs:
             grep -q "_Initial$" migrations.txt
           done
 
-      - name: Les vues de lecture des rapports existent
+      - name: Les vues de lecture des rapports existent (15)
         run: |
-          for vue in referentiel.v_articles caisse.v_tickets caisse.v_lignes_vendues caisse.v_paiements \
+          for vue in identite.v_utilisateurs referentiel.v_articles caisse.v_tickets caisse.v_lignes_vendues caisse.v_paiements \
                      caisse.v_remboursements_credit caisse.v_sessions credit.v_clients credit.v_operations \
                      credit.v_ventes_credit stock.v_mouvements stock.v_soldes achats.v_receptions achats.v_frais \
                      achats.v_paiements_fournisseurs; do

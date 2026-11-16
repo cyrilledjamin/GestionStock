@@ -30,7 +30,7 @@ public sealed class RapportsTests(ApiDeTest api)
 
         var rapport = await b.Comptable.GetFromJsonAsync<RapportVentes>("/api/rapports/ventes", Annulation);
         var article = rapport!.ParArticle.Single(a => a.ArticleId == b.Article);
-        var caissier = rapport.ParCaissier.Single(c => c.Caissier == b.IdentifiantCaissier);
+        var caissier = rapport.ParCaissier.Single(c => c.Caissier == $"Test Caissier ({b.IdentifiantCaissier})");
 
         Assert.Equal((14m, 4200m), (article.Quantite, article.CoutDesVentes));
         Assert.Equal(article.ChiffreAffairesHt - 4200m, article.Marge);
