@@ -7,6 +7,7 @@ using GestionStock.Infrastructure.Persistance;
 using GestionStock.Inventaire;
 using GestionStock.Prix;
 using GestionStock.Referentiel;
+using GestionStock.Reprise;
 using GestionStock.Stock;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
@@ -34,6 +35,7 @@ builder.Services.AddAchatsModule(builder.Configuration);
 builder.Services.AddCreditModule(builder.Configuration);
 builder.Services.AddCaisseModule(builder.Configuration);
 builder.Services.AddInventaireModule(builder.Configuration);
+builder.Services.AddRepriseModule(builder.Configuration);
 
 var app = builder.Build();
 
@@ -82,6 +84,7 @@ app.MapAchatsEndpoints();
 app.MapCreditEndpoints();
 app.MapCaisseEndpoints();
 app.MapInventaireEndpoints();
+app.MapRepriseEndpoints();
 
 await app.RunAsync();
 

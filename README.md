@@ -11,6 +11,7 @@ est dans [docs/dossier-analyse.md](docs/dossier-analyse.md).
 - .NET 10, ASP.NET Core Minimal API, EF Core 10 + Npgsql (PostgreSQL)
 - Client Blazor WebAssembly servi par l'API (même origine), sans ressource externe
 - Monolithe modulaire : un projet `.Contracts` public et un projet interne par module, un schéma PostgreSQL par module
+- Fichiers Excel : ClosedXML (reprise des données)
 - Tests : xUnit v3 (Microsoft.Testing.Platform), NetArchTest, Testcontainers
 - Déploiement : Docker Compose, conteneur Linux
 
@@ -46,6 +47,9 @@ src/
   Modules/Referentiel/
     GestionStock.Referentiel.Contracts  contrat public : IConsultationReferentiel (articles, site de la boutique)
     GestionStock.Referentiel         articles, site et emplacements (style CRUD)
+  Modules/Reprise/
+    GestionStock.Reprise.Contracts   contrat public : colonnes du fichier de reprise
+    GestionStock.Reprise             import Excel (ClosedXML) : modèle, exemple, contrôle, import tout ou rien
   Modules/Stock/
     GestionStock.Stock.Contracts     contrat public : IServiceMouvementsStock, IConsultationStock
     GestionStock.Stock.Domain        C# pur : MouvementStock, StockSite, StockEmplacement
@@ -213,6 +217,9 @@ Si le port 5432 est déjà pris (PostgreSQL installé sur le poste), choisir un 
 | `GET /api/demarques?statut=` | `Inventaire.Consulter` | Déclarations de démarque |
 | `POST /api/demarques` | `Inventaire.Demarque.Declarer` | `{ articleId, quantite, motif: Casse \| Vol \| Perime \| Freinte, commentaire? }` |
 | `POST /api/demarques/{id}/validation`, `/refus` | `Inventaire.Demarque.Valider` | Valide (mouvement Demarque) ou refuse (`{ motif }`) |
+| `GET /api/reprise/modele.xlsx` | `Reprise.Importer` | Modèle Excel dans la langue de la requête ; `?exemple=true` : rempli avec le jeu d'exemple |
+| `POST /api/reprise/simulation` | `Reprise.Importer` | Corps : le classeur (`application/octet-stream`, 5 Mo au plus) ; rapport ligne par ligne, rien n'est écrit |
+| `POST /api/reprise/import` | `Reprise.Importer` | Même contrôle, puis import tout ou rien et inventaire d'ouverture ; rapport |
 | `GET /api/stock/soldes` | `Stock.Consulter` | Soldes article × site de la boutique : physique, réservé, bloqué, disponible, CUMP |
 | `GET /api/stock/articles/{id}/mouvements` | `Stock.Consulter` | Journal d'un article, du plus récent au plus ancien (`?limite=`, 100 par défaut, 1000 au plus) |
 
@@ -310,6 +317,35 @@ en anglais. Hors ligne (PWA, IndexedDB) : tranche ultérieure, avec la caisse.
   polices standard des lecteurs PDF, à chasse fixe comme un ticket thermique) : aucune police à embarquer, aucune
   dépendance. L'impression se fait sur le poste client.
 
+## Reprise des données
+
+Pour démarrer une boutique (décision 29) : le Gérant télécharge le **modèle Excel**, le remplit (une ligne par
+conditionnement), l'envoie ; l'application le **contrôle entièrement** puis l'**importe tout ou rien**.
+
+| Colonne | Contenu |
+| --- | --- |
+| Code article | Regroupe les lignes d'un même article ; ne doit pas exister dans l'application |
+| Libellé, Libellé en anglais | Sur la ligne Unite |
+| Unité de stock, Décimales | Sur la ligne Unite : plus petite unité vendue (RG44) ; 0 à 3 décimales (RG46) |
+| Conditionnement, Niveau, Contenu | Chaque article a **une** ligne de niveau `Unite` (contenu 1) ; les autres lignes : Pack, Carton, Sac ou Palette, avec leur contenu en unités de stock |
+| Code-barres | Facultatif : EAN-13, EAN-8, UPC-A, clé de contrôle, unique (RG26, RG33) |
+| Prix de vente | Facultatif, TTC, par conditionnement (RG45) |
+| Coût d'achat | Sur la ligne Unite, par unité de stock, hors TVA récupérable (RG30) : valorise l'inventaire d'ouverture |
+
+- Les colonnes sont lues **par position** : l'en-tête peut être en français ou en anglais. Les nombres acceptent la
+  virgule décimale et les séparateurs de milliers d'Excel ; les codes doivent rester en texte (le modèle formate ces
+  colonnes en texte).
+- Le **contrôle** relève toutes les erreurs, avec leur ligne et leur colonne traduites : champ manquant, nombre,
+  décimales, niveau, contenu (entier pour un article à la pièce), ligne Unite absente ou en double, données d'article
+  contradictoires entre ses lignes, code article déjà présent, code-barres invalide, en double ou déjà attribué, prix,
+  coût.
+- L'**import** écrit, dans **une seule transaction**, les articles, conditionnements, codes-barres et prix par les
+  contrats des modules Referentiel et Prix (mêmes règles que les écrans), puis crée l'**inventaire d'ouverture**
+  avec chaque article à compter et son coût d'achat. Une seule erreur, et rien n'est écrit.
+- **Jeu d'exemple** (`?exemple=true`) : 19 articles d'une boutique de quartier (riz, sucre et farine au kg et en sac,
+  huile et pétrole au litre, conserves, lait, savon, eau… à la pièce et au carton), 34 conditionnements, codes-barres
+  fictifs (préfixe 617 suivi de 99), prix et coûts. Données de démonstration, pas de produits réels.
+
 ## Inventaire et démarque
 
 - **Inventaire** (UC11) : d'ouverture (créé par la reprise des données, avec le coût d'achat de chaque article),
@@ -380,6 +416,7 @@ Chaque permission est attribuée à des rôles dans
 | `Inventaire.Compter`, `Inventaire.Demarque.Declarer` | Magasinier |
 | `Inventaire.Valider` | Comptable |
 | `Inventaire.Demarque.Valider` | Comptable, Gerant |
+| `Reprise.Importer` | Administrateur, Gerant *(provisoire)* |
 | `Caisse.Vendre` | Caissier |
 | `Caisse.Tickets.Consulter` | Caissier, Gerant, Comptable |
 | `Caisse.Sessions.Consulter`, `Caisse.Sessions.Valider` | Gerant, Comptable |
@@ -439,7 +476,7 @@ sur une machine Linux de GitHub qui dispose de Docker :
 | 18 | Client : écran de caisse et écrans de gestion | Fait |
 | 19 | Architecture, CI, README, démonstration de la caisse | Fait |
 | 20 | Module Inventaire : inventaires, écarts, démarque | Fait |
-| 21 | Module Reprise : import Excel des articles, codes, prix et coûts | À faire |
+| 21 | Module Reprise : import Excel des articles, codes, prix et coûts | Fait |
 | 22 | Client : écrans reprise, inventaire, démarque | À faire |
 | 23 | Architecture, CI, README, démonstration de l'inventaire | À faire |
 
@@ -483,6 +520,8 @@ Vérifiée dans le navigateur sur http://localhost:8080, avec les comptes de dé
   PDFsharp-MigraDoc, qui exigerait d'embarquer une police sous Linux.
 - Avoir valorisé au CUMP courant à son retour en stock (le dossier ne précise pas la valorisation d'un retour).
 - Montants de caisse en francs CFA entiers et arrondi de chaque ligne à l'unité (déduits de 1.5 et RG32).
+- Reprise : `Reprise.Importer` attribuée à l'Administrateur et au Gérant ; un code article déjà existant est une
+  erreur (la reprise crée, elle ne met rien à jour).
 - Délai de paiement par défaut (30 jours) : non fixé par le dossier, choix provisoire.
 - Format des codes internes (`INT` + 6 chiffres) : non fixé par le dossier, choix provisoire.
 - Coût unitaire saisi sur la ligne de réception : absent de `LigneReception` dans le modèle UML (il y vient de la

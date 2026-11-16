@@ -131,6 +131,26 @@ internal sealed class ServiceArticles(ReferentielDbContext contexte) : IConsulta
             .Select(a => new ArticleReferentiel(a.Id, a.Code, a.Libelle, a.UniteStock, a.PrecisionQuantite, a.Actif))
             .ToListAsync(annulation);
 
+    public async Task<IReadOnlySet<string>> CodesArticlesExistantsAsync(IReadOnlyCollection<string> codes, CancellationToken annulation = default)
+    {
+        var majuscules = codes.Select(c => c.Trim().ToUpperInvariant()).ToList();
+        var existants = await contexte.Articles.AsNoTracking()
+            .Where(a => majuscules.Contains(a.Code.ToUpper()))
+            .Select(a => a.Code)
+            .ToListAsync(annulation);
+        return existants.ToHashSet(StringComparer.OrdinalIgnoreCase);
+    }
+
+    public async Task<IReadOnlySet<string>> CodesBarresAttribuesAsync(IReadOnlyCollection<string> valeurs, CancellationToken annulation = default)
+    {
+        var liste = valeurs.ToList();
+        var attribues = await contexte.Codes.AsNoTracking()
+            .Where(c => c.Actif && liste.Contains(c.Valeur))
+            .Select(c => c.Valeur)
+            .ToListAsync(annulation);
+        return attribues.ToHashSet(StringComparer.Ordinal);
+    }
+
     public async Task<SiteBoutique> ObtenirSiteBoutiqueAsync(CancellationToken annulation = default)
     {
         var site = await contexte.Sites.AsNoTracking()

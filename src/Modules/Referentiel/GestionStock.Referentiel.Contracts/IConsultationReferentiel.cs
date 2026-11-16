@@ -20,6 +20,12 @@ public interface IConsultationReferentiel
 
     /// <summary>Articles actifs, par code (inventaire complet).</summary>
     Task<IReadOnlyList<ArticleReferentiel>> ListerArticlesActifsAsync(CancellationToken annulation = default);
+
+    /// <summary>Codes article déjà utilisés parmi ceux donnés (sans tenir compte de la casse).</summary>
+    Task<IReadOnlySet<string>> CodesArticlesExistantsAsync(IReadOnlyCollection<string> codes, CancellationToken annulation = default);
+
+    /// <summary>Codes-barres déjà attribués (actifs) parmi ceux donnés.</summary>
+    Task<IReadOnlySet<string>> CodesBarresAttribuesAsync(IReadOnlyCollection<string> valeurs, CancellationToken annulation = default);
 }
 
 /// <summary>Article tel que le voient les autres modules.</summary>

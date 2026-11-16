@@ -1,3 +1,5 @@
+using GestionStock.Referentiel.Contracts;
+
 namespace GestionStock.Referentiel.Domain;
 
 /// <summary>Type de code (section 4.5). En V1 : codes linéaires EAN / UPC et codes internes.</summary>
@@ -56,7 +58,7 @@ internal sealed class CodeArticle
             _ => throw new ExceptionReferentiel(CodesErreurReferentiel.CodeInvalide),
         };
 
-        if (!nettoyee.All(char.IsAsciiDigit) || !CleValide(nettoyee))
+        if (!CodesBarres.EstGtinValide(nettoyee))
         {
             throw new ExceptionReferentiel(CodesErreurReferentiel.CodeInvalide);
         }
@@ -82,18 +84,4 @@ internal sealed class CodeArticle
     };
 
     public void Desactiver() => Actif = false;
-
-    /// <summary>Clé de contrôle GS1 modulo 10 : poids 3 et 1 en partant du chiffre précédant la clé.</summary>
-    public static bool CleValide(string chiffres)
-    {
-        ArgumentNullException.ThrowIfNull(chiffres);
-        var somme = 0;
-        for (var i = chiffres.Length - 2; i >= 0; i--)
-        {
-            var poids = (chiffres.Length - 2 - i) % 2 == 0 ? 3 : 1;
-            somme += (chiffres[i] - '0') * poids;
-        }
-
-        return (10 - (somme % 10)) % 10 == chiffres[^1] - '0';
-    }
 }

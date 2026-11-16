@@ -20,6 +20,7 @@ public static class ModuleReferentiel
         services.AjouterContexteModule<ReferentielDbContext>(ReferentielDbContext.Schema);
         services.AddScoped<ServiceArticles>();
         services.AddScoped<ServiceConditionnements>();
+        services.AddScoped<IServiceReferentiel, ServiceEcritureReferentiel>();
         services.AddScoped<IConsultationReferentiel>(fournisseur => fournisseur.GetRequiredService<ServiceArticles>());
         return services;
     }

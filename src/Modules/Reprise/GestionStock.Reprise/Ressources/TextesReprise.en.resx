@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Reprise.Feuille.Articles" xml:space="preserve"><value>Items</value></data>
+  <data name="Reprise.Feuille.Aide" xml:space="preserve"><value>Help</value></data>
+  <data name="Reprise.Colonne.CodeArticle" xml:space="preserve"><value>Item code</value></data>
+  <data name="Reprise.Colonne.Libelle" xml:space="preserve"><value>Label</value></data>
+  <data name="Reprise.Colonne.LibelleTraduit" xml:space="preserve"><value>Label in English</value></data>
+  <data name="Reprise.Colonne.UniteStock" xml:space="preserve"><value>Stock unit</value></data>
+  <data name="Reprise.Colonne.Decimales" xml:space="preserve"><value>Decimals</value></data>
+  <data name="Reprise.Colonne.Conditionnement" xml:space="preserve"><value>Packaging</value></data>
+  <data name="Reprise.Colonne.Niveau" xml:space="preserve"><value>Level</value></data>
+  <data name="Reprise.Colonne.Contenu" xml:space="preserve"><value>Contains</value></data>
+  <data name="Reprise.Colonne.CodeBarres" xml:space="preserve"><value>Barcode</value></data>
+  <data name="Reprise.Colonne.PrixTtc" xml:space="preserve"><value>Selling price</value></data>
+  <data name="Reprise.Colonne.CoutAchat" xml:space="preserve"><value>Purchase cost</value></data>
+  <data name="Reprise.Aide.Titre" xml:space="preserve"><value>Data import: one row per packaging (unit, pack, carton, bag, pallet).</value></data>
+  <data name="Reprise.Aide.Ligne" xml:space="preserve"><value>Columns are read in order: do not move them. The first row (headers) is ignored.</value></data>
+  <data name="Reprise.Aide.Unite" xml:space="preserve"><value>Each item has exactly one row at level "Unite" (contains 1): it carries the label, the stock unit (smallest unit sold: piece, kg, litre…), the decimals (0 by the piece, up to 3 by weight or volume) and the purchase cost.</value></data>
+  <data name="Reprise.Aide.Autres" xml:space="preserve"><value>Other rows with the same item code describe its packagings: name (e.g. Carton of 24), level (Pack, Carton, Sac, Palette) and contents in stock units.</value></data>
+  <data name="Reprise.Aide.Codes" xml:space="preserve"><value>Optional barcode: EAN-13, EAN-8 or UPC-A with a correct check digit, unique in the file and in the application.</value></data>
+  <data name="Reprise.Aide.Prix" xml:space="preserve"><value>Selling price incl. VAT in XAF, optional, per packaging: a carton may cost less than its units.</value></data>
+  <data name="Reprise.Aide.Cout" xml:space="preserve"><value>Unit purchase cost excluding recoverable VAT, landing costs included, in XAF per stock unit: it values the stock counted in the opening stock count.</value></data>
+  <data name="Reprise.Aide.Import" xml:space="preserve"><value>The application checks the whole file before importing; nothing is imported while any row has an error. The import creates the opening stock count to be counted.</value></data>
+  <data name="Reprise.FichierIllisible" xml:space="preserve"><value>Unreadable file: send an Excel workbook (.xlsx).</value></data>
+  <data name="Reprise.FichierVide" xml:space="preserve"><value>The file contains no item rows.</value></data>
+  <data name="Reprise.FichierTropGros" xml:space="preserve"><value>Too many rows in the file.</value></data>
+  <data name="Reprise.ChampObligatoire" xml:space="preserve"><value>Required value missing.</value></data>
+  <data name="Reprise.TexteTropLong" xml:space="preserve"><value>Text too long.</value></data>
+  <data name="Reprise.NombreInvalide" xml:space="preserve"><value>Invalid number.</value></data>
+  <data name="Reprise.DecimalesInvalides" xml:space="preserve"><value>Decimals must be 0, 1, 2 or 3.</value></data>
+  <data name="Reprise.NiveauInvalide" xml:space="preserve"><value>Unknown level: Unite, Pack, Carton, Sac or Palette.</value></data>
+  <data name="Reprise.ContenuInvalide" xml:space="preserve"><value>Invalid contents: positive, whole for an item sold by the piece, 1 for the Unite row.</value></data>
+  <data name="Reprise.LigneUniteManquante" xml:space="preserve"><value>This item has no row at level Unite.</value></data>
+  <data name="Reprise.LigneUniteEnDouble" xml:space="preserve"><value>This item has several rows at level Unite.</value></data>
+  <data name="Reprise.IncoherenceArticle" xml:space="preserve"><value>Value differs from the item's Unite row.</value></data>
+  <data name="Reprise.CodeArticleExistant" xml:space="preserve"><value>This item code already exists in the application.</value></data>
+  <data name="Reprise.CodeBarresInvalide" xml:space="preserve"><value>Invalid barcode (EAN-13, EAN-8, UPC-A, check digit).</value></data>
+  <data name="Reprise.CodeBarresEnDouble" xml:space="preserve"><value>Barcode appears several times in the file.</value></data>
+  <data name="Reprise.CodeBarresAttribue" xml:space="preserve"><value>Barcode already assigned in the application.</value></data>
+  <data name="Reprise.PrixInvalide" xml:space="preserve"><value>Invalid selling price (greater than zero).</value></data>
+  <data name="Reprise.CoutInvalide" xml:space="preserve"><value>Invalid purchase cost (zero or positive).</value></data>
+  <data name="Reprise.EcritureRefusee" xml:space="preserve"><value>Import refused: nothing was recorded.</value></data>
+</root>

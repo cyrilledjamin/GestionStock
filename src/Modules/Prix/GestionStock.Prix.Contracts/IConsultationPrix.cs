@@ -29,3 +29,39 @@ public sealed record RegimeTva(bool Assujetti, decimal TauxPourcent)
         return (ht, montantTtc - ht);
     }
 }
+
+/// <summary>Écriture des prix par les autres modules (reprise des données) : mêmes règles que l'écran des prix.</summary>
+public interface IServicePrix
+{
+    /// <summary>Fixe le prix TTC d'un conditionnement à partir d'aujourd'hui (Douala).</summary>
+    /// <exception cref="ErreurPrix">Prix invalide, conditionnement introuvable ou inactif.</exception>
+    Task FixerPrixAsync(Guid conditionnementId, decimal prixTtc, CancellationToken annulation = default);
+}
+
+/// <summary>Règle des prix violée ; <see cref="Code"/> est la clé de traduction (ex. « Prix.PrixNonPositif »).</summary>
+public sealed class ErreurPrix : Exception
+{
+    public ErreurPrix(string code, string message)
+        : base(message)
+    {
+        Code = code;
+    }
+
+    public ErreurPrix()
+        : this("Prix.Inconnu", "Erreur des prix.")
+    {
+    }
+
+    public ErreurPrix(string message)
+        : this("Prix.Inconnu", message)
+    {
+    }
+
+    public ErreurPrix(string message, Exception innerException)
+        : base(message, innerException)
+    {
+        Code = "Prix.Inconnu";
+    }
+
+    public string Code { get; }
+}

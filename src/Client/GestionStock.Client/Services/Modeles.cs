@@ -110,6 +110,7 @@ public static class Permissions
     public const string InventaireValider = "Inventaire.Valider";
     public const string DemarqueDeclarer = "Inventaire.Demarque.Declarer";
     public const string DemarqueValider = "Inventaire.Demarque.Valider";
+    public const string RepriseImporter = "Reprise.Importer";
 }
 
 // --- Conditionnements, codes, prix -------------------------------------------------------------------------------

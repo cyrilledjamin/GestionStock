@@ -74,6 +74,9 @@ public static class Permissions
     /// <summary>Valider ou refuser une démarque (UC20).</summary>
     public const string DemarqueValider = "Inventaire.Demarque.Valider";
 
+    /// <summary>Importer les données de reprise (décision 29) : articles, codes, prix, inventaire d'ouverture.</summary>
+    public const string RepriseImporter = "Reprise.Importer";
+
     /// <summary>Consulter les disponibilités et les mouvements (UC14).</summary>
     public const string StockConsulter = "Stock.Consulter";
 }
