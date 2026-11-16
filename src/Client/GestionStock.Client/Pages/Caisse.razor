@@ -184,7 +184,7 @@ else
                 </ul>
             </section>
 
-            <aside class="encaissement">
+            <aside class="encaissement" id="encaissement">
                 <div class="total-grand" aria-live="polite">@Format.Montant(_vente.Total)</div>
 
                 <ChoixClient @bind-Client="_client" Libelle="@L["ClientCredit"]" />
@@ -246,6 +246,22 @@ else
                 <button type="button" class="lien" disabled="@_vente.EstVide" @onclick="AnnulerVente">@L["AnnulerVente"]</button>
                 <p class="discret">@L["TotauxSession", _session.Totaux.NombreVentes, Format.Montant(_session.Totaux.Ventes)]</p>
             </aside>
+        </div>
+
+        @* Tablette et téléphone : total et reste toujours visibles en bas de l'écran pendant le scan. *@
+        <div class="barre-total" aria-hidden="@(_vente.EstVide ? "true" : "false")">
+            <div class="montants">
+                <strong>@Format.Montant(_vente.Total)</strong>
+                <small>@(_vente.Reste >= 0 ? L["ResteAPayer"] : L["Rendu"]) : @Format.Montant(Math.Abs(_vente.Reste))</small>
+            </div>
+            @if (PeutEncaisser)
+            {
+                <button class="principal" @onclick="Encaisser">@L["Encaisser"]</button>
+            }
+            else
+            {
+                <button type="button" class="valider" disabled="@_vente.EstVide" @onclick="AllerAuPaiement">@L["Payer"] ↓</button>
+            }
         </div>
     </div>
 }
@@ -570,6 +586,8 @@ else
             _vente.AjouterEspeces(valeur);
         }
     }
+
+    private async Task AllerAuPaiement() => await Js.InvokeVoidAsync("gestionStock.defiler", "encaissement");
 
     private async Task AnnulerVente()
     {

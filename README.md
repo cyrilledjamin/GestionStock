@@ -294,7 +294,10 @@ le serveur les relit à l'encaissement.
 viennent des jetons de `:root` (texte de 16 px, cibles tactiles de 44 px, contrastes AA, focus visible au clavier) ;
 icônes SVG embarquées dans le composant `Icone` (aucune ressource externe, hors ligne). **Responsive** : poste à partir
 de 1 000 px (menu latéral) ; tablette en portrait et téléphone (menu en tiroir ouvert par le bouton « Menu ») ; sous
-760 px, une seule colonne et les tableaux défilent dans leur cadre. Les tests de conventions refusent une couleur en
+760 px, une seule colonne ; les listes principales (stock, clients, sessions de caisse, articles, réceptions, dettes,
+tickets) passent en cartes, chaque valeur gardant l'intitulé de sa colonne, les autres tableaux défilent dans leur
+cadre. À la caisse, sur tablette et téléphone, une barre fixée en bas garde le total, le reste ou le rendu et le bouton
+« Payer » (vers l'encaissement) puis « Encaisser » ; l'en-tête de caisse tient sur une ligne. Les tests de conventions refusent une couleur en
 dur hors des jetons, un style en ligne, une icône inconnue et l'absence de la balise `viewport`.
 
 Tous les champs de mot de passe (connexion, création de compte, validation par un responsable à la caisse) sont masqués
@@ -639,7 +642,7 @@ sur une machine Linux de GitHub qui dispose de Docker :
 | 36 | Design : caisse, vente (champ unique, articles rapides, pavé numérique, raccourcis) | Fait |
 | 37 | Design : caisse, ouverture, session bloquée (clôture par le Gérant), clôture guidée | Fait |
 | 38 | Accueil en tableau de bord par rôle | Fait |
-| 39 | Téléphone et tablette : listes en cartes, caisse sur tablette | À faire |
+| 39 | Téléphone et tablette : listes en cartes, caisse sur tablette | Fait |
 | 40 | Identité et finitions (nom et logo, unités traduites, quantités) | À faire |
 | 41 | Vérification, CI, README, démonstration de la tranche 6 | À faire |
 

@@ -476,4 +476,5 @@
   <data name="DemarquesAValider" xml:space="preserve"><value>Démarques à valider</value></data>
   <data name="DemarquesEnAttente" xml:space="preserve"><value>Démarques en attente de validation</value></data>
   <data name="Raccourcis" xml:space="preserve"><value>Raccourcis</value></data>
+  <data name="Payer" xml:space="preserve"><value>Payer</value></data>
 </root>

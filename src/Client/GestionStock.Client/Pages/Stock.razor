@@ -12,7 +12,7 @@
 
 <Message Texte="@_erreur" />
 
-<table>
+<table class="cartes">
     <thead>
         <tr>
             <th>@L["Code"]</th><th>@L["Libelle"]</th>
@@ -24,12 +24,12 @@
         @foreach (var ligne in Lignes)
         {
             <tr class="@(ligne.Solde.QuantitePhysique < 0 ? "negatif" : "")">
-                <td><a href="stock/@ligne.Article.Id"><code>@ligne.Article.Code</code></a></td>
-                <td>@Format.Libelle(ligne.Article)</td>
-                <td class="nombre">@Format.Quantite(ligne.Solde.QuantitePhysique, ligne.Article.PrecisionQuantite) @ligne.Article.UniteStock</td>
-                <td class="nombre">@Format.Quantite(ligne.Solde.QuantiteDisponible, ligne.Article.PrecisionQuantite)</td>
-                <td class="nombre">@Format.Montant(ligne.Solde.Cump)</td>
-                <td class="nombre">@Format.Montant(ligne.Solde.QuantitePhysique * ligne.Solde.Cump)</td>
+                <td data-label="@L["Code"]"><a href="stock/@ligne.Article.Id"><code>@ligne.Article.Code</code></a></td>
+                <td data-label="@L["Libelle"]">@Format.Libelle(ligne.Article)</td>
+                <td data-label="@L["Physique"]" class="nombre">@Format.Quantite(ligne.Solde.QuantitePhysique, ligne.Article.PrecisionQuantite) @ligne.Article.UniteStock</td>
+                <td data-label="@L["Disponible"]" class="nombre">@Format.Quantite(ligne.Solde.QuantiteDisponible, ligne.Article.PrecisionQuantite)</td>
+                <td data-label="@L["Cump"]" class="nombre">@Format.Montant(ligne.Solde.Cump)</td>
+                <td data-label="@L["ValeurStock"]" class="nombre">@Format.Montant(ligne.Solde.QuantitePhysique * ligne.Solde.Cump)</td>
             </tr>
         }
         @if (!Lignes.Any())

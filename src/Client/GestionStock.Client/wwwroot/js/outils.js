@@ -23,7 +23,18 @@ window.gestionStock = {
         const element = document.getElementById(id);
         if (element) {
             element.focus();
-            element.select();
+            // Un champ est sélectionné (le scan suivant remplace l'ancien texte) ; un bouton n'a pas de sélection.
+            if (typeof element.select === "function") {
+                element.select();
+            }
+        }
+    },
+
+    // Fait défiler la page jusqu'à un élément (caisse sur tablette : du panier au paiement).
+    defiler: function (id) {
+        const element = document.getElementById(id);
+        if (element) {
+            element.scrollIntoView({ behavior: "smooth", block: "start" });
         }
     },
 

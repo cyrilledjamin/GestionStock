@@ -476,4 +476,5 @@
   <data name="DemarquesAValider" xml:space="preserve"><value>Shrinkage to approve</value></data>
   <data name="DemarquesEnAttente" xml:space="preserve"><value>Shrinkage awaiting approval</value></data>
   <data name="Raccourcis" xml:space="preserve"><value>Shortcuts</value></data>
+  <data name="Payer" xml:space="preserve"><value>Pay</value></data>
 </root>

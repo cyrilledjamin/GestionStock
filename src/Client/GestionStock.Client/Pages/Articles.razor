@@ -58,7 +58,7 @@
     </form>
 }
 
-<table>
+<table class="cartes">
     <thead>
         <tr><th>@L["Code"]</th><th>@L["Libelle"]</th><th>@L["UniteStock"]</th><th class="nombre">@L["Precision"]</th><th>@L["Etat"]</th><th></th></tr>
     </thead>
@@ -66,11 +66,11 @@
         @foreach (var article in _articles)
         {
             <tr class="@(article.Actif ? "" : "inactif")">
-                <td><a href="articles/@article.Id"><code>@article.Code</code></a></td>
-                <td>@article.Libelle @if (article.LibelleTraduit is not null) { <small class="discret"> · @article.LibelleTraduit</small> }</td>
-                <td>@article.UniteStock</td>
-                <td class="nombre">@article.PrecisionQuantite</td>
-                <td>@(article.Actif ? L["Actif"] : L["Inactif"])</td>
+                <td data-label="@L["Code"]"><a href="articles/@article.Id"><code>@article.Code</code></a></td>
+                <td data-label="@L["Libelle"]">@article.Libelle @if (article.LibelleTraduit is not null) { <small class="discret"> · @article.LibelleTraduit</small> }</td>
+                <td data-label="@L["UniteStock"]">@article.UniteStock</td>
+                <td data-label="@L["Precision"]" class="nombre">@article.PrecisionQuantite</td>
+                <td data-label="@L["Etat"]">@(article.Actif ? L["Actif"] : L["Inactif"])</td>
                 <td class="actions-ligne">
                     @if (Session.A(Permissions.StockConsulter))
                     {

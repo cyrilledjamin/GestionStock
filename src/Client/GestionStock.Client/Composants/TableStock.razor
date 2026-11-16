@@ -1,14 +1,14 @@
 @* Articles d'un rapport de stock : quantité, CUMP et valeur ; les stocks négatifs ressortent (RG22). *@
-<table>
+<table class="cartes">
     <thead><tr><th>@L["Article"]</th><th class="nombre">@L["Quantite"]</th><th class="nombre">@L["Cump"]</th><th class="nombre">@L["Valeur"]</th></tr></thead>
     <tbody>
         @foreach (var ligne in Lignes)
         {
             <tr class="@(ligne.Quantite < 0 ? "negatif" : "")">
-                <td><a href="stock/@ligne.ArticleId"><code>@ligne.Code</code></a> @ligne.Libelle</td>
-                <td class="nombre">@Format.Quantite(ligne.Quantite, ligne.PrecisionQuantite) @ligne.UniteStock</td>
-                <td class="nombre">@Format.Montant(ligne.Cump)</td>
-                <td class="nombre">@Format.Montant(ligne.Valeur)</td>
+                <td data-label="@L["Article"]"><a href="stock/@ligne.ArticleId"><code>@ligne.Code</code></a> @ligne.Libelle</td>
+                <td data-label="@L["Quantite"]" class="nombre">@Format.Quantite(ligne.Quantite, ligne.PrecisionQuantite) @ligne.UniteStock</td>
+                <td data-label="@L["Cump"]" class="nombre">@Format.Montant(ligne.Cump)</td>
+                <td data-label="@L["Valeur"]" class="nombre">@Format.Montant(ligne.Valeur)</td>
             </tr>
         }
         @if (Lignes.Count == 0)
