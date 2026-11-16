@@ -479,4 +479,18 @@
   <data name="Payer" xml:space="preserve"><value>Pay</value></data>
   <data name="ServeurInjoignable" xml:space="preserve"><value>Server unreachable: check the network.</value></data>
   <data name="HorsLigneBandeau" xml:space="preserve"><value>Offline: the server is not responding. The till keeps selling; its operations will be sent as soon as the network is back.</value></data>
+  <data name="OuvertureHorsLigne" xml:space="preserve"><value>Server unreachable: opening a session needs the server. A session already open on this till carries on offline.</value></data>
+  <data name="CodeInconnuHorsLigne" xml:space="preserve"><value>Code unknown on this till: {0}. The till's data dates from the last connection.</value></data>
+  <data name="RemiseHorsLigne" xml:space="preserve"><value>Offline, a discount or a manager approval is not possible: remove the discount or wait for the network.</value></data>
+  <data name="RenduSansEspeces" xml:space="preserve"><value>Only cash gives change: reduce the amount paid by card or Mobile Money.</value></data>
+  <data name="ReferenceMobileMoney" xml:space="preserve"><value>The Mobile Money transaction reference is required.</value></data>
+  <data name="PlafondHorsLigne" xml:space="preserve"><value>Offline, a credit sale must stay within the customer's limit (last known balance, pending credit included).</value></data>
+  <data name="ClotureAttendSynchro" xml:space="preserve"><value>Cannot close: {0} operation(s) made offline have not yet been sent to the server.</value></data>
+  <data name="RemboursementEnAttente" xml:space="preserve"><value>Repayment of {0} from {1} recorded on this till: it will be sent when the network is back.</value></data>
+  <data name="OperationsEnAttente" xml:space="preserve"><value>{0} operation(s) made offline waiting to be sent: they will go in order as soon as the server responds.</value></data>
+  <data name="SynchroBloquee" xml:space="preserve"><value>They belong to cashier {0}: they must sign in on this till to send them.</value></data>
+  <data name="OperationRefusee" xml:space="preserve"><value>Refused by the server: {0} ({1}).</value></data>
+  <data name="TicketHorsPoste" xml:space="preserve"><value>Receipt not found on this till: offline, only the current session's receipts are available.</value></data>
+  <data name="AvoirCreditEnLigne" xml:space="preserve"><value>This receipt has a credit part: its credit note needs the server (debt to cancel).</value></data>
+  <data name="QuantiteARendreInvalide" xml:space="preserve"><value>Enter a quantity to return, no more than what is left to return.</value></data>
 </root>

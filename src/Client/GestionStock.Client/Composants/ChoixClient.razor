@@ -1,5 +1,6 @@
 @* Recherche et choix d'un client à crédit (nom ou téléphone). *@
 @inject Api Api
+@inject CacheCaisse Cache
 
 <div class="choix-client">
     @if (Client is null)
@@ -37,10 +38,23 @@
 
     private async Task Rechercher()
     {
-        _resultats = _recherche.Trim().Length < 2
-            ? []
-            : ((await Api.GetAsync<List<ClientCredit>>($"api/credit/clients?recherche={Uri.EscapeDataString(_recherche.Trim())}")).Valeur ?? [])
-                .Where(c => c.Actif).Take(10).ToList();
+        var texte = _recherche.Trim();
+        if (texte.Length < 2)
+        {
+            _resultats = [];
+            return;
+        }
+
+        var trouves = await Api.GetAsync<List<ClientCredit>>($"api/credit/clients?recherche={Uri.EscapeDataString(texte)}");
+        if (trouves.Code == Api.CodeHorsLigne)
+        {
+            // Hors ligne (7.8) : clients gardés sur le poste, avec leur dernier solde connu.
+            await Cache.ChargerAsync();
+            trouves = new Resultat<List<ClientCredit>>(
+                [.. Cache.Clients.Where(c => c.Nom.Contains(texte, StringComparison.CurrentCultureIgnoreCase) || c.Telephone.Contains(texte, StringComparison.Ordinal))], null);
+        }
+
+        _resultats = (trouves.Valeur ?? []).Where(c => c.Actif).Take(10).ToList();
     }
 
     private async Task Choisir(ClientCredit? client)

@@ -85,6 +85,10 @@ public static class Format
             : article.Libelle;
     }
 
+    /// <summary>Jour à Douala d'un horodatage UTC (date des prix, ENF07).</summary>
+    public static DateOnly JourDouala(DateTime utc) =>
+        DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(utc, DateTimeKind.Utc), Douala));
+
     /// <summary>Horodatage UTC affiché en heure de Douala.</summary>
     public static string Date(DateTime utc) =>
         TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(utc, DateTimeKind.Utc), Douala).ToString("g", CultureInfo.CurrentCulture);

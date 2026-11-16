@@ -5,6 +5,7 @@
 @inject IJSRuntime Js
 @inject Api Api
 @inject EtatConnexion Connexion
+@inject CaisseHorsLigne HorsLigne
 
 @if (!Session.EstConnecte)
 {
@@ -85,6 +86,24 @@ else
                 @* Serveur injoignable (7.8) : l'application continue ; la caisse garde ses opérations sur le poste. *@
                 <div class="bandeau-hors-ligne" role="status"><Icone Nom="erreur" /><span>@L["HorsLigneBandeau"]</span></div>
             }
+            @if (HorsLigne.EnAttente.Count > 0)
+            {
+                @* File des opérations faites hors ligne (7.8) : rien n'est perdu, tout part dans l'ordre. *@
+                <div class="bandeau-hors-ligne" role="status">
+                    <Icone Nom="sessions" />
+                    <span>
+                        @L["OperationsEnAttente", HorsLigne.EnAttente.Count]
+                        @if (HorsLigne.BloqueePar is { } caissier)
+                        {
+                            <br />@L["SynchroBloquee", caissier]
+                        }
+                        @foreach (var refusee in HorsLigne.EnAttente.Where(o => o.Erreur is not null))
+                        {
+                            <br />@L["OperationRefusee", refusee.Resume, refusee.Erreur!]
+                        }
+                    </span>
+                </div>
+            }
             @Body
         </main>
     </div>
@@ -95,6 +114,7 @@ else
     {
         Session.Changement += Rafraichir;
         Connexion.Changement += Rafraichir;
+        HorsLigne.Changement += Rafraichir;
         Navigation.LocationChanged += SurNavigation;
         ExigerConnexion();
     }
@@ -153,6 +173,7 @@ else
     {
         Session.Changement -= Rafraichir;
         Connexion.Changement -= Rafraichir;
+        HorsLigne.Changement -= Rafraichir;
         Navigation.LocationChanged -= SurNavigation;
     }
 }

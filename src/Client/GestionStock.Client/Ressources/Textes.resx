@@ -479,4 +479,18 @@
   <data name="Payer" xml:space="preserve"><value>Payer</value></data>
   <data name="ServeurInjoignable" xml:space="preserve"><value>Serveur injoignable : vérifiez le réseau.</value></data>
   <data name="HorsLigneBandeau" xml:space="preserve"><value>Hors ligne : le serveur ne répond pas. La caisse continue de vendre ; ses opérations partiront dès le retour du réseau.</value></data>
+  <data name="OuvertureHorsLigne" xml:space="preserve"><value>Serveur injoignable : l'ouverture d'une session exige le serveur. Une session déjà ouverte sur ce poste continue hors ligne.</value></data>
+  <data name="CodeInconnuHorsLigne" xml:space="preserve"><value>Code inconnu du poste : {0}. Les données du poste datent de la dernière connexion.</value></data>
+  <data name="RemiseHorsLigne" xml:space="preserve"><value>Hors ligne, une remise ou une validation par un responsable est impossible : retirez la remise ou attendez le retour du réseau.</value></data>
+  <data name="RenduSansEspeces" xml:space="preserve"><value>Seules les espèces se rendent : réduisez le montant payé par carte ou Mobile Money.</value></data>
+  <data name="ReferenceMobileMoney" xml:space="preserve"><value>La référence de transaction Mobile Money est obligatoire.</value></data>
+  <data name="PlafondHorsLigne" xml:space="preserve"><value>Hors ligne, la vente à crédit doit rester dans le plafond du client (dernier solde connu, crédit en attente compris).</value></data>
+  <data name="ClotureAttendSynchro" xml:space="preserve"><value>Clôture impossible : {0} opération(s) faite(s) hors ligne n'ont pas encore été envoyées au serveur (RG36).</value></data>
+  <data name="RemboursementEnAttente" xml:space="preserve"><value>Remboursement de {0} de {1} enregistré sur le poste : il partira au retour du réseau.</value></data>
+  <data name="OperationsEnAttente" xml:space="preserve"><value>{0} opération(s) faite(s) hors ligne en attente d'envoi : elles partiront dans l'ordre dès que le serveur répondra.</value></data>
+  <data name="SynchroBloquee" xml:space="preserve"><value>Elles appartiennent au caissier {0} : il doit se reconnecter sur ce poste pour les envoyer.</value></data>
+  <data name="OperationRefusee" xml:space="preserve"><value>Refusée par le serveur : {0} ({1}).</value></data>
+  <data name="TicketHorsPoste" xml:space="preserve"><value>Ticket introuvable sur ce poste : hors ligne, seuls les tickets de la session en cours sont disponibles.</value></data>
+  <data name="AvoirCreditEnLigne" xml:space="preserve"><value>Ce ticket a une part à crédit : son avoir exige le serveur (dette à annuler).</value></data>
+  <data name="QuantiteARendreInvalide" xml:space="preserve"><value>Indiquez une quantité à rendre, sans dépasser ce qui reste à rendre.</value></data>
 </root>

@@ -18,12 +18,18 @@ async function installer() {
         .filter(f => !aIgnorer.some(motif => motif.test(f.url)))
         .map(f => new Request(f.url, { integrity: f.hash, cache: 'no-cache' }));
     await caches.open(nomCache).then(cache => cache.addAll(fichiers));
+
+    // Une caisse reste ouverte toute la journée : la nouvelle version n'attend pas la fermeture de tous les onglets.
+    // Elle prend la main tout de suite mais ne s'applique qu'au prochain chargement de la page (l'application en
+    // cours garde ses fichiers en mémoire), jamais au milieu d'une vente.
+    await self.skipWaiting();
 }
 
 async function activer() {
     // Nouvelle version déployée : les caches des versions précédentes sont supprimés.
     const noms = await caches.keys();
     await Promise.all(noms.filter(nom => nom.startsWith(prefixeCache) && nom !== nomCache).map(nom => caches.delete(nom)));
+    await self.clients.claim();
 }
 
 async function repondre(event) {

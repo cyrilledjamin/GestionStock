@@ -332,7 +332,8 @@ public sealed record SessionCaisse(
     decimal? EspecesComptees,
     decimal? Ecart,
     string? ValideePar,
-    TotauxSession Totaux);
+    TotauxSession Totaux,
+    long DernierNumeroPoste = 0);
 
 /// <summary>Poste tenu par une session ouverte (le caissier bloqué voit qui l'occupe et depuis quand).</summary>
 public sealed record OccupationPoste(string NumeroCaisse, Guid SessionId, string Caissier, DateTime OuvertureUtc);
