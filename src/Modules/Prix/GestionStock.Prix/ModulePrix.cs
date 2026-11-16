@@ -24,6 +24,7 @@ public static class ModulePrix
             .ValidateOnStart();
         services.AddScoped<ServicePrix>();
         services.AddScoped<IConsultationPrix>(fournisseur => fournisseur.GetRequiredService<ServicePrix>());
+        services.AddScoped<IServicePrix>(fournisseur => fournisseur.GetRequiredService<ServicePrix>());
         return services;
     }
 

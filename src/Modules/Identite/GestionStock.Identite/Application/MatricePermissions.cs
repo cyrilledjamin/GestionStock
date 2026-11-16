@@ -48,6 +48,10 @@ internal static class MatricePermissions
             [Permissions.DemarqueDeclarer] = [Roles.Magasinier],
             [Permissions.DemarqueValider] = [Roles.Comptable, Roles.Gerant],
 
+            // Provisoire : la reprise des données n'est attribuée à aucun rôle par la section 8.3 ; elle crée des articles
+            // (Gérant, Administrateur) et des prix (Gérant).
+            [Permissions.RepriseImporter] = [Roles.Administrateur, Roles.Gerant],
+
             // Provisoire : la gestion des articles n'est attribuée à aucun rôle par la section 8.3.
             [Permissions.ArticlesGerer] = [Roles.Gerant, Roles.Administrateur],
 

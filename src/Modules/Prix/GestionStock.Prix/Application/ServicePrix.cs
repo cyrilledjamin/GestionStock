@@ -41,7 +41,7 @@ internal sealed class ServicePrix(
     IConsultationReferentiel referentiel,
     IUtilisateurCourant utilisateur,
     IHorloge horloge,
-    IOptions<OptionsEntreprise> options) : IConsultationPrix
+    IOptions<OptionsEntreprise> options) : IConsultationPrix, IServicePrix
 {
     public RegimeTva Regime => new(options.Value.AssujettiTva, options.Value.TauxTva);
 
@@ -83,6 +83,18 @@ internal sealed class ServicePrix(
             .OrderByDescending(p => p.DebutValidite).ThenByDescending(p => p.DateSaisieUtc)
             .Select(p => new HistoriquePrix(p.Id, p.PrixTtc, p.DebutValidite, p.SaisiPar, p.DateSaisieUtc))
             .ToListAsync(annulation);
+
+    public async Task FixerPrixAsync(Guid conditionnementId, decimal prixTtc, CancellationToken annulation = default)
+    {
+        try
+        {
+            await FixerAsync(conditionnementId, new NouveauPrix(prixTtc, null), annulation);
+        }
+        catch (ExceptionPrix erreur)
+        {
+            throw new ErreurPrix(erreur.Code, erreur.Message);
+        }
+    }
 
     /// <summary>Fixe un prix à partir d'aujourd'hui (par défaut) ou d'une date future.</summary>
     public async Task<HistoriquePrix> FixerAsync(Guid conditionnementId, NouveauPrix saisie, CancellationToken annulation)

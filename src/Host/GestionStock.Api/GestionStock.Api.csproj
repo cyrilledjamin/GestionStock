@@ -16,6 +16,7 @@
     <ProjectReference Include="../../Modules/Inventaire/GestionStock.Inventaire/GestionStock.Inventaire.csproj" />
     <ProjectReference Include="../../Modules/Prix/GestionStock.Prix/GestionStock.Prix.csproj" />
     <ProjectReference Include="../../Modules/Referentiel/GestionStock.Referentiel/GestionStock.Referentiel.csproj" />
+    <ProjectReference Include="../../Modules/Reprise/GestionStock.Reprise/GestionStock.Reprise.csproj" />
     <ProjectReference Include="../../Modules/Stock/GestionStock.Stock/GestionStock.Stock.csproj" />
   </ItemGroup>
 </Project>

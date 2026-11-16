@@ -39,6 +39,10 @@
     <Project Path="src/Modules/Referentiel/GestionStock.Referentiel.Contracts/GestionStock.Referentiel.Contracts.csproj" />
     <Project Path="src/Modules/Referentiel/GestionStock.Referentiel/GestionStock.Referentiel.csproj" />
   </Folder>
+  <Folder Name="/src/Modules/Reprise/">
+    <Project Path="src/Modules/Reprise/GestionStock.Reprise.Contracts/GestionStock.Reprise.Contracts.csproj" />
+    <Project Path="src/Modules/Reprise/GestionStock.Reprise/GestionStock.Reprise.csproj" />
+  </Folder>
   <Folder Name="/src/Modules/Stock/">
     <Project Path="src/Modules/Stock/GestionStock.Stock.Contracts/GestionStock.Stock.Contracts.csproj" />
     <Project Path="src/Modules/Stock/GestionStock.Stock.Domain/GestionStock.Stock.Domain.csproj" />
