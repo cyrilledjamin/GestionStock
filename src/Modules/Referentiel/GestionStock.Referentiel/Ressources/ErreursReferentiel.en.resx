@@ -13,4 +13,11 @@
   <data name="Referentiel.UniteTropLongue" xml:space="preserve"><value>The stock unit is too long: 20 characters at most.</value></data>
   <data name="Referentiel.PrecisionInvalide" xml:space="preserve"><value>Quantity precision must be between 0 and 3 decimal places.</value></data>
   <data name="Referentiel.ArticleIntrouvable" xml:space="preserve"><value>Item not found.</value></data>
+  <data name="Referentiel.ConditionnementIntrouvable" xml:space="preserve"><value>Packaging not found.</value></data>
+  <data name="Referentiel.NiveauInvalide" xml:space="preserve"><value>Unknown packaging level.</value></data>
+  <data name="Referentiel.FacteurInvalide" xml:space="preserve"><value>The packaging quantity must be positive and respect the item's decimals.</value></data>
+  <data name="Referentiel.UniteNonDesactivable" xml:space="preserve"><value>The unit packaging cannot be deactivated.</value></data>
+  <data name="Referentiel.CodeInvalide" xml:space="preserve"><value>Invalid barcode: EAN-13, EAN-8 or UPC-A with a correct check digit.</value></data>
+  <data name="Referentiel.CodeDejaAttribue" xml:space="preserve"><value>This barcode is already assigned to another packaging.</value></data>
+  <data name="Referentiel.CodeIntrouvable" xml:space="preserve"><value>Unknown code.</value></data>
 </root>

@@ -13,4 +13,11 @@
   <data name="Referentiel.UniteTropLongue" xml:space="preserve"><value>L'unité de stock est trop longue : 20 caractères au maximum.</value></data>
   <data name="Referentiel.PrecisionInvalide" xml:space="preserve"><value>La précision des quantités doit être comprise entre 0 et 3 décimales.</value></data>
   <data name="Referentiel.ArticleIntrouvable" xml:space="preserve"><value>Article introuvable.</value></data>
+  <data name="Referentiel.ConditionnementIntrouvable" xml:space="preserve"><value>Conditionnement introuvable.</value></data>
+  <data name="Referentiel.NiveauInvalide" xml:space="preserve"><value>Niveau de conditionnement inconnu.</value></data>
+  <data name="Referentiel.FacteurInvalide" xml:space="preserve"><value>Le nombre d'unités du conditionnement doit être positif et respecter les décimales de l'article.</value></data>
+  <data name="Referentiel.UniteNonDesactivable" xml:space="preserve"><value>Le conditionnement à l'unité ne peut pas être désactivé.</value></data>
+  <data name="Referentiel.CodeInvalide" xml:space="preserve"><value>Code-barres invalide : EAN-13, EAN-8 ou UPC-A avec une clé de contrôle correcte.</value></data>
+  <data name="Referentiel.CodeDejaAttribue" xml:space="preserve"><value>Ce code-barres est déjà attribué à un autre conditionnement.</value></data>
+  <data name="Referentiel.CodeIntrouvable" xml:space="preserve"><value>Code inconnu.</value></data>
 </root>

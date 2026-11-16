@@ -23,6 +23,8 @@ namespace GestionStock.Referentiel.Infrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.HasSequence("code_interne");
+
             modelBuilder.Entity("GestionStock.Referentiel.Domain.Article", b =>
                 {
                     b.Property<Guid>("Id")
@@ -79,6 +81,89 @@ namespace GestionStock.Referentiel.Infrastructure.Migrations
                     b.ToTable("article", "referentiel", t =>
                         {
                             t.HasCheckConstraint("ck_article_precision_quantite", "precision_quantite BETWEEN 0 AND 3");
+                        });
+                });
+
+            modelBuilder.Entity("GestionStock.Referentiel.Domain.CodeArticle", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<bool>("Actif")
+                        .HasColumnType("boolean")
+                        .HasColumnName("actif");
+
+                    b.Property<Guid>("ConditionnementId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("conditionnement_id");
+
+                    b.Property<bool>("Principal")
+                        .HasColumnType("boolean")
+                        .HasColumnName("principal");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer")
+                        .HasColumnName("type");
+
+                    b.Property<string>("Valeur")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("valeur");
+
+                    b.HasKey("Id")
+                        .HasName("pk_code_article");
+
+                    b.HasIndex("ConditionnementId")
+                        .HasDatabaseName("ix_code_article_conditionnement_id");
+
+                    b.HasIndex("Valeur")
+                        .IsUnique()
+                        .HasDatabaseName("ix_code_article_valeur")
+                        .HasFilter("actif");
+
+                    b.ToTable("code_article", "referentiel");
+                });
+
+            modelBuilder.Entity("GestionStock.Referentiel.Domain.Conditionnement", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<bool>("Actif")
+                        .HasColumnType("boolean")
+                        .HasColumnName("actif");
+
+                    b.Property<Guid>("ArticleId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("article_id");
+
+                    b.Property<string>("Libelle")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("libelle");
+
+                    b.Property<int>("Niveau")
+                        .HasColumnType("integer")
+                        .HasColumnName("niveau");
+
+                    b.Property<decimal>("QuantiteUniteStock")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("quantite_unite_stock");
+
+                    b.HasKey("Id")
+                        .HasName("pk_conditionnement");
+
+                    b.HasIndex("ArticleId")
+                        .HasDatabaseName("ix_conditionnement_article_id");
+
+                    b.ToTable("conditionnement", "referentiel", t =>
+                        {
+                            t.HasCheckConstraint("ck_conditionnement_quantite_unite_stock", "quantite_unite_stock > 0");
                         });
                 });
 
@@ -177,6 +262,26 @@ namespace GestionStock.Referentiel.Infrastructure.Migrations
                             Nom = "Boutique",
                             Type = 2
                         });
+                });
+
+            modelBuilder.Entity("GestionStock.Referentiel.Domain.CodeArticle", b =>
+                {
+                    b.HasOne("GestionStock.Referentiel.Domain.Conditionnement", null)
+                        .WithMany()
+                        .HasForeignKey("ConditionnementId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_code_article_conditionnement_conditionnement_id");
+                });
+
+            modelBuilder.Entity("GestionStock.Referentiel.Domain.Conditionnement", b =>
+                {
+                    b.HasOne("GestionStock.Referentiel.Domain.Article", null)
+                        .WithMany()
+                        .HasForeignKey("ArticleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_conditionnement_article_article_id");
                 });
 
             modelBuilder.Entity("GestionStock.Referentiel.Domain.Emplacement", b =>
