@@ -482,7 +482,7 @@ sur une machine Linux de GitHub qui dispose de Docker :
 | 20 | Module Inventaire : inventaires, écarts, démarque | Fait |
 | 21 | Module Reprise : import Excel des articles, codes, prix et coûts | Fait |
 | 22 | Client : écrans reprise, inventaire, démarque | Fait |
-| 23 | Architecture, CI, README, démonstration de l'inventaire | À faire |
+| 23 | Architecture, CI, README, démonstration de l'inventaire | Fait |
 
 ## Démonstration
 
@@ -515,6 +515,24 @@ Vérifiée dans le navigateur sur http://localhost:8080, avec les comptes de dé
 6. clôture : espèces théoriques 24 550 XAF, comptées 24 500, écart −50 ; le **Comptable** valide l'écart ;
 7. journal de l'article : ventes et avoir au CUMP de 600 XAF ; stock négatif sur l'emplacement de vente, jamais
    bloquant (RG22) ; la cliente doit 40 000 XAF.
+
+### Démonstration de la reprise et de l'inventaire (tranche 3)
+
+Vérifiée dans le navigateur sur http://localhost:8080, avec les comptes de démonstration (`magasinier`, `comptable`,
+mot de passe de test `Secret123!`) :
+
+1. **Administrateur**, Reprise des données : le modèle avec exemple est contrôlé (34 lignes, 19 articles,
+   34 conditionnements, 34 codes-barres, 34 prix), puis importé ; l'inventaire d'ouverture `INV-000001` est créé ;
+2. **Magasinier**, INV-000001 : scan de deux sacs de riz de 25 kg puis d'un kilo (51 kg), d'un carton de 50 boîtes
+   de sardines puis d'une boîte (51 boîtes) ; saisie manuelle de 40 bougies ; chaque écart est valorisé au coût
+   d'achat du fichier ;
+3. **Comptable** : seule la validation lui est proposée ; 19 lignes comptées sur 19, écarts valorisés à 217 550 XAF ;
+   l'inventaire validé fait entrer le stock (mouvements `AjustementInventaire`) ;
+4. **Magasinier**, Démarque : `DEM-000001`, 3 boîtes de sardines, motif casse, commentaire « Carton tombé » ;
+5. **Comptable** : validation de la démarque, sortie de 3 boîtes au CUMP (mouvement `Demarque`).
+
+L'inventaire partiel (démarré vide, articles ajoutés au scan), la freinte, le comptage pendant les ventes (RG16) et
+le refus d'une démarque sont couverts par les tests d'intégration.
 
 ## Points ouverts
 
