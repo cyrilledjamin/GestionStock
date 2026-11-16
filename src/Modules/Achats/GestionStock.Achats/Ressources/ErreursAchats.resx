@@ -20,4 +20,10 @@
   <data name="Achats.ArticleIntrouvable" xml:space="preserve"><value>Article introuvable.</value></data>
   <data name="Achats.ArticleInactif" xml:space="preserve"><value>Cet article est désactivé.</value></data>
   <data name="Achats.MouvementRefuse" xml:space="preserve"><value>Entrée en stock refusée : rien n'a été enregistré.</value></data>
+  <data name="Achats.TypeFraisInvalide" xml:space="preserve"><value>Type de frais inconnu (Transport, Transit, Douane ou Autre).</value></data>
+  <data name="Achats.CleRepartitionInvalide" xml:space="preserve"><value>Clé de répartition inconnue (Valeur ou Quantité).</value></data>
+  <data name="Achats.MontantFraisInvalide" xml:space="preserve"><value>Le montant du frais doit être positif, avec au plus 4 décimales.</value></data>
+  <data name="Achats.LibelleFraisTropLong" xml:space="preserve"><value>Le libellé du frais dépasse 100 caractères.</value></data>
+  <data name="Achats.RepartitionImpossible" xml:space="preserve"><value>Répartition impossible : la valeur des lignes est nulle. Choisissez la clé Quantité.</value></data>
+  <data name="Achats.FraisIntrouvable" xml:space="preserve"><value>Frais introuvable sur cette réception.</value></data>
 </root>

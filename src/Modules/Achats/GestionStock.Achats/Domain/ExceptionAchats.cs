@@ -28,4 +28,10 @@ internal static class CodesErreurAchats
     public const string ArticleIntrouvable = "Achats.ArticleIntrouvable";
     public const string ArticleInactif = "Achats.ArticleInactif";
     public const string MouvementRefuse = "Achats.MouvementRefuse";
+    public const string TypeFraisInvalide = "Achats.TypeFraisInvalide";
+    public const string CleRepartitionInvalide = "Achats.CleRepartitionInvalide";
+    public const string MontantFraisInvalide = "Achats.MontantFraisInvalide";
+    public const string LibelleFraisTropLong = "Achats.LibelleFraisTropLong";
+    public const string RepartitionImpossible = "Achats.RepartitionImpossible";
+    public const string FraisIntrouvable = "Achats.FraisIntrouvable";
 }

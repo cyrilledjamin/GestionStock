@@ -20,4 +20,10 @@
   <data name="Achats.ArticleIntrouvable" xml:space="preserve"><value>Item not found.</value></data>
   <data name="Achats.ArticleInactif" xml:space="preserve"><value>This item is deactivated.</value></data>
   <data name="Achats.MouvementRefuse" xml:space="preserve"><value>Stock entry refused: nothing was recorded.</value></data>
+  <data name="Achats.TypeFraisInvalide" xml:space="preserve"><value>Unknown cost type (Transport, Transit, Customs or Other).</value></data>
+  <data name="Achats.CleRepartitionInvalide" xml:space="preserve"><value>Unknown allocation basis (Value or Quantity).</value></data>
+  <data name="Achats.MontantFraisInvalide" xml:space="preserve"><value>The cost amount must be positive, with at most 4 decimals.</value></data>
+  <data name="Achats.LibelleFraisTropLong" xml:space="preserve"><value>The cost label exceeds 100 characters.</value></data>
+  <data name="Achats.RepartitionImpossible" xml:space="preserve"><value>Allocation not possible: the lines have no value. Choose the Quantity basis.</value></data>
+  <data name="Achats.FraisIntrouvable" xml:space="preserve"><value>Cost not found on this goods receipt.</value></data>
 </root>

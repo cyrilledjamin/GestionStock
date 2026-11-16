@@ -25,6 +25,52 @@ namespace GestionStock.Achats.Infrastructure.Migrations
 
             modelBuilder.HasSequence("numero_reception");
 
+            modelBuilder.Entity("GestionStock.Achats.Domain.AllocationFrais", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("FraisApprocheId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("frais_approche_id");
+
+                    b.Property<Guid>("LigneReceptionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("ligne_reception_id");
+
+                    b.Property<decimal>("Montant")
+                        .HasPrecision(19, 4)
+                        .HasColumnType("numeric(19,4)")
+                        .HasColumnName("montant");
+
+                    b.Property<decimal>("MontantNonIncorpore")
+                        .HasPrecision(19, 4)
+                        .HasColumnType("numeric(19,4)")
+                        .HasColumnName("montant_non_incorpore");
+
+                    b.Property<decimal>("QuantiteRevalorisee")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("quantite_revalorisee");
+
+                    b.Property<decimal>("SupplementUnitaire")
+                        .HasPrecision(19, 4)
+                        .HasColumnType("numeric(19,4)")
+                        .HasColumnName("supplement_unitaire");
+
+                    b.HasKey("Id")
+                        .HasName("pk_allocation_frais");
+
+                    b.HasIndex("FraisApprocheId")
+                        .HasDatabaseName("ix_allocation_frais_frais_approche_id");
+
+                    b.HasIndex("LigneReceptionId")
+                        .HasDatabaseName("ix_allocation_frais_ligne_reception_id");
+
+                    b.ToTable("allocation_frais", "achats");
+                });
+
             modelBuilder.Entity("GestionStock.Achats.Domain.Fournisseur", b =>
                 {
                     b.Property<Guid>("Id")
@@ -58,6 +104,61 @@ namespace GestionStock.Achats.Infrastructure.Migrations
                     b.ToTable("fournisseur", "achats");
                 });
 
+            modelBuilder.Entity("GestionStock.Achats.Domain.FraisApproche", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<bool>("ApresValidation")
+                        .HasColumnType("boolean")
+                        .HasColumnName("apres_validation");
+
+                    b.Property<string>("Cle")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("cle");
+
+                    b.Property<string>("Libelle")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("libelle");
+
+                    b.Property<decimal>("Montant")
+                        .HasPrecision(19, 4)
+                        .HasColumnType("numeric(19,4)")
+                        .HasColumnName("montant");
+
+                    b.Property<Guid>("ReceptionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("reception_id");
+
+                    b.Property<DateTime>("SaisiLeUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("saisi_le_utc");
+
+                    b.Property<string>("SaisiPar")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("saisi_par");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("type");
+
+                    b.HasKey("Id")
+                        .HasName("pk_frais_approche");
+
+                    b.HasIndex("ReceptionId")
+                        .HasDatabaseName("ix_frais_approche_reception_id");
+
+                    b.ToTable("frais_approche", "achats");
+                });
+
             modelBuilder.Entity("GestionStock.Achats.Domain.LigneReception", b =>
                 {
                     b.Property<Guid>("Id")
@@ -72,6 +173,11 @@ namespace GestionStock.Achats.Infrastructure.Migrations
                         .HasPrecision(19, 4)
                         .HasColumnType("numeric(19,4)")
                         .HasColumnName("cout_unitaire");
+
+                    b.Property<decimal>("FraisApprocheAlloues")
+                        .HasPrecision(19, 4)
+                        .HasColumnType("numeric(19,4)")
+                        .HasColumnName("frais_approche_alloues");
 
                     b.Property<int>("Ordre")
                         .HasColumnType("integer")
@@ -156,6 +262,33 @@ namespace GestionStock.Achats.Infrastructure.Migrations
                     b.ToTable("reception", "achats");
                 });
 
+            modelBuilder.Entity("GestionStock.Achats.Domain.AllocationFrais", b =>
+                {
+                    b.HasOne("GestionStock.Achats.Domain.FraisApproche", null)
+                        .WithMany("Allocations")
+                        .HasForeignKey("FraisApprocheId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_allocation_frais_frais_approche_frais_approche_id");
+
+                    b.HasOne("GestionStock.Achats.Domain.LigneReception", null)
+                        .WithMany()
+                        .HasForeignKey("LigneReceptionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_allocation_frais_ligne_reception_ligne_reception_id");
+                });
+
+            modelBuilder.Entity("GestionStock.Achats.Domain.FraisApproche", b =>
+                {
+                    b.HasOne("GestionStock.Achats.Domain.Reception", null)
+                        .WithMany("Frais")
+                        .HasForeignKey("ReceptionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_frais_approche_receptions_reception_id");
+                });
+
             modelBuilder.Entity("GestionStock.Achats.Domain.LigneReception", b =>
                 {
                     b.HasOne("GestionStock.Achats.Domain.Reception", null)
@@ -176,8 +309,15 @@ namespace GestionStock.Achats.Infrastructure.Migrations
                         .HasConstraintName("fk_reception_fournisseur_fournisseur_id");
                 });
 
+            modelBuilder.Entity("GestionStock.Achats.Domain.FraisApproche", b =>
+                {
+                    b.Navigation("Allocations");
+                });
+
             modelBuilder.Entity("GestionStock.Achats.Domain.Reception", b =>
                 {
+                    b.Navigation("Frais");
+
                     b.Navigation("Lignes");
                 });
 #pragma warning restore 612, 618

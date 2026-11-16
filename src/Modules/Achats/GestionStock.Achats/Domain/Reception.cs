@@ -14,8 +14,9 @@ internal enum StatutReception
 internal sealed record SaisieLigneReception(Guid ArticleId, decimal Quantite, decimal CoutUnitaire);
 
 /// <summary>
-/// Réception d'une livraison fournisseur (UC04), en version simple : sans commande fournisseur, sans lots
-/// ni frais d'approche. Saisie en brouillon, puis validée : la validation écrit un mouvement EntreeReception par ligne.
+/// Réception d'une livraison fournisseur (UC04), en version simple : sans commande fournisseur ni lots.
+/// Saisie en brouillon avec ses frais d'approche, puis validée : la validation écrit un mouvement EntreeReception par
+/// ligne, au coût d'entrée frais compris (RG30). Des frais tardifs peuvent encore s'ajouter après la validation.
 /// </summary>
 internal sealed class Reception
 {
@@ -48,6 +49,13 @@ internal sealed class Reception
     public string? ValideePar { get; private set; }
 
     public List<LigneReception> Lignes { get; private set; } = [];
+
+    public List<FraisApproche> Frais { get; private set; } = [];
+
+    /// <summary>Valeur de la marchandise (quantité × coût unitaire), hors frais.</summary>
+    public decimal ValeurMarchandise => Lignes.Sum(l => l.Quantite * l.CoutUnitaire);
+
+    public decimal TotalFrais => Frais.Sum(f => f.Montant);
 
     public static Reception Creer(
         string numero,
@@ -108,6 +116,45 @@ internal sealed class Reception
         NumeroBonLivraison = string.IsNullOrEmpty(bonLivraison) ? null : bonLivraison;
         Lignes.Clear();
         Lignes.AddRange(lignes.Select((l, index) => new LigneReception(Id, index + 1, l.ArticleId, l.Quantite, l.CoutUnitaire)));
+
+        // Les lignes ont changé : chaque frais du brouillon est réparti à nouveau.
+        foreach (var frais in Frais)
+        {
+            frais.Repartir(Lignes);
+        }
+
+        TotaliserFrais();
+    }
+
+    /// <summary>
+    /// Ajoute un frais d'approche et le répartit. Sur une réception validée, le frais est tardif : le service
+    /// revalorise ensuite le stock ligne par ligne (<see cref="AllocationFrais.Incorporer"/>).
+    /// </summary>
+    public FraisApproche AjouterFrais(TypeFrais type, decimal montant, CleRepartition cle, string? libelle, string utilisateur, DateTime maintenantUtc)
+    {
+        var frais = FraisApproche.Creer(Id, type, montant, cle, libelle, Statut == StatutReception.Validee, utilisateur, maintenantUtc);
+        frais.Repartir(Lignes);
+        Frais.Add(frais);
+        TotaliserFrais();
+        return frais;
+    }
+
+    /// <summary>Retire un frais d'un brouillon ; après la validation, un frais ne se retire plus.</summary>
+    public void RetirerFrais(Guid fraisId)
+    {
+        ExigerBrouillon();
+        var frais = Frais.SingleOrDefault(f => f.Id == fraisId)
+            ?? throw new ExceptionAchats(CodesErreurAchats.FraisIntrouvable);
+        Frais.Remove(frais);
+        TotaliserFrais();
+    }
+
+    private void TotaliserFrais()
+    {
+        foreach (var ligne in Lignes)
+        {
+            ligne.AffecterFrais(Frais.SelectMany(f => f.Allocations).Where(a => a.LigneReceptionId == ligne.Id).Sum(a => a.Montant));
+        }
     }
 
     public void Valider(string utilisateur, DateTime maintenantUtc)
@@ -157,4 +204,12 @@ internal sealed class LigneReception
 
     /// <summary>Coût unitaire hors TVA récupérable, en XAF.</summary>
     public decimal CoutUnitaire { get; private set; }
+
+    /// <summary>Total des frais d'approche répartis sur la ligne (modèle UML, section 4.7).</summary>
+    public decimal FraisApprocheAlloues { get; private set; }
+
+    /// <summary>Coût de revient unitaire : coût unitaire plus frais par unité, à 4 décimales (RG30).</summary>
+    public decimal CoutEntree => decimal.Round(CoutUnitaire + (FraisApprocheAlloues / Quantite), Reception.DecimalesCout, MidpointRounding.AwayFromZero);
+
+    public void AffecterFrais(decimal montant) => FraisApprocheAlloues = montant;
 }

@@ -192,7 +192,9 @@ Si le port 5432 est déjà pris (PostgreSQL installé sur le poste), choisir un 
 | `POST /api/achats/fournisseurs`, `PUT /api/achats/fournisseurs/{id}` | `Achats.Fournisseurs.Gerer` | `{ nom, telephone?, actif }` |
 | `GET /api/achats/receptions`, `GET /api/achats/receptions/{id}` | `Achats.Consulter` | Réceptions (la plus récente d'abord) ; détail avec lignes et articles |
 | `POST /api/achats/receptions`, `PUT /api/achats/receptions/{id}` | `Achats.Receptions.Saisir` | `{ fournisseurId, numeroBonLivraison?, lignes: [{ articleId, quantite, coutUnitaire }] }` : brouillon |
-| `POST /api/achats/receptions/{id}/validation` | `Achats.Receptions.Valider` | Valide et fait entrer la marchandise en stock (409 si déjà validée) |
+| `POST /api/achats/receptions/{id}/validation` | `Achats.Receptions.Valider` | Valide et fait entrer la marchandise en stock, frais d'approche compris (409 si déjà validée) |
+| `POST /api/achats/receptions/{id}/frais` | `Achats.Frais.Saisir` | `{ type: Transport \| Transit \| Douane \| Autre, montant, cle?: Valeur \| Quantite, libelle? }` : avant ou après la validation |
+| `DELETE /api/achats/receptions/{id}/frais/{fraisId}` | `Achats.Frais.Saisir` | Retire un frais d'un brouillon (409 après la validation) |
 | `GET /api/credit/clients?recherche=` | `Credit.Consulter` | Clients (nom ou téléphone) avec solde dû et montant en retard |
 | `GET /api/credit/clients/{id}` | `Credit.Consulter` | Fiche : client, ventes non soldées (reste dû, échéance), journal des opérations |
 | `GET /api/credit/impayes` | `Credit.Consulter` | Clients ayant une dette échue (RG43) |
@@ -382,7 +384,7 @@ conditionnement), l'envoie ; l'application le **contrôle entièrement** puis l'
 
 ## Réception simple (V1)
 
-Sans commande fournisseur, lots ni frais d'approche (prévus plus tard) :
+Sans commande fournisseur ni lots :
 
 1. le Magasinier ou le Gérant saisit la réception en **brouillon** : fournisseur actif, numéro de bon de livraison
    facultatif, lignes article × quantité (en unité de stock, selon la précision de l'article) × coût unitaire ;
@@ -392,6 +394,21 @@ Sans commande fournisseur, lots ni frais d'approche (prévus plus tard) :
    réception et un mouvement `EntreeReception` par ligne vers l'emplacement de vente (RG13), avec le CUMP recalculé
    par le module Stock (RG17). Si une ligne est refusée, rien n'est écrit. Une réception validée ne se modifie plus ;
    deux validations simultanées n'écrivent qu'une fois (verrou de la réception, idempotence des mouvements).
+
+### Frais d'approche (RG30, décision 18)
+
+Le Comptable ou le Gérant saisit les frais d'une réception : type (transport, transit, douane, autre), montant hors TVA
+récupérable, clé de répartition (**valeur** par défaut, ou quantité) et libellé facultatif.
+
+- Chaque frais est réparti sur les lignes au prorata de la clé, à 4 décimales. Le reliquat d'arrondi va à la ligne
+  de plus grand poids (la première saisie en cas d'égalité) : la somme des parts égale le montant.
+- **Avant la validation :** les frais suivent les lignes du brouillon (nouvelle répartition à chaque modification)
+  et se retirent librement. À la validation, chaque ligne entre en stock au **coût de revient** :
+  `coût unitaire + frais de la ligne / quantité`.
+- **Après la validation (frais tardif) :** le frais est réparti de la même façon, puis chaque ligne revalorise la
+  quantité de l'article **encore en stock** (au plus la quantité reçue), au supplément `part / quantité reçue`. La part
+  de la marchandise déjà sortie est conservée comme **non incorporée** sur le frais. Tout est écrit dans une seule
+  transaction ; un frais validé ne se retire plus.
 
 ## Revalorisation (RG30)
 
@@ -436,6 +453,7 @@ Chaque permission est attribuée à des rôles dans
 | `Achats.Consulter` | Gerant, Comptable, Magasinier |
 | `Achats.Fournisseurs.Gerer` | Gerant, Magasinier *(provisoire)* |
 | `Achats.Receptions.Saisir`, `Achats.Receptions.Valider` | Magasinier, Gerant *(validation provisoire)* |
+| `Achats.Frais.Saisir` | Comptable, Gerant *(Gérant provisoire)* |
 
 ## Tests
 
@@ -492,7 +510,7 @@ sur une machine Linux de GitHub qui dispose de Docker :
 | 22 | Client : écrans reprise, inventaire, démarque | Fait |
 | 23 | Architecture, CI, README, démonstration de l'inventaire | Fait |
 | 24 | Stock : mouvement Revalorisation (RG30) | Fait |
-| 25 | Achats : frais d'approche, répartition, revalorisation des frais tardifs | À faire |
+| 25 | Achats : frais d'approche, répartition, revalorisation des frais tardifs | Fait |
 | 26 | Achats : dettes fournisseurs et paiements | À faire |
 | 27 | Module Rapports : ventes et marge, stock, créances et dettes, caisse et anomalies | À faire |
 | 28 | Exports comptables Excel et CSV | À faire |
@@ -568,6 +586,8 @@ le refus d'une démarque sont couverts par les tests d'intégration.
   (le processus 6.1 cite l'Acheteur, rôle absent de la V1) : attributions provisoires, à confirmer (voir ci-dessus).
 
 - Effet des mouvements `Blocage` et `Deblocage` : refusés tant qu'il n'est pas défini.
+- Frais d'approche : clé de répartition Poids non proposée (pas de poids sur l'article en V1) ; saisie par le
+  Comptable (8.3) et, provisoirement, par le Gérant ; un frais saisi après la validation ne se retire plus.
 - Revalorisation (RG30) : le supplément porte sur la quantité encore en stock ; la part des frais qui concerne de la
   marchandise déjà vendue n'entre pas dans le CUMP (conservée sur la réception, signalée dans les rapports).
 - Motif de démarque (RG23) : absent du modèle UML ; porté par la déclaration de démarque que le mouvement référence.
