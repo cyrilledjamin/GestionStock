@@ -105,6 +105,11 @@ public static class Permissions
     public const string TicketsConsulter = "Caisse.Tickets.Consulter";
     public const string SessionsConsulter = "Caisse.Sessions.Consulter";
     public const string SessionsValider = "Caisse.Sessions.Valider";
+    public const string InventaireConsulter = "Inventaire.Consulter";
+    public const string InventaireCompter = "Inventaire.Compter";
+    public const string InventaireValider = "Inventaire.Valider";
+    public const string DemarqueDeclarer = "Inventaire.Demarque.Declarer";
+    public const string DemarqueValider = "Inventaire.Demarque.Valider";
 }
 
 // --- Conditionnements, codes, prix -------------------------------------------------------------------------------

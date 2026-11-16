@@ -13,6 +13,7 @@
     <ProjectReference Include="../../Modules/Caisse/GestionStock.Caisse/GestionStock.Caisse.csproj" />
     <ProjectReference Include="../../Modules/Credit/GestionStock.Credit/GestionStock.Credit.csproj" />
     <ProjectReference Include="../../Modules/Identite/GestionStock.Identite/GestionStock.Identite.csproj" />
+    <ProjectReference Include="../../Modules/Inventaire/GestionStock.Inventaire/GestionStock.Inventaire.csproj" />
     <ProjectReference Include="../../Modules/Prix/GestionStock.Prix/GestionStock.Prix.csproj" />
     <ProjectReference Include="../../Modules/Referentiel/GestionStock.Referentiel/GestionStock.Referentiel.csproj" />
     <ProjectReference Include="../../Modules/Stock/GestionStock.Stock/GestionStock.Stock.csproj" />

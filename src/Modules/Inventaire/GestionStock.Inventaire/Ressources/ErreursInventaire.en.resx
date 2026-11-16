@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Inventaire.InventaireIntrouvable" xml:space="preserve"><value>Stock count not found.</value></data>
+  <data name="Inventaire.InventaireSansLigne" xml:space="preserve"><value>A stock count must cover at least one item.</value></data>
+  <data name="Inventaire.InventaireTermine" xml:space="preserve"><value>This stock count is closed: it can no longer be changed.</value></data>
+  <data name="Inventaire.TypeInvalide" xml:space="preserve"><value>Invalid stock count type.</value></data>
+  <data name="Inventaire.LignesNonComptees" xml:space="preserve"><value>Some items have not been counted yet.</value></data>
+  <data name="Inventaire.ArticleIntrouvable" xml:space="preserve"><value>Item not found.</value></data>
+  <data name="Inventaire.ArticleInactif" xml:space="preserve"><value>This item is deactivated.</value></data>
+  <data name="Inventaire.QuantiteInvalide" xml:space="preserve"><value>Invalid quantity for this item.</value></data>
+  <data name="Inventaire.CoutInvalide" xml:space="preserve"><value>Invalid purchase cost.</value></data>
+  <data name="Inventaire.FreinteSurEcartPositif" xml:space="preserve"><value>Shrinkage only applies to a shortage (negative difference).</value></data>
+  <data name="Inventaire.DemarqueIntrouvable" xml:space="preserve"><value>Shrinkage report not found.</value></data>
+  <data name="Inventaire.DemarqueDejaTraitee" xml:space="preserve"><value>This report has already been processed.</value></data>
+  <data name="Inventaire.MotifInvalide" xml:space="preserve"><value>Invalid reason.</value></data>
+  <data name="Inventaire.MotifRefusObligatoire" xml:space="preserve"><value>Give the reason for the refusal.</value></data>
+  <data name="Inventaire.MouvementRefuse" xml:space="preserve"><value>Stock movement refused: nothing was recorded.</value></data>
+</root>

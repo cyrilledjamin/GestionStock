@@ -40,6 +40,14 @@ internal static class MatricePermissions
             [Permissions.SessionsConsulter] = [Roles.Gerant, Roles.Comptable],
             [Permissions.SessionsValider] = [Roles.Gerant, Roles.Comptable],
 
+            // 8.3 : le Magasinier fait l'inventaire et déclare la démarque ; le Comptable valide les écarts
+            // d'inventaire ; la démarque est validée par le Comptable ou le Gérant.
+            [Permissions.InventaireConsulter] = [Roles.Gerant, Roles.Comptable, Roles.Magasinier],
+            [Permissions.InventaireCompter] = [Roles.Magasinier],
+            [Permissions.InventaireValider] = [Roles.Comptable],
+            [Permissions.DemarqueDeclarer] = [Roles.Magasinier],
+            [Permissions.DemarqueValider] = [Roles.Comptable, Roles.Gerant],
+
             // Provisoire : la gestion des articles n'est attribuée à aucun rôle par la section 8.3.
             [Permissions.ArticlesGerer] = [Roles.Gerant, Roles.Administrateur],
 

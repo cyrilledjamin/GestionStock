@@ -1,0 +1,3 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Contrat public du module Inventaire : création de l'inventaire d'ouverture par la reprise des données -->
+</Project>

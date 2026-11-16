@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Inventaire.InventaireIntrouvable" xml:space="preserve"><value>Inventaire introuvable.</value></data>
+  <data name="Inventaire.InventaireSansLigne" xml:space="preserve"><value>Un inventaire doit porter sur au moins un article.</value></data>
+  <data name="Inventaire.InventaireTermine" xml:space="preserve"><value>Cet inventaire est terminé : il ne peut plus être modifié.</value></data>
+  <data name="Inventaire.TypeInvalide" xml:space="preserve"><value>Type d'inventaire invalide.</value></data>
+  <data name="Inventaire.LignesNonComptees" xml:space="preserve"><value>Des articles ne sont pas encore comptés.</value></data>
+  <data name="Inventaire.ArticleIntrouvable" xml:space="preserve"><value>Article introuvable.</value></data>
+  <data name="Inventaire.ArticleInactif" xml:space="preserve"><value>Cet article est désactivé.</value></data>
+  <data name="Inventaire.QuantiteInvalide" xml:space="preserve"><value>Quantité invalide pour cet article.</value></data>
+  <data name="Inventaire.CoutInvalide" xml:space="preserve"><value>Coût d'achat invalide.</value></data>
+  <data name="Inventaire.FreinteSurEcartPositif" xml:space="preserve"><value>La freinte ne s'applique qu'à un manque (écart négatif).</value></data>
+  <data name="Inventaire.DemarqueIntrouvable" xml:space="preserve"><value>Déclaration de démarque introuvable.</value></data>
+  <data name="Inventaire.DemarqueDejaTraitee" xml:space="preserve"><value>Cette déclaration a déjà été traitée.</value></data>
+  <data name="Inventaire.MotifInvalide" xml:space="preserve"><value>Motif invalide.</value></data>
+  <data name="Inventaire.MotifRefusObligatoire" xml:space="preserve"><value>Indiquez le motif du refus.</value></data>
+  <data name="Inventaire.MouvementRefuse" xml:space="preserve"><value>Mouvement de stock refusé : rien n'a été enregistré.</value></data>
+</root>
