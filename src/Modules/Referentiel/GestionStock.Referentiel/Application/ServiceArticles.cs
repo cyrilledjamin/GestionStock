@@ -109,6 +109,21 @@ internal sealed class ServiceArticles(ReferentielDbContext contexte) : IConsulta
             .AsNoTracking()
             .SingleOrDefaultAsync(annulation);
 
+    public async Task<IReadOnlyList<ConditionnementReferentiel>> ListerConditionnementsAsync(Guid articleId, CancellationToken annulation = default) =>
+        await (
+                from conditionnement in contexte.Conditionnements
+                join article in contexte.Articles on conditionnement.ArticleId equals article.Id
+                where article.Id == articleId
+                orderby conditionnement.QuantiteUniteStock
+                select new ConditionnementReferentiel(
+                    conditionnement.Id,
+                    conditionnement.Libelle,
+                    conditionnement.QuantiteUniteStock,
+                    conditionnement.Actif,
+                    new ArticleReferentiel(article.Id, article.Code, article.Libelle, article.UniteStock, article.PrecisionQuantite, article.Actif)))
+            .AsNoTracking()
+            .ToListAsync(annulation);
+
     public async Task<SiteBoutique> ObtenirSiteBoutiqueAsync(CancellationToken annulation = default)
     {
         var site = await contexte.Sites.AsNoTracking()

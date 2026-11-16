@@ -1,0 +1,3 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Contrat public du module Prix : prix de vente applicable et régime de TVA -->
+</Project>

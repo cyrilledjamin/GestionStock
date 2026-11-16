@@ -27,6 +27,12 @@ public static class Permissions
     /// <summary>Valider une réception : elle écrit les mouvements d'entrée en stock.</summary>
     public const string ReceptionsValider = "Achats.Receptions.Valider";
 
+    /// <summary>Consulter les prix de vente et le régime de TVA.</summary>
+    public const string PrixConsulter = "Prix.Consulter";
+
+    /// <summary>Fixer les prix de vente (UC25).</summary>
+    public const string PrixGerer = "Prix.Gerer";
+
     /// <summary>Consulter les disponibilités et les mouvements (UC14).</summary>
     public const string StockConsulter = "Stock.Consulter";
 }

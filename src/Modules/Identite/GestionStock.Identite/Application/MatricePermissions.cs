@@ -17,6 +17,10 @@ internal static class MatricePermissions
             // UC14 : consultation ouverte à tous.
             [Permissions.ReferentielConsulter] = Roles.Tous,
             [Permissions.StockConsulter] = Roles.Tous,
+            [Permissions.PrixConsulter] = Roles.Tous,
+
+            // 8.3 : le Gérant gère les prix ; le Comptable ne modifie pas les prix.
+            [Permissions.PrixGerer] = [Roles.Gerant],
 
             // Provisoire : la gestion des articles n'est attribuée à aucun rôle par la section 8.3.
             [Permissions.ArticlesGerer] = [Roles.Gerant, Roles.Administrateur],

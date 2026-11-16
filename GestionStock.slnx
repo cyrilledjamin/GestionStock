@@ -19,6 +19,10 @@
     <Project Path="src/Modules/Identite/GestionStock.Identite.Contracts/GestionStock.Identite.Contracts.csproj" />
     <Project Path="src/Modules/Identite/GestionStock.Identite/GestionStock.Identite.csproj" />
   </Folder>
+  <Folder Name="/src/Modules/Prix/">
+    <Project Path="src/Modules/Prix/GestionStock.Prix.Contracts/GestionStock.Prix.Contracts.csproj" />
+    <Project Path="src/Modules/Prix/GestionStock.Prix/GestionStock.Prix.csproj" />
+  </Folder>
   <Folder Name="/src/Modules/Referentiel/">
     <Project Path="src/Modules/Referentiel/GestionStock.Referentiel.Contracts/GestionStock.Referentiel.Contracts.csproj" />
     <Project Path="src/Modules/Referentiel/GestionStock.Referentiel/GestionStock.Referentiel.csproj" />

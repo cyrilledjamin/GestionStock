@@ -2,6 +2,7 @@ using GestionStock.Achats;
 using GestionStock.Identite;
 using GestionStock.Infrastructure;
 using GestionStock.Infrastructure.Persistance;
+using GestionStock.Prix;
 using GestionStock.Referentiel;
 using GestionStock.Stock;
 using Microsoft.AspNetCore.Authorization;
@@ -24,6 +25,7 @@ builder.Services.AddAuthorizationBuilder()
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddIdentiteModule(builder.Configuration);
 builder.Services.AddReferentielModule(builder.Configuration);
+builder.Services.AddPrixModule(builder.Configuration);
 builder.Services.AddStockModule(builder.Configuration);
 builder.Services.AddAchatsModule(builder.Configuration);
 
@@ -68,6 +70,7 @@ app.MapFallback("/api/{*chemin}", () => Results.NotFound());
 // Modules
 app.MapIdentiteEndpoints();
 app.MapReferentielEndpoints();
+app.MapPrixEndpoints();
 app.MapStockEndpoints();
 app.MapAchatsEndpoints();
 
