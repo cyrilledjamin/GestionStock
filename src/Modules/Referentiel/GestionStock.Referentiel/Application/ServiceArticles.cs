@@ -63,6 +63,9 @@ internal sealed class ServiceArticles(ReferentielDbContext contexte) : IConsulta
         }
 
         contexte.Articles.Add(article);
+
+        // Tout article se vend au moins à l'unité de stock (RG44) : conditionnement « Unité » de facteur 1.
+        contexte.Conditionnements.Add(Conditionnement.Unite(article));
         try
         {
             await contexte.SaveChangesAsync(annulation);
@@ -90,6 +93,20 @@ internal sealed class ServiceArticles(ReferentielDbContext contexte) : IConsulta
         await contexte.Articles.AsNoTracking()
             .Where(a => a.Id == articleId)
             .Select(a => new ArticleReferentiel(a.Id, a.Code, a.Libelle, a.UniteStock, a.PrecisionQuantite, a.Actif))
+            .SingleOrDefaultAsync(annulation);
+
+    public async Task<ConditionnementReferentiel?> ObtenirConditionnementAsync(Guid conditionnementId, CancellationToken annulation = default) =>
+        await (
+                from conditionnement in contexte.Conditionnements
+                join article in contexte.Articles on conditionnement.ArticleId equals article.Id
+                where conditionnement.Id == conditionnementId
+                select new ConditionnementReferentiel(
+                    conditionnement.Id,
+                    conditionnement.Libelle,
+                    conditionnement.QuantiteUniteStock,
+                    conditionnement.Actif,
+                    new ArticleReferentiel(article.Id, article.Code, article.Libelle, article.UniteStock, article.PrecisionQuantite, article.Actif)))
+            .AsNoTracking()
             .SingleOrDefaultAsync(annulation);
 
     public async Task<SiteBoutique> ObtenirSiteBoutiqueAsync(CancellationToken annulation = default)

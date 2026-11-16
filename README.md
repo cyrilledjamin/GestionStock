@@ -155,6 +155,14 @@ Si le port 5432 est déjà pris (PostgreSQL installé sur le poste), choisir un 
 | `POST /api/referentiel/articles` | `Referentiel.Articles.Gerer` | `{ code, libelle, libelleTraduit?, uniteStock, precisionQuantite }` → crée un article (409 si le code existe) |
 | `PUT /api/referentiel/articles/{id}` | `Referentiel.Articles.Gerer` | `{ libelle, libelleTraduit?, actif }` : le code, l'unité et la précision sont fixés à la création |
 | `GET /api/referentiel/site` | `Referentiel.Consulter` | Site de la boutique et son emplacement de vente |
+| `GET /api/referentiel/articles/{id}/conditionnements` | `Referentiel.Consulter` | Conditionnements de l'article et leurs codes |
+| `POST /api/referentiel/articles/{id}/conditionnements` | `Referentiel.Articles.Gerer` | `{ libelle, niveau, quantiteUniteStock }` (niveau : Unite, Pack, Carton, Sac, Palette) |
+| `PUT /api/referentiel/conditionnements/{id}` | `Referentiel.Articles.Gerer` | `{ libelle, actif }` : le facteur est fixé à la création |
+| `POST /api/referentiel/conditionnements/{id}/codes` | `Referentiel.Articles.Gerer` | `{ valeur }` : EAN-13, EAN-8 ou UPC-A, clé contrôlée (409 si déjà attribué) |
+| `POST /api/referentiel/conditionnements/{id}/codes/interne` | `Referentiel.Articles.Gerer` | Génère un code interne `INT000001` à imprimer en étiquette |
+| `POST /api/referentiel/codes/{id}/desactivation` | `Referentiel.Articles.Gerer` | Désactive un code (il reste dans l'historique) |
+| `GET /api/referentiel/scan/{valeur}` | `Referentiel.Consulter` | Article + conditionnement d'un code scanné ou du code article (404 si inconnu) |
+| `GET /api/referentiel/vendables?recherche=` | `Referentiel.Consulter` | Articles actifs (code ou libellé) avec chacun de leurs conditionnements actifs |
 | `GET /api/achats/fournisseurs` | `Achats.Consulter` | Fournisseurs actifs ; `?inclureInactifs=true` |
 | `POST /api/achats/fournisseurs`, `PUT /api/achats/fournisseurs/{id}` | `Achats.Fournisseurs.Gerer` | `{ nom, telephone?, actif }` |
 | `GET /api/achats/receptions`, `GET /api/achats/receptions/{id}` | `Achats.Consulter` | Réceptions (la plus récente d'abord) ; détail avec lignes et articles |
@@ -193,6 +201,14 @@ en anglais. Hors ligne (PWA, IndexedDB) : tranche ultérieure, avec la caisse.
   stock = plus petite unité vendue (RG44), précision des quantités de 0 à 3 décimales (RG46). Le code, l'unité et la
   précision ne changent plus après la création (les mouvements sont exprimés dans cette unité) ; un article n'est
   jamais supprimé, il est désactivé. Mode de suivi (lots, séries) et DLC sont prévus dans la table, inutilisés en V1.
+- **Conditionnements** (RG18, RG44) : chaque article a d'office un conditionnement « Unité » de facteur 1 ; on y
+  ajoute packs, cartons, sacs… avec leur nombre d'unités de stock, entier si l'article se vend à la pièce. Le facteur
+  ne change plus après la création ; un conditionnement est désactivé, jamais supprimé (sauf l'unité, toujours active).
+- **Codes** (RG26, RG33) : plusieurs codes par conditionnement ; EAN-13, EAN-8 et UPC-A avec contrôle de la clé
+  modulo 10 ; un code actif ne désigne qu'un conditionnement (index unique filtré) ; un code réattribué est désactivé.
+  Un article sans GTIN fiable reçoit un code interne `INT` + 6 chiffres, imprimé en Code 128.
+- **Scan** (UC22, V1) : code actif d'un conditionnement (un UPC-A lu en EAN-13 avec un zéro de tête est reconnu),
+  sinon code de l'article (conditionnement à l'unité). GS1-128, DataMatrix et poids variable : plus tard (RG24, RG27).
 - **Site et emplacement** : la migration crée la boutique (`BOUTIQUE`, type Magasin, sans séparation réserve / rayon)
   et son emplacement de vente `VENTE` (RG20). Sans gestion par emplacements, la marchandise reçue y est disponible
   dès la validation (RG13). Pas d'écran de gestion des sites en V1 (mono-site).
@@ -272,6 +288,13 @@ sur une machine Linux de GitHub qui dispose de Docker :
 | 10 | Module Achats minimal : fournisseurs, réception simple ; lectures du stock | Fait |
 | 11 | Client Blazor WebAssembly : premiers écrans | Fait |
 | 12 | Tests d'architecture du client, clés de protection conservées, démonstration de bout en bout | Fait |
+| 13 | Referentiel : conditionnements, codes-barres, scan | Fait |
+| 14 | Module Prix et paramètre TVA | À faire |
+| 15 | Identite : validation par un responsable | À faire |
+| 16 | Module Credit : clients, plafond, remboursements | À faire |
+| 17 | Module Caisse : sessions, tickets, avoirs, remises, reçu PDF | À faire |
+| 18 | Client : écran de caisse et écrans de gestion | À faire |
+| 19 | Architecture, CI, README, démonstration de la caisse | À faire |
 
 ## Démonstration
 
@@ -289,6 +312,7 @@ Scénario vérifié dans le navigateur sur http://localhost:8080, base vierge :
 
 ## Points ouverts
 
+- Format des codes internes (`INT` + 6 chiffres) : non fixé par le dossier, choix provisoire.
 - Coût unitaire saisi sur la ligne de réception : absent de `LigneReception` dans le modèle UML (il y vient de la
   commande fournisseur) ; ajouté faute de commande en V1, à reporter dans le dossier. Statuts de réception retenus :
   Brouillon et Validee.

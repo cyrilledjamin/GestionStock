@@ -18,4 +18,11 @@ internal static class CodesErreurReferentiel
     public const string UniteTropLongue = "Referentiel.UniteTropLongue";
     public const string PrecisionInvalide = "Referentiel.PrecisionInvalide";
     public const string ArticleIntrouvable = "Referentiel.ArticleIntrouvable";
+    public const string ConditionnementIntrouvable = "Referentiel.ConditionnementIntrouvable";
+    public const string NiveauInvalide = "Referentiel.NiveauInvalide";
+    public const string FacteurInvalide = "Referentiel.FacteurInvalide";
+    public const string UniteNonDesactivable = "Referentiel.UniteNonDesactivable";
+    public const string CodeInvalide = "Referentiel.CodeInvalide";
+    public const string CodeDejaAttribue = "Referentiel.CodeDejaAttribue";
+    public const string CodeIntrouvable = "Referentiel.CodeIntrouvable";
 }

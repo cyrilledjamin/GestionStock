@@ -43,6 +43,46 @@ internal static class EndpointsReferentiel
             Executer(async () => TypedResults.Ok(await service.ModifierAsync(id, saisie, annulation))))
             .RequireAuthorization(Permissions.ArticlesGerer);
 
+        // Conditionnements et codes (RG18, RG26, RG33)
+        groupe.MapGet("/articles/{id:guid}/conditionnements", (Guid id, ServiceConditionnements service, CancellationToken annulation) =>
+            Executer(async () => TypedResults.Ok(await service.ListerAsync(id, annulation))))
+            .RequireAuthorization(Permissions.ReferentielConsulter);
+
+        groupe.MapPost("/articles/{id:guid}/conditionnements", (Guid id, NouveauConditionnement saisie, ServiceConditionnements service, CancellationToken annulation) =>
+            Executer(async () =>
+            {
+                var conditionnement = await service.CreerAsync(id, saisie, annulation);
+                return TypedResults.Created($"{Prefixe}/conditionnements/{conditionnement.Id}", conditionnement);
+            }))
+            .RequireAuthorization(Permissions.ArticlesGerer);
+
+        groupe.MapPut("/conditionnements/{id:guid}", (Guid id, ModificationConditionnement saisie, ServiceConditionnements service, CancellationToken annulation) =>
+            Executer(async () => TypedResults.Ok(await service.ModifierAsync(id, saisie, annulation))))
+            .RequireAuthorization(Permissions.ArticlesGerer);
+
+        groupe.MapPost("/conditionnements/{id:guid}/codes", (Guid id, NouveauCode saisie, ServiceConditionnements service, CancellationToken annulation) =>
+            Executer(async () => TypedResults.Ok(await service.AjouterCodeAsync(id, saisie, annulation))))
+            .RequireAuthorization(Permissions.ArticlesGerer);
+
+        groupe.MapPost("/conditionnements/{id:guid}/codes/interne", (Guid id, ServiceConditionnements service, CancellationToken annulation) =>
+            Executer(async () => TypedResults.Ok(await service.GenererCodeInterneAsync(id, annulation))))
+            .RequireAuthorization(Permissions.ArticlesGerer);
+
+        groupe.MapPost("/codes/{id:guid}/desactivation", (Guid id, ServiceConditionnements service, CancellationToken annulation) =>
+            Executer(async () => TypedResults.Ok(await service.DesactiverCodeAsync(id, annulation))))
+            .RequireAuthorization(Permissions.ArticlesGerer);
+
+        // Identification d'un article vendable : scan (UC22) ou recherche par code / libellé.
+        groupe.MapGet("/scan/{valeur}", async (string valeur, ServiceConditionnements service, CancellationToken annulation) =>
+            await service.ResoudreAsync(valeur, annulation) is { } article
+                ? Results.Ok(article)
+                : ReponsesErreur.Probleme(StatusCodes.Status404NotFound, CodesErreurReferentiel.CodeIntrouvable, Ressources, valeur))
+            .RequireAuthorization(Permissions.ReferentielConsulter);
+
+        groupe.MapGet("/vendables", async (string? recherche, ServiceConditionnements service, CancellationToken annulation) =>
+            TypedResults.Ok(await service.RechercherAsync(recherche, annulation)))
+            .RequireAuthorization(Permissions.ReferentielConsulter);
+
         groupe.MapGet("/site", async (IConsultationReferentiel referentiel, CancellationToken annulation) =>
             TypedResults.Ok(await referentiel.ObtenirSiteBoutiqueAsync(annulation)))
             .RequireAuthorization(Permissions.ReferentielConsulter);
@@ -59,8 +99,9 @@ internal static class EndpointsReferentiel
         {
             var statut = erreur.Code switch
             {
-                CodesErreurReferentiel.ArticleIntrouvable => StatusCodes.Status404NotFound,
-                CodesErreurReferentiel.CodeDejaUtilise => StatusCodes.Status409Conflict,
+                CodesErreurReferentiel.ArticleIntrouvable or CodesErreurReferentiel.ConditionnementIntrouvable
+                    or CodesErreurReferentiel.CodeIntrouvable => StatusCodes.Status404NotFound,
+                CodesErreurReferentiel.CodeDejaUtilise or CodesErreurReferentiel.CodeDejaAttribue => StatusCodes.Status409Conflict,
                 _ => StatusCodes.Status400BadRequest,
             };
             return ReponsesErreur.Probleme(statut, erreur.Code, Ressources);
