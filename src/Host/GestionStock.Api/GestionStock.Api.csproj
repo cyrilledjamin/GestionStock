@@ -11,6 +11,7 @@
     <ProjectReference Include="../../Client/GestionStock.Client/GestionStock.Client.csproj" />
     <ProjectReference Include="../../Modules/Achats/GestionStock.Achats/GestionStock.Achats.csproj" />
     <ProjectReference Include="../../Modules/Identite/GestionStock.Identite/GestionStock.Identite.csproj" />
+    <ProjectReference Include="../../Modules/Prix/GestionStock.Prix/GestionStock.Prix.csproj" />
     <ProjectReference Include="../../Modules/Referentiel/GestionStock.Referentiel/GestionStock.Referentiel.csproj" />
     <ProjectReference Include="../../Modules/Stock/GestionStock.Stock/GestionStock.Stock.csproj" />
   </ItemGroup>

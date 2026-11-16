@@ -14,6 +14,9 @@ public interface IConsultationReferentiel
 
     /// <summary>Conditionnement et son article, actifs ou non ; null s'il n'existe pas.</summary>
     Task<ConditionnementReferentiel?> ObtenirConditionnementAsync(Guid conditionnementId, CancellationToken annulation = default);
+
+    /// <summary>Conditionnements d'un article (actifs ou non), du plus petit au plus grand ; vide si l'article n'existe pas.</summary>
+    Task<IReadOnlyList<ConditionnementReferentiel>> ListerConditionnementsAsync(Guid articleId, CancellationToken annulation = default);
 }
 
 /// <summary>Article tel que le voient les autres modules.</summary>

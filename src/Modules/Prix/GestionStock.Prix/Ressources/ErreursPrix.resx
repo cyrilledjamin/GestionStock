@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Prix.PrixNonPositif" xml:space="preserve"><value>Le prix doit être supérieur à zéro.</value></data>
+  <data name="Prix.PrecisionPrix" xml:space="preserve"><value>Le prix admet au plus 4 décimales.</value></data>
+  <data name="Prix.DateDansLePasse" xml:space="preserve"><value>Un prix ne peut pas prendre effet dans le passé.</value></data>
+  <data name="Prix.ConditionnementIntrouvable" xml:space="preserve"><value>Conditionnement introuvable.</value></data>
+  <data name="Prix.ConditionnementInactif" xml:space="preserve"><value>Ce conditionnement ou cet article est désactivé.</value></data>
+  <data name="Prix.ArticleIntrouvable" xml:space="preserve"><value>Article introuvable.</value></data>
+</root>

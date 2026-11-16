@@ -31,6 +31,9 @@ src/
   Modules/Identite/
     GestionStock.Identite.Contracts  contrat public : Roles, Permissions
     GestionStock.Identite            comptes locaux (ASP.NET Core Identity), jetons porteurs, matrice des permissions
+  Modules/Prix/
+    GestionStock.Prix.Contracts      contrat public : IConsultationPrix (prix applicable), RegimeTva (HT / TVA)
+    GestionStock.Prix                prix de vente par conditionnement, historisés
   Modules/Referentiel/
     GestionStock.Referentiel.Contracts  contrat public : IConsultationReferentiel (articles, site de la boutique)
     GestionStock.Referentiel         articles, site et emplacements (style CRUD)
@@ -126,6 +129,8 @@ Uniquement par variables d'environnement ou `appsettings` ; aucun chemin ni adre
 | `ConnectionStrings:GestionStock` | `ConnectionStrings__GestionStock` | Chaîne de connexion PostgreSQL (obligatoire) ; le chiffrement GSS (Kerberos) y est désactivé sauf si `GSS Encryption Mode` est fourni |
 | `Stockage:RepertoireRacine` | `Stockage__RepertoireRacine` | Répertoire des fichiers (reçus, imports) ; `donnees/fichiers` par défaut. Contient aussi `cles-protection/`, les clés qui signent les jetons de connexion : conservées, elles évitent qu'un redémarrage déconnecte tout le monde (à inclure dans les sauvegardes) |
 | `BaseDeDonnees:AppliquerMigrationsAuDemarrage` | `BaseDeDonnees__AppliquerMigrationsAuDemarrage` | Applique les migrations de chaque module au démarrage ; `false` par défaut, `true` en Development et dans docker-compose |
+| `Entreprise:AssujettiTva` | `Entreprise__AssujettiTva` | Entreprise assujettie à la TVA (RG37) : reçu HT / TVA / TTC ; `false` par défaut, prix nets (`ENTREPRISE_ASSUJETTIE_TVA` dans `deploy/.env`) |
+| `Entreprise:TauxTva` | `Entreprise__TauxTva` | Taux légal en %, 19,25 par défaut |
 | `Identite:AdministrateurInitial:Identifiant` | `Identite__AdministrateurInitial__Identifiant` | Compte Administrateur créé au démarrage si la base ne contient aucun compte (`ADMIN_IDENTIFIANT` dans `deploy/.env`) |
 | `Identite:AdministrateurInitial:MotDePasse` | `Identite__AdministrateurInitial__MotDePasse` | Son mot de passe (`ADMIN_MOT_DE_PASSE`) ; à changer en boutique |
 
@@ -163,6 +168,11 @@ Si le port 5432 est déjà pris (PostgreSQL installé sur le poste), choisir un 
 | `POST /api/referentiel/codes/{id}/desactivation` | `Referentiel.Articles.Gerer` | Désactive un code (il reste dans l'historique) |
 | `GET /api/referentiel/scan/{valeur}` | `Referentiel.Consulter` | Article + conditionnement d'un code scanné ou du code article (404 si inconnu) |
 | `GET /api/referentiel/vendables?recherche=` | `Referentiel.Consulter` | Articles actifs (code ou libellé) avec chacun de leurs conditionnements actifs |
+| `GET /api/prix/regime` | `Prix.Consulter` | Régime de TVA : `{ assujetti, tauxPourcent, tauxApplique }` |
+| `GET /api/prix/articles/{id}` | `Prix.Consulter` | Conditionnements de l'article avec prix en vigueur et prochain prix programmé |
+| `GET /api/prix/conditionnements/{id}` | `Prix.Consulter` | Prix applicable aujourd'hui (204 s'il n'y en a pas) |
+| `GET /api/prix/conditionnements/{id}/historique` | `Prix.Consulter` | Tous les prix du conditionnement, du plus récent au plus ancien |
+| `POST /api/prix/conditionnements/{id}` | `Prix.Gerer` | `{ prixTtc, debutValidite? }` : nouveau prix, dès aujourd'hui ou à une date future |
 | `GET /api/achats/fournisseurs` | `Achats.Consulter` | Fournisseurs actifs ; `?inclureInactifs=true` |
 | `POST /api/achats/fournisseurs`, `PUT /api/achats/fournisseurs/{id}` | `Achats.Fournisseurs.Gerer` | `{ nom, telephone?, actif }` |
 | `GET /api/achats/receptions`, `GET /api/achats/receptions/{id}` | `Achats.Consulter` | Réceptions (la plus récente d'abord) ; détail avec lignes et articles |
@@ -213,6 +223,16 @@ en anglais. Hors ligne (PWA, IndexedDB) : tranche ultérieure, avec la caisse.
   et son emplacement de vente `VENTE` (RG20). Sans gestion par emplacements, la marchandise reçue y est disponible
   dès la validation (RG13). Pas d'écran de gestion des sites en V1 (mono-site).
 
+## Prix de vente
+
+- Prix **TTC par conditionnement** (RG45) : le carton peut coûter moins que la somme de ses unités. L'application est
+  la seule référence des prix (RG37).
+- Un changement de prix crée un **nouveau prix daté**, jamais une modification : l'historique est conservé. Le prix
+  applicable un jour donné (date de Douala) est celui de date de début la plus récente sans dépasser ce jour ; le même
+  jour, le dernier saisi l'emporte. Un prix peut être programmé à une date future, jamais dans le passé.
+- **TVA** (RG37) : paramètre `Entreprise:AssujettiTva`. Assujettie, l'entreprise affiche HT, TVA 19,25 % et TTC ;
+  sinon, prix nets et taux appliqué nul.
+
 ## Réception simple (V1)
 
 Sans commande fournisseur, lots ni frais d'approche (prévus plus tard) :
@@ -239,7 +259,8 @@ Chaque permission est attribuée à des rôles dans
 | Permission | Rôles |
 | --- | --- |
 | `Identite.Utilisateurs.Gerer` | Administrateur |
-| `Referentiel.Consulter`, `Stock.Consulter` | tous |
+| `Referentiel.Consulter`, `Stock.Consulter`, `Prix.Consulter` | tous |
+| `Prix.Gerer` | Gerant |
 | `Referentiel.Articles.Gerer` | Gerant, Administrateur *(provisoire)* |
 | `Achats.Consulter` | Gerant, Comptable, Magasinier |
 | `Achats.Fournisseurs.Gerer` | Gerant, Magasinier *(provisoire)* |
@@ -289,7 +310,7 @@ sur une machine Linux de GitHub qui dispose de Docker :
 | 11 | Client Blazor WebAssembly : premiers écrans | Fait |
 | 12 | Tests d'architecture du client, clés de protection conservées, démonstration de bout en bout | Fait |
 | 13 | Referentiel : conditionnements, codes-barres, scan | Fait |
-| 14 | Module Prix et paramètre TVA | À faire |
+| 14 | Module Prix et paramètre TVA | Fait |
 | 15 | Identite : validation par un responsable | À faire |
 | 16 | Module Credit : clients, plafond, remboursements | À faire |
 | 17 | Module Caisse : sessions, tickets, avoirs, remises, reçu PDF | À faire |
