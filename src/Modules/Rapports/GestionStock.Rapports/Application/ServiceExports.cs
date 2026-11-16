@@ -107,12 +107,14 @@ internal sealed class ServiceExports(NpgsqlDataSource sourceDeDonnees, IHorloge 
 
     // Un avoir vient en négatif ; la remise est déjà déduite des totaux.
     private const string SqlVentes = """
-        SELECT t.date_utc, t.numero_complet, CASE WHEN t.est_avoir THEN 'Avoir' ELSE 'Vente' END AS operation, t.caissier,
+        SELECT t.date_utc, t.numero_complet, CASE WHEN t.est_avoir THEN 'Avoir' ELSE 'Vente' END AS operation,
+               COALESCE(uc.designation, t.caissier) AS caissier,
                c.nom AS client, o.numero_complet AS origine, t.signe * t.remise AS remise, t.signe * t.total_ht AS ht,
                t.signe * t.total_tva AS tva, t.signe * t.total_ttc AS ttc
         FROM caisse.v_tickets t
         LEFT JOIN credit.v_clients c ON c.client_id = t.client_id
         LEFT JOIN caisse.v_tickets o ON o.ticket_id = t.ticket_origine_id
+        LEFT JOIN identite.v_utilisateurs uc ON uc.matricule = t.caissier
         WHERE t.date_utc >= @Debut AND t.date_utc < @Fin
         ORDER BY t.date_utc, t.numero_complet
         """;
@@ -161,14 +163,18 @@ internal sealed class ServiceExports(NpgsqlDataSource sourceDeDonnees, IHorloge 
     private const string SqlEncaissements = """
         SELECT * FROM (
             SELECT p.date_utc, p.numero_complet AS piece, CASE WHEN p.est_avoir THEN 'Avoir' ELSE 'Vente' END AS operation,
-                   p.caissier, c.nom AS client, p.mode, p.reference, p.montant_encaisse AS montant
+                   COALESCE(uc.designation, p.caissier) AS caissier, c.nom AS client, p.mode, p.reference,
+                   p.montant_encaisse AS montant
             FROM caisse.v_paiements p
             LEFT JOIN credit.v_clients c ON c.client_id = p.client_id
+            LEFT JOIN identite.v_utilisateurs uc ON uc.matricule = p.caissier
             WHERE p.mode <> 'Credit' AND p.date_utc >= @Debut AND p.date_utc < @Fin
             UNION ALL
-            SELECT r.date_utc, NULL, 'RemboursementCredit', r.caissier, c.nom, r.mode, r.reference, r.montant
+            SELECT r.date_utc, NULL, 'RemboursementCredit', COALESCE(uc.designation, r.caissier), c.nom, r.mode,
+                   r.reference, r.montant
             FROM caisse.v_remboursements_credit r
             JOIN credit.v_clients c ON c.client_id = r.client_id
+            LEFT JOIN identite.v_utilisateurs uc ON uc.matricule = r.caissier
             WHERE r.date_utc >= @Debut AND r.date_utc < @Fin
         ) journal
         ORDER BY date_utc, piece
@@ -183,10 +189,11 @@ internal sealed class ServiceExports(NpgsqlDataSource sourceDeDonnees, IHorloge 
 
     // RG43 : journal des créances. Une vente à crédit augmente la créance ; un remboursement ou une annulation la réduit.
     private const string SqlCreances = """
-        SELECT o.date_utc, c.nom, c.telephone, o.type, o.numero_ticket, o.echeance_utc, o.utilisateur,
+        SELECT o.date_utc, c.nom, c.telephone, o.type, o.numero_ticket, o.echeance_utc, COALESCE(u.designation, o.utilisateur),
                CASE WHEN o.type = 'VenteCredit' THEN o.montant ELSE -o.montant END AS montant
         FROM credit.v_operations o
         JOIN credit.v_clients c ON c.client_id = o.client_id
+        LEFT JOIN identite.v_utilisateurs u ON u.matricule = o.utilisateur
         WHERE o.date_utc >= @Debut AND o.date_utc < @Fin
         ORDER BY o.date_utc, c.nom
         """;

@@ -84,6 +84,7 @@ internal sealed record RapportCaisse(
 
 /// <summary>
 /// Rapports V1 (décision 33) : ventes et marge, stock et valeur, créances et dettes, caisse et anomalies.
+/// Le personnel est désigné par « Prénom Nom (matricule) » (vue <c>identite.v_utilisateurs</c>).
 /// Lecture seule (section 7 : CQRS côté lecture) : uniquement les vues <c>v_*</c> publiées par les modules, dans une
 /// transaction en lecture seule ; aucun accès aux tables ni aux DbContext des autres modules.
 /// </summary>
@@ -118,11 +119,12 @@ internal sealed class ServiceRapports(NpgsqlDataSource sourceDeDonnees, IHorloge
                 WHERE m.type IN ('VenteCaisse', 'AvoirCaisse') AND m.document_id IN (SELECT ticket_id FROM lignes)
                 GROUP BY m.document_id, m.article_id
             )
-            SELECT l.ticket_id, l.article_id, a.code, a.libelle, a.unite_stock, l.date_utc, l.caissier, l.signe,
-                   l.quantite, l.ttc, l.ht, COALESCE(c.cout, 0) AS cout
+            SELECT l.ticket_id, l.article_id, a.code, a.libelle, a.unite_stock, l.date_utc,
+                   COALESCE(uc.designation, l.caissier) AS caissier, l.signe, l.quantite, l.ttc, l.ht, COALESCE(c.cout, 0) AS cout
             FROM lignes l
             JOIN referentiel.v_articles a ON a.article_id = l.article_id
             LEFT JOIN couts c ON c.ticket_id = l.ticket_id AND c.article_id = l.article_id
+            LEFT JOIN identite.v_utilisateurs uc ON uc.matricule = l.caissier
             """;
         const string SqlTickets = """
             SELECT t.ticket_id, t.est_avoir, t.remise, t.signe
@@ -226,20 +228,28 @@ internal sealed class ServiceRapports(NpgsqlDataSource sourceDeDonnees, IHorloge
     public async Task<RapportCaisse> CaisseAsync(Periode periode, CancellationToken annulation)
     {
         const string SqlSessions = """
-            SELECT s.session_id, s.numero_caisse, s.caissier, s.ouverture_utc, s.cloture_utc, s.statut,
-                   s.nombre_ventes::int AS nombre_ventes, s.nombre_avoirs::int AS nombre_avoirs, s.ventes_nettes,
-                   s.especes_theoriques, s.especes_comptees, s.ecart, s.validee_par
+            SELECT s.session_id, s.numero_caisse, COALESCE(uc.designation, s.caissier) AS caissier, s.ouverture_utc,
+                   s.cloture_utc, s.statut, s.nombre_ventes::int AS nombre_ventes, s.nombre_avoirs::int AS nombre_avoirs,
+                   s.ventes_nettes, s.especes_theoriques, s.especes_comptees, s.ecart,
+                   COALESCE(uv.designation, s.validee_par) AS validee_par
             FROM caisse.v_sessions s
+            LEFT JOIN identite.v_utilisateurs uc ON uc.matricule = s.caissier
+            LEFT JOIN identite.v_utilisateurs uv ON uv.matricule = s.validee_par
             WHERE s.ouverture_utc >= @Debut AND s.ouverture_utc < @Fin
             ORDER BY s.ouverture_utc
             """;
 
         // Remises, avoirs et ventes à crédit validées par un responsable : opérations journalisées à surveiller.
         const string SqlTickets = """
-            SELECT t.ticket_id, t.numero_complet AS numero, t.date_utc, t.caissier, t.total_ttc, t.remise, t.est_avoir,
-                   t.remise_validee_par, t.credit_valide_par, o.numero_complet AS ticket_origine
+            SELECT t.ticket_id, t.numero_complet AS numero, t.date_utc, COALESCE(uc.designation, t.caissier) AS caissier,
+                   t.total_ttc, t.remise, t.est_avoir,
+                   COALESCE(ur.designation, t.remise_validee_par) AS remise_validee_par,
+                   COALESCE(uv.designation, t.credit_valide_par) AS credit_valide_par, o.numero_complet AS ticket_origine
             FROM caisse.v_tickets t
             LEFT JOIN caisse.v_tickets o ON o.ticket_id = t.ticket_origine_id
+            LEFT JOIN identite.v_utilisateurs uc ON uc.matricule = t.caissier
+            LEFT JOIN identite.v_utilisateurs ur ON ur.matricule = t.remise_validee_par
+            LEFT JOIN identite.v_utilisateurs uv ON uv.matricule = t.credit_valide_par
             WHERE t.date_utc >= @Debut AND t.date_utc < @Fin
               AND (t.remise > 0 OR t.est_avoir OR t.credit_valide_par IS NOT NULL)
             ORDER BY t.date_utc

@@ -35,6 +35,8 @@ public sealed class ExportsTests(ApiDeTest api)
         Assert.Equal("Date;Pièce;Opération;Caissier;Client;Ticket d'origine;Remise;Total HT;TVA;Total TTC", lignes[0]);
         Assert.Equal("1500", lignes.Select(Cellules).Single(c => c[1] == numeroVente)[9]);
         Assert.Equal(("Avoir", numeroVente, "-500"), (ligneAvoir[2], ligneAvoir[5], ligneAvoir[9]));
+        var caissier = (await b.Caissier.GetFromJsonAsync<JsonElement>("/api/identite/moi", Annulation)).GetProperty("identifiant").GetString();
+        Assert.Equal($"Test Caissier ({caissier})", ligneAvoir[3]);
     }
 
     [Fact]
