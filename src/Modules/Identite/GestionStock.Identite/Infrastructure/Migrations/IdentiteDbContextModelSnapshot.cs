@@ -23,6 +23,48 @@ namespace GestionStock.Identite.Infrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.HasSequence("numero_matricule");
+
+            modelBuilder.Entity("GestionStock.Identite.Infrastructure.JournalCompte", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("action");
+
+                    b.Property<string>("Auteur")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("auteur");
+
+                    b.Property<DateTime>("DateUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_utc");
+
+                    b.Property<string>("Detail")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("detail");
+
+                    b.Property<Guid>("UtilisateurId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("utilisateur_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_journal_compte");
+
+                    b.HasIndex("UtilisateurId", "DateUtc")
+                        .HasDatabaseName("ix_journal_compte_utilisateur_id_date_utc");
+
+                    b.ToTable("journal_compte", "identite");
+                });
+
             modelBuilder.Entity("GestionStock.Identite.Infrastructure.Utilisateur", b =>
                 {
                     b.Property<Guid>("Id")
@@ -33,6 +75,12 @@ namespace GestionStock.Identite.Infrastructure.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("integer")
                         .HasColumnName("access_failed_count");
+
+                    b.Property<bool>("Actif")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("actif");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
@@ -48,6 +96,14 @@ namespace GestionStock.Identite.Infrastructure.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("email_confirmed");
 
+                    b.Property<string>("Langue")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(2)
+                        .HasColumnType("character varying(2)")
+                        .HasDefaultValue("fr")
+                        .HasColumnName("langue");
+
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("boolean")
                         .HasColumnName("lockout_enabled");
@@ -55,6 +111,16 @@ namespace GestionStock.Identite.Infrastructure.Migrations
                     b.Property<DateTimeOffset?>("LockoutEnd")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("lockout_end");
+
+                    b.Property<bool>("MotDePasseProvisoire")
+                        .HasColumnType("boolean")
+                        .HasColumnName("mot_de_passe_provisoire");
+
+                    b.Property<string>("Nom")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("nom");
 
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(256)
@@ -77,6 +143,12 @@ namespace GestionStock.Identite.Infrastructure.Migrations
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("boolean")
                         .HasColumnName("phone_number_confirmed");
+
+                    b.Property<string>("Prenom")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("prenom");
 
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("text")
@@ -301,6 +373,16 @@ namespace GestionStock.Identite.Infrastructure.Migrations
                         .HasName("pk_utilisateur_jeton");
 
                     b.ToTable("utilisateur_jeton", "identite");
+                });
+
+            modelBuilder.Entity("GestionStock.Identite.Infrastructure.JournalCompte", b =>
+                {
+                    b.HasOne("GestionStock.Identite.Infrastructure.Utilisateur", null)
+                        .WithMany()
+                        .HasForeignKey("UtilisateurId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_journal_compte_utilisateur_utilisateur_id");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>

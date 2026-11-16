@@ -4,11 +4,22 @@
   <resheader name="version"><value>2.0</value></resheader>
   <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
-  <data name="Identite.IdentifiantsInvalides" xml:space="preserve"><value>Incorrect username or password.</value></data>
+  <data name="Identite.IdentifiantsInvalides" xml:space="preserve"><value>Incorrect employee number or password.</value></data>
   <data name="Identite.CompteVerrouille" xml:space="preserve"><value>Account locked after several attempts: try again in a few minutes.</value></data>
   <data name="Identite.SessionExpiree" xml:space="preserve"><value>Session expired: please sign in again.</value></data>
   <data name="Identite.IdentifiantObligatoire" xml:space="preserve"><value>The username is required.</value></data>
   <data name="Identite.IdentifiantDejaUtilise" xml:space="preserve"><value>This username is already taken.</value></data>
   <data name="Identite.RoleInconnu" xml:space="preserve"><value>Unknown role.</value></data>
   <data name="Identite.MotDePasseRefuse" xml:space="preserve"><value>Password rejected: at least 8 characters, with an uppercase letter, a lowercase letter, a digit and a special character.</value></data>
+  <data name="Identite.CompteIntrouvable" xml:space="preserve"><value>Account not found.</value></data>
+  <data name="Identite.CompteDesactive" xml:space="preserve"><value>This account is deactivated. Contact the administrator.</value></data>
+  <data name="Identite.MatriculeInvalide" xml:space="preserve"><value>Invalid employee number: letters, digits, dot, dash or underscore, 20 characters at most.</value></data>
+  <data name="Identite.NomObligatoire" xml:space="preserve"><value>First name and last name are required.</value></data>
+  <data name="Identite.NomTropLong" xml:space="preserve"><value>First or last name exceeds 100 characters.</value></data>
+  <data name="Identite.TelephoneInvalide" xml:space="preserve"><value>Invalid phone: digits and spaces, leading “+”, 8 to 20 characters.</value></data>
+  <data name="Identite.RoleObligatoire" xml:space="preserve"><value>Choose at least one role.</value></data>
+  <data name="Identite.LangueInconnue" xml:space="preserve"><value>Unknown language: French or English.</value></data>
+  <data name="Identite.DernierAdministrateur" xml:space="preserve"><value>At least one active administrator must remain.</value></data>
+  <data name="Identite.MotDePasseActuelInvalide" xml:space="preserve"><value>The current password is incorrect.</value></data>
+  <data name="Identite.MotDePasseIdentique" xml:space="preserve"><value>The new password must differ from the current one.</value></data>
 </root>

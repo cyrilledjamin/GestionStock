@@ -33,12 +33,17 @@ public static class ModuleIdentite
             })
             .AddRoles<IdentityRole<Guid>>()
             .AddEntityFrameworkStores<IdentiteDbContext>()
+            .AddClaimsPrincipalFactory<FabriquePrincipal>()
             .AddSignInManager();
 
         var autorisations = services.AddAuthorizationBuilder();
         foreach (var (permission, roles) in MatricePermissions.RolesParPermission)
         {
-            autorisations.AddPolicy(permission, politique => politique.RequireAuthenticatedUser().RequireRole(roles));
+            // Tant que son mot de passe est provisoire, un utilisateur n'a aucune permission (il doit d'abord le changer).
+            autorisations.AddPolicy(permission, politique => politique
+                .RequireAuthenticatedUser()
+                .RequireRole(roles)
+                .RequireAssertion(contexte => !contexte.User.HasClaim(c => c.Type == RevendicationsIdentite.MotDePasseProvisoire)));
         }
 
         services.AddHttpContextAccessor();

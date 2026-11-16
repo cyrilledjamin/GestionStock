@@ -40,7 +40,7 @@ public sealed class IdentiteTests(ApiDeTest api)
         Assert.Equal(HttpStatusCode.Unauthorized, reponse.StatusCode);
         var probleme = await LireProblemeAsync(reponse);
         Assert.Equal("Identite.IdentifiantsInvalides", probleme.Code);
-        Assert.Equal("Incorrect username or password.", probleme.Titre);
+        Assert.Equal("Incorrect employee number or password.", probleme.Titre);
     }
 
     [Fact]
@@ -85,19 +85,23 @@ public sealed class IdentiteTests(ApiDeTest api)
 
         var comptes = await administrateur.GetFromJsonAsync<List<Compte>>("/api/identite/utilisateurs", Annulation);
 
-        Assert.Contains(comptes!, c => c.Identifiant == identifiantGerant && c.Roles.SequenceEqual([Roles.Gerant]));
+        Assert.Contains(comptes!, c => c.Matricule == identifiantGerant && c.Roles.SequenceEqual([Roles.Gerant]) && c.Actif);
     }
 
     [Theory]
-    [InlineData("admin", ApiDeTest.MotDePasseValide, Roles.Caissier, HttpStatusCode.Conflict, "Identite.IdentifiantDejaUtilise")]
-    [InlineData("nouveau-role", ApiDeTest.MotDePasseValide, "Acheteur", HttpStatusCode.BadRequest, "Identite.RoleInconnu")]
-    [InlineData("mdp-faible", "abc", Roles.Caissier, HttpStatusCode.BadRequest, "Identite.MotDePasseRefuse")]
-    [InlineData("  ", ApiDeTest.MotDePasseValide, Roles.Caissier, HttpStatusCode.BadRequest, "Identite.IdentifiantObligatoire")]
-    public async Task Une_creation_de_compte_invalide_est_refusee(string identifiant, string motDePasse, string role, HttpStatusCode attendu, string code)
+    [InlineData("admin", "Awa", ApiDeTest.MotDePasseValide, Roles.Caissier, HttpStatusCode.Conflict, "Identite.IdentifiantDejaUtilise")]
+    [InlineData("nouveau-role", "Awa", ApiDeTest.MotDePasseValide, "Acheteur", HttpStatusCode.BadRequest, "Identite.RoleInconnu")]
+    [InlineData("mdp-faible", "Awa", "abc", Roles.Caissier, HttpStatusCode.BadRequest, "Identite.MotDePasseRefuse")]
+    [InlineData("sans-nom", " ", ApiDeTest.MotDePasseValide, Roles.Caissier, HttpStatusCode.BadRequest, "Identite.NomObligatoire")]
+    [InlineData("mat/ricule", "Awa", ApiDeTest.MotDePasseValide, Roles.Caissier, HttpStatusCode.BadRequest, "Identite.MatriculeInvalide")]
+    public async Task Une_creation_de_compte_invalide_est_refusee(string matricule, string prenom, string motDePasse, string role, HttpStatusCode attendu, string code)
     {
         using var administrateur = await api.ClientAdministrateurAsync();
 
-        var reponse = await administrateur.PostAsJsonAsync("/api/identite/utilisateurs", new { identifiant, motDePasse, role }, Annulation);
+        var reponse = await administrateur.PostAsJsonAsync(
+            "/api/identite/utilisateurs",
+            new { matricule, prenom, nom = "Ngono", roles = new[] { role }, motDePasse },
+            Annulation);
 
         Assert.Equal(attendu, reponse.StatusCode);
         Assert.Equal(code, (await LireProblemeAsync(reponse)).Code);
@@ -136,5 +140,5 @@ public sealed class IdentiteTests(ApiDeTest api)
 
     private sealed record Profil(string Identifiant, List<string> Roles, List<string> Permissions);
 
-    private sealed record Compte(Guid Id, string Identifiant, List<string> Roles);
+    private sealed record Compte(Guid Id, string Matricule, List<string> Roles, bool Actif);
 }

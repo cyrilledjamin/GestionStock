@@ -4,11 +4,22 @@
   <resheader name="version"><value>2.0</value></resheader>
   <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
-  <data name="Identite.IdentifiantsInvalides" xml:space="preserve"><value>Identifiant ou mot de passe incorrect.</value></data>
+  <data name="Identite.IdentifiantsInvalides" xml:space="preserve"><value>Matricule ou mot de passe incorrect.</value></data>
   <data name="Identite.CompteVerrouille" xml:space="preserve"><value>Compte verrouillé après plusieurs essais : réessayez dans quelques minutes.</value></data>
   <data name="Identite.SessionExpiree" xml:space="preserve"><value>Session expirée : reconnectez-vous.</value></data>
   <data name="Identite.IdentifiantObligatoire" xml:space="preserve"><value>L'identifiant est obligatoire.</value></data>
   <data name="Identite.IdentifiantDejaUtilise" xml:space="preserve"><value>Cet identifiant est déjà utilisé.</value></data>
   <data name="Identite.RoleInconnu" xml:space="preserve"><value>Rôle inconnu.</value></data>
   <data name="Identite.MotDePasseRefuse" xml:space="preserve"><value>Mot de passe refusé : au moins 8 caractères, avec une majuscule, une minuscule, un chiffre et un caractère spécial.</value></data>
+  <data name="Identite.CompteIntrouvable" xml:space="preserve"><value>Compte introuvable.</value></data>
+  <data name="Identite.CompteDesactive" xml:space="preserve"><value>Ce compte est désactivé. Adressez-vous à l'administrateur.</value></data>
+  <data name="Identite.MatriculeInvalide" xml:space="preserve"><value>Matricule invalide : lettres, chiffres, point, tiret ou souligné, 20 caractères au plus.</value></data>
+  <data name="Identite.NomObligatoire" xml:space="preserve"><value>Le prénom et le nom sont obligatoires.</value></data>
+  <data name="Identite.NomTropLong" xml:space="preserve"><value>Le prénom ou le nom dépasse 100 caractères.</value></data>
+  <data name="Identite.TelephoneInvalide" xml:space="preserve"><value>Téléphone invalide : chiffres et espaces, « + » au début, 8 à 20 caractères.</value></data>
+  <data name="Identite.RoleObligatoire" xml:space="preserve"><value>Choisissez au moins un rôle.</value></data>
+  <data name="Identite.LangueInconnue" xml:space="preserve"><value>Langue inconnue : français ou anglais.</value></data>
+  <data name="Identite.DernierAdministrateur" xml:space="preserve"><value>Il doit rester au moins un administrateur actif.</value></data>
+  <data name="Identite.MotDePasseActuelInvalide" xml:space="preserve"><value>Le mot de passe actuel est incorrect.</value></data>
+  <data name="Identite.MotDePasseIdentique" xml:space="preserve"><value>Le nouveau mot de passe doit être différent de l'actuel.</value></data>
 </root>

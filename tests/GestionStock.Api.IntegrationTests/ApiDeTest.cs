@@ -112,17 +112,38 @@ public sealed class ApiDeTest : IAsyncLifetime
     /// <summary>Client connecté en Administrateur initial.</summary>
     public Task<HttpClient> ClientAdministrateurAsync() => ClientConnecteAsync(Administrateur, MotDePasseAdministrateur);
 
-    /// <summary>Crée un compte neuf avec ce rôle (par l'Administrateur) et renvoie un client connecté avec lui.</summary>
-    public async Task<HttpClient> ClientAvecRoleAsync(string role)
+    /// <summary>Mot de passe initial fixé par l'Administrateur : provisoire, remplacé à la première connexion.</summary>
+    public const string MotDePasseProvisoire = "Provisoire1!";
+
+    /// <summary>
+    /// Crée un compte neuf avec ces rôles (par l'Administrateur), change son mot de passe provisoire en
+    /// <see cref="MotDePasseValide"/> et renvoie un client connecté avec lui.
+    /// </summary>
+    public async Task<HttpClient> ClientAvecRoleAsync(string role, params string[] autresRoles)
     {
-        var identifiant = $"{role.ToLowerInvariant()}-{Guid.NewGuid():N}"[..20];
+        var matricule = await CreerCompteAsync([role, .. autresRoles]);
+        using (var provisoire = await ClientConnecteAsync(matricule, MotDePasseProvisoire))
+        {
+            (await provisoire.PostAsJsonAsync(
+                "/api/identite/moi/mot-de-passe",
+                new { actuel = MotDePasseProvisoire, nouveau = MotDePasseValide },
+                TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        }
+
+        return await ClientConnecteAsync(matricule, MotDePasseValide);
+    }
+
+    /// <summary>Crée un compte (mot de passe provisoire) et renvoie son matricule.</summary>
+    public async Task<string> CreerCompteAsync(string[] roles, string? matricule = null)
+    {
+        matricule ??= $"{roles[0].ToLowerInvariant()}-{Guid.NewGuid():N}"[..20];
         using var administrateur = await ClientAdministrateurAsync();
         var reponse = await administrateur.PostAsJsonAsync(
             "/api/identite/utilisateurs",
-            new { identifiant, motDePasse = MotDePasseValide, role },
+            new { matricule, prenom = "Test", nom = roles[0], telephone = "+237 699 00 00 00", roles, motDePasse = MotDePasseProvisoire },
             TestContext.Current.CancellationToken);
-        reponse.EnsureSuccessStatusCode();
-        return await ClientConnecteAsync(identifiant, MotDePasseValide);
+        Assert.True(reponse.IsSuccessStatusCode, await reponse.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+        return matricule;
     }
 
     public static async Task<JetonAcces> ConnecterAsync(HttpClient client, string identifiant, string motDePasse)
