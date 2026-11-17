@@ -1,5 +1,6 @@
 @page "/utilisateurs/{Id:guid}"
 @inject Api Api
+@inject Confirmation Confirmation
 @inject NavigationManager Navigation
 
 <PageTitle>@(_fiche?.Compte.NomComplet ?? L["Utilisateurs"]) · GestionStock</PageTitle>
@@ -110,12 +111,25 @@
         () => Api.PutAsync<FicheCompte>($"api/identite/utilisateurs/{Id}", new { Prenom = _prenom, Nom = _nom, Telephone = _telephone, Roles = _roles.ToList(), Langue = _langue }),
         "FicheEnregistree");
 
-    private Task Desactiver() => Executer(() => Api.PostAsync<FicheCompte>($"api/identite/utilisateurs/{Id}/desactivation"), "CompteDesactive");
+    private async Task Desactiver()
+    {
+        if (!await Confirmation.DemanderAsync(L["ConfirmerDesactivationCompte", _fiche?.Compte.NomComplet ?? ""].Value))
+        {
+            return;
+        }
+
+        await Executer(() => Api.PostAsync<FicheCompte>($"api/identite/utilisateurs/{Id}/desactivation"), "CompteDesactive");
+    }
 
     private Task Reactiver() => Executer(() => Api.PostAsync<FicheCompte>($"api/identite/utilisateurs/{Id}/reactivation"), "CompteReactive");
 
     private async Task Reinitialiser()
     {
+        if (!await Confirmation.DemanderAsync(L["ConfirmerReinitialisation", _fiche?.Compte.NomComplet ?? ""].Value))
+        {
+            return;
+        }
+
         await Executer(() => Api.PostAsync<FicheCompte>($"api/identite/utilisateurs/{Id}/mot-de-passe", new { MotDePasse = _provisoire }), "MotDePasseReinitialise");
         if (_erreur is null)
         {

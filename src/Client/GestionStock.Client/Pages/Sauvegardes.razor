@@ -54,7 +54,11 @@
                 <td data-label="@L["Taille"]" class="nombre">@(passage.Taille is { } taille ? Taille(taille) : "")</td>
             </tr>
         }
-        @if (_passages.Count == 0)
+        @if (!_charge)
+        {
+            <tr><td colspan="5"><Chargement /></td></tr>
+        }
+        else if (_passages.Count == 0)
         {
             <tr><td colspan="5" class="vide">@L["AucuneSauvegarde"]</td></tr>
         }
@@ -65,6 +69,9 @@
 <p>@L["RestaurationAide"]</p>
 
 @code {
+    // Premier chargement terminé : jusque-là, la liste montre l'attente et non « Aucun… ».
+    private bool _charge;
+
     private EtatExploitation? _etat;
     private List<PassageSauvegarde> _passages = [];
     private string _filtre = "";
@@ -76,6 +83,7 @@
         _etat = etat.Valeur;
         _erreur = etat.Erreur;
         await Charger();
+        _charge = true;
     }
 
     private async Task Charger()

@@ -270,6 +270,11 @@ public sealed class CaisseTests(ApiDeTest api)
         Assert.Equal(HttpStatusCode.Forbidden, parLeCaissier.StatusCode);
         Assert.Equal("Validee", validee.Statut);
         Assert.Equal(HttpStatusCode.NoContent, apres.StatusCode);
+
+        // Les écrans montrent les personnes par leur nom ; le matricule reste l'identifiant tracé.
+        Assert.Equal($"Test Caissier ({b.IdentifiantCaissier})", cloture.NomCaissier);
+        Assert.Equal($"Test Caissier ({b.IdentifiantCaissier})", cloture.NomClotureePar);
+        Assert.StartsWith("Test Comptable (", validee.NomValideePar, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -476,7 +481,7 @@ public sealed class CaisseTests(ApiDeTest api)
 
     private sealed record IdentiteBoutique(string Nom, bool Logo);
 
-    private sealed record Session(Guid Id, string Statut, decimal? Ecart, string? ClotureePar, Totaux Totaux);
+    private sealed record Session(Guid Id, string Statut, decimal? Ecart, string? ClotureePar, Totaux Totaux, string? NomCaissier = null, string? NomClotureePar = null, string? NomValideePar = null);
 
     private sealed record Occupation(string NumeroCaisse, Guid SessionId, string Caissier, DateTime OuvertureUtc);
 

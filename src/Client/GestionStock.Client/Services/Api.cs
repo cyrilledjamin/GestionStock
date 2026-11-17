@@ -106,15 +106,34 @@ public sealed class Api(HttpClient http, Session session, NavigationManager navi
     private Task<Resultat<T>> EnvoyerAsync<T>(HttpMethod methode, string url, object? corps) =>
         SansReseauAsync(async () =>
         {
-            using var reponse = await EnvoyerAvecJetonAsync(methode, url, corps);
-            if (reponse.StatusCode == HttpStatusCode.Unauthorized && await session.RafraichirAsync())
+            var reponse = await EnvoyerAvecJetonAsync(methode, url, corps);
+            try
             {
-                using var nouvelle = await EnvoyerAvecJetonAsync(methode, url, corps);
-                return await LireAsync<T>(nouvelle);
-            }
+                // Base interrompue (503, pool vidé par le serveur) : une lecture est redemandée une fois après le délai
+                // annoncé. Une écriture ne l'est jamais automatiquement : son message invite à réessayer.
+                if (reponse.StatusCode == HttpStatusCode.ServiceUnavailable && methode == HttpMethod.Get)
+                {
+                    reponse.Dispose();
+                    await Task.Delay(DelaiAvantNouvelEssai);
+                    reponse = await EnvoyerAvecJetonAsync(methode, url, corps);
+                }
 
-            return await LireAsync<T>(reponse);
+                if (reponse.StatusCode == HttpStatusCode.Unauthorized && await session.RafraichirAsync())
+                {
+                    using var nouvelle = await EnvoyerAvecJetonAsync(methode, url, corps);
+                    return await LireAsync<T>(nouvelle);
+                }
+
+                return await LireAsync<T>(reponse);
+            }
+            finally
+            {
+                reponse.Dispose();
+            }
         });
+
+    /// <summary>Délai avant de redemander une lecture refusée par une coupure de la base (en-tête Retry-After : 1 s).</summary>
+    private static readonly TimeSpan DelaiAvantNouvelEssai = TimeSpan.FromSeconds(1);
 
     /// <summary>
     /// Exécute un appel ; une erreur réseau (serveur injoignable) devient un résultat <see cref="CodeHorsLigne"/> et

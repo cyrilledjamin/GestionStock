@@ -1,6 +1,7 @@
 using GestionStock.Achats.Contracts;
 using GestionStock.Achats.Domain;
 using GestionStock.Achats.Infrastructure;
+using GestionStock.Identite.Contracts;
 using GestionStock.Infrastructure.Persistance;
 using GestionStock.Referentiel.Contracts;
 using GestionStock.SharedKernel;
@@ -39,7 +40,8 @@ internal sealed record DetailReception(
     decimal TotalFrais,
     decimal MontantTotal,
     IReadOnlyList<DetailLigneReception> Lignes,
-    IReadOnlyList<DetailFraisApproche> Frais);
+    IReadOnlyList<DetailFraisApproche> Frais,
+    IReadOnlyDictionary<string, string> Personnel);
 
 internal sealed record DetailLigneReception(
     Guid Id,
@@ -84,7 +86,8 @@ internal sealed class ServiceReceptions(
     IConsultationStock consultationStock,
     IUniteDeTravail uniteDeTravail,
     IUtilisateurCourant utilisateur,
-    IHorloge horloge)
+    IHorloge horloge,
+    IAnnuairePersonnel annuaire)
 {
     public async Task<IReadOnlyList<ResumeReception>> ListerAsync(CancellationToken annulation)
     {
@@ -378,6 +381,7 @@ internal sealed class ServiceReceptions(
             reception.ValeurMarchandise + reception.TotalFrais,
             lignes,
             [.. reception.Frais.OrderBy(f => f.SaisiLeUtc).Select(f => new DetailFraisApproche(
-                f.Id, f.Type, f.Libelle, f.Montant, f.Cle, f.ApresValidation, f.SaisiPar, f.SaisiLeUtc, f.MontantNonIncorpore))]);
+                f.Id, f.Type, f.Libelle, f.Montant, f.Cle, f.ApresValidation, f.SaisiPar, f.SaisiLeUtc, f.MontantNonIncorpore))],
+            await annuaire.DesignationsAsync([reception.CreePar, reception.ValideePar, .. reception.Frais.Select(f => f.SaisiPar)], annulation));
     }
 }

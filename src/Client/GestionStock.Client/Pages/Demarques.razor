@@ -1,5 +1,6 @@
 @page "/demarques"
 @inject Api Api
+@inject Confirmation Confirmation
 @inject Session Session
 
 <PageTitle>@L["Demarque"] · GestionStock</PageTitle>
@@ -42,7 +43,7 @@
                 </label>
                 <label>@L["Commentaire"] <input @bind="_commentaire" maxlength="500" /></label>
             </div>
-            <div class="actions"><button type="submit" class="principal">@L["Declarer"]</button></div>
+            <div class="actions"><button type="submit" class="principal" disabled="@_enCours">@L["Declarer"]</button></div>
         }
     </form>
 }
@@ -76,14 +77,18 @@
                 <td class="actions-ligne">
                     @if (demarque.Statut == "Declaree" && Session.A(Permissions.DemarqueValider))
                     {
-                        <button class="lien" @onclick="() => Valider(demarque.Id)">@L["Valider"]</button>
+                        <button class="lien" disabled="@_enCours" @onclick="() => Valider(demarque.Id)">@L["Valider"]</button>
                         <input class="motif-refus" placeholder="@L["MotifRefus"]" @bind="_motifsRefus[demarque.Id]" />
-                        <button class="lien" @onclick="() => Refuser(demarque.Id)">@L["Refuser"]</button>
+                        <button class="lien" disabled="@_enCours" @onclick="() => Refuser(demarque.Id)">@L["Refuser"]</button>
                     }
                 </td>
             </tr>
         }
-        @if (_demarques.Count == 0)
+        @if (!_charge)
+        {
+            <tr><td colspan="8"><Chargement /></td></tr>
+        }
+        else if (_demarques.Count == 0)
         {
             <tr><td colspan="8" class="vide">@L["AucuneDemarque"]</td></tr>
         }
@@ -91,6 +96,9 @@
 </table>
 
 @code {
+    // Premier chargement terminé : jusque-là, la liste montre l'attente et non « Aucun… ».
+    private bool _charge;
+
     private List<DeclarationDemarque> _demarques = [];
     private Dictionary<Guid, string?> _motifsRefus = [];
     private string _statut = "";
@@ -101,6 +109,7 @@
     private string _motif = "Casse";
     private string? _commentaire;
     private string? _erreur;
+    private bool _enCours;
     private string? _succes;
 
     protected override Task OnInitializedAsync() => Charger();
@@ -114,42 +123,101 @@
         {
             _motifsRefus.TryAdd(demarque.Id, null);
         }
+        _charge = true;
     }
 
     private async Task Rechercher()
     {
-        _resultats = _recherche.Trim().Length < 2
-            ? []
-            : (await Api.GetAsync<List<ArticleVendable>>($"api/referentiel/vendables?recherche={Uri.EscapeDataString(_recherche.Trim())}")).Valeur ?? [];
+        if (_recherche.Trim().Length < 2)
+        {
+            _resultats = [];
+            return;
+        }
+
+        var trouves = await Api.GetAsync<List<ArticleVendable>>($"api/referentiel/vendables?recherche={Uri.EscapeDataString(_recherche.Trim())}");
+        _erreur = trouves.Erreur;
+        _resultats = trouves.Valeur ?? [];
     }
 
     private async Task Declarer()
     {
-        var resultat = await Api.PostAsync<DeclarationDemarque>("api/demarques", new { _article!.ArticleId, Quantite = _quantite, Motif = _motif, Commentaire = _commentaire });
-        _erreur = resultat.Erreur;
-        if (resultat.Valeur is { } demarque)
+        // Un seul envoi à la fois : un double clic ou une connexion lente ne crée pas deux fois la même chose.
+        if (_enCours)
         {
-            _succes = L["DemarqueDeclaree", demarque.Numero].Value;
-            _article = null;
-            _quantite = 0;
-            _commentaire = null;
-            _recherche = "";
-            _resultats = [];
-            await Charger();
+            return;
+        }
+
+        _enCours = true;
+        try
+        {
+            var resultat = await Api.PostAsync<DeclarationDemarque>("api/demarques", new { _article!.ArticleId, Quantite = _quantite, Motif = _motif, Commentaire = _commentaire });
+            _erreur = resultat.Erreur;
+            if (resultat.Valeur is { } demarque)
+            {
+                _succes = L["DemarqueDeclaree", demarque.Numero].Value;
+                _article = null;
+                _quantite = 0;
+                _commentaire = null;
+                _recherche = "";
+                _resultats = [];
+                await Charger();
+            }
+        }
+        finally
+        {
+            _enCours = false;
         }
     }
 
     private async Task Valider(Guid id)
     {
-        var resultat = await Api.PostAsync<DeclarationDemarque>($"api/demarques/{id}/validation");
-        _erreur = resultat.Erreur;
-        await Charger();
+        if (!await Confirmation.DemanderAsync(L["ConfirmerValidationDemarque"].Value))
+        {
+            return;
+        }
+
+        // Un seul envoi à la fois : un double clic ou une connexion lente ne crée pas deux fois la même chose.
+        if (_enCours)
+        {
+            return;
+        }
+
+        _enCours = true;
+        try
+        {
+            var resultat = await Api.PostAsync<DeclarationDemarque>($"api/demarques/{id}/validation");
+            _erreur = resultat.Erreur;
+            await Charger();
+        }
+        finally
+        {
+            _enCours = false;
+        }
     }
 
     private async Task Refuser(Guid id)
     {
-        var resultat = await Api.PostAsync<DeclarationDemarque>($"api/demarques/{id}/refus", new { Motif = _motifsRefus.GetValueOrDefault(id) ?? "" });
-        _erreur = resultat.Erreur;
-        await Charger();
+        if (!await Confirmation.DemanderAsync(L["ConfirmerRefusDemarque"].Value))
+        {
+            return;
+        }
+
+        // Un seul envoi à la fois : un double clic ou une connexion lente ne crée pas deux fois la même chose.
+        if (_enCours)
+        {
+            return;
+        }
+
+        _enCours = true;
+        try
+        {
+            var resultat = await Api.PostAsync<DeclarationDemarque>($"api/demarques/{id}/refus", new { Motif = _motifsRefus.GetValueOrDefault(id) ?? "" });
+            _erreur = resultat.Erreur;
+            await Charger();
+        }
+        finally
+        {
+            _enCours = false;
+        }
     }
 }

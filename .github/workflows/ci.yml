@@ -176,7 +176,8 @@ jobs:
           dotnet build tests/GestionStock.E2E --configuration Release
           pwsh tests/GestionStock.E2E/bin/Release/net10.0/playwright.ps1 install --with-deps chromium
           mkdir -p "$E2E_TRACES"
-          E2E_ADMIN="$ADMIN_IDENTIFIANT" E2E_MOT_DE_PASSE="$ADMIN_MOT_DE_PASSE"             dotnet tests/GestionStock.E2E/bin/Release/net10.0/GestionStock.E2E.dll
+          E2E_ADMIN="$ADMIN_IDENTIFIANT" E2E_MOT_DE_PASSE="$ADMIN_MOT_DE_PASSE" \
+            dotnet tests/GestionStock.E2E/bin/Release/net10.0/GestionStock.E2E.dll
 
       - name: Traces des parcours en échec
         if: failure()
@@ -185,6 +186,24 @@ jobs:
           name: traces-e2e
           path: ${{ runner.temp }}/traces
           if-no-files-found: ignore
+
+      # Redémarrage de PostgreSQL (coupure de courant, mise à jour) : les connexions du pool sont mortes. La première
+      # requête reçoit un 503 traduit (ou 200 si une connexion neuve est prise), jamais une erreur 500 ; la suivante passe.
+      - name: Coupure de la base, 503 puis reprise
+        run: |
+          source deploy/.env
+          jeton=$(curl -fsS -H 'Content-Type: application/json' \
+            -d "{\"identifiant\":\"$ADMIN_IDENTIFIANT\",\"motDePasse\":\"$ADMIN_MOT_DE_PASSE\"}" \
+            http://localhost:8080/api/identite/connexion | jq -r .accessToken)
+          route=http://localhost:8080/api/referentiel/articles
+          test "$(curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $jeton" $route)" = "200"
+          $COMPOSE restart db
+          until $COMPOSE exec -T db pg_isready -U gestionstock -d gestionstock > /dev/null; do sleep 1; done
+          premier=$(curl -s -o premier.json -w '%{http_code}' -H "Authorization: Bearer $jeton" $route)
+          echo "Première requête après le redémarrage : $premier"
+          if [ "$premier" = "503" ]; then jq -e '.code == "Base.Indisponible"' premier.json; else test "$premier" = "200"; fi
+          sleep 1
+          test "$(curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $jeton" $route)" = "200"
 
       - name: Sauvegarde, copie chiffrée hors site et restauration (tranche 8)
         run: |

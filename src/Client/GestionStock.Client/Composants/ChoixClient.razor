@@ -3,6 +3,7 @@
 @inject CacheCaisse Cache
 
 <div class="choix-client">
+    <Message Texte="@_erreur" />
     @if (Client is null)
     {
         <input type="search" placeholder="@(Libelle ?? L["ChercherClient"])" @bind="_recherche" @bind:event="oninput" @bind:after="Rechercher" />
@@ -35,6 +36,7 @@
 
     private string _recherche = "";
     private List<ClientCredit> _resultats = [];
+    private string? _erreur;
 
     private async Task Rechercher()
     {
@@ -54,6 +56,7 @@
                 [.. Cache.Clients.Where(c => c.Nom.Contains(texte, StringComparison.CurrentCultureIgnoreCase) || c.Telephone.Contains(texte, StringComparison.Ordinal))], null);
         }
 
+        _erreur = trouves.Erreur;
         _resultats = (trouves.Valeur ?? []).Where(c => c.Actif).Take(10).ToList();
     }
 

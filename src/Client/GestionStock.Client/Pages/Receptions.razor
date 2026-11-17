@@ -32,7 +32,11 @@
                 <td data-label="@L["Statut"]"><span class="pastille @reception.Statut.ToLowerInvariant()">@L[$"Statut.{reception.Statut}"]</span></td>
             </tr>
         }
-        @if (_receptions.Count == 0)
+        @if (!_charge)
+        {
+            <tr><td colspan="7"><Chargement /></td></tr>
+        }
+        else if (_receptions.Count == 0)
         {
             <tr><td colspan="7" class="vide">@L["AucuneReception"]</td></tr>
         }
@@ -40,6 +44,9 @@
 </table>
 
 @code {
+    // Premier chargement terminé : jusque-là, la liste montre l'attente et non « Aucun… ».
+    private bool _charge;
+
     private List<ResumeReception> _receptions = [];
     private string? _erreur;
 
@@ -48,5 +55,6 @@
         var resultat = await Api.GetAsync<List<ResumeReception>>("api/achats/receptions");
         _receptions = resultat.Valeur ?? [];
         _erreur = resultat.Erreur;
+        _charge = true;
     }
 }

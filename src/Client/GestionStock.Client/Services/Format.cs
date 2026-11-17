@@ -105,4 +105,11 @@ public static class Format
             return TimeZoneInfo.CreateCustomTimeZone("Africa/Douala", TimeSpan.FromHours(1), "Douala", "WAT");
         }
     }
+
+    /// <summary>
+    /// Une personne citée par un document : son nom tiré de la table « matricule → nom » jointe par le serveur, ou son
+    /// matricule à défaut.
+    /// </summary>
+    public static string Personne(IReadOnlyDictionary<string, string>? personnel, string? matricule) =>
+        matricule is null ? "" : personnel?.GetValueOrDefault(matricule) ?? matricule;
 }

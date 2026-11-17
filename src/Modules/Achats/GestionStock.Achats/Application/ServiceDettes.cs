@@ -1,5 +1,6 @@
 using GestionStock.Achats.Domain;
 using GestionStock.Achats.Infrastructure;
+using GestionStock.Identite.Contracts;
 using GestionStock.Infrastructure.Persistance;
 using GestionStock.SharedKernel;
 using Microsoft.EntityFrameworkCore;
@@ -36,7 +37,7 @@ internal sealed record DetailPaiement(
     bool EstAnnule);
 
 /// <summary>Dette d'une réception avec l'historique de ses paiements et annulations.</summary>
-internal sealed record DetailDette(DetteReception Dette, IReadOnlyList<DetailPaiement> Paiements);
+internal sealed record DetailDette(DetteReception Dette, IReadOnlyList<DetailPaiement> Paiements, IReadOnlyDictionary<string, string> Personnel);
 
 internal sealed record SaisiePaiement(decimal Montant, ModePaiementFournisseur Mode, string? Reference);
 
@@ -50,7 +51,8 @@ internal sealed class ServiceDettes(
     AchatsDbContext contexte,
     IUniteDeTravail uniteDeTravail,
     IUtilisateurCourant utilisateur,
-    IHorloge horloge)
+    IHorloge horloge,
+    IAnnuairePersonnel annuaire)
 {
     public async Task<Dettes> ListerAsync(Guid? fournisseurId, bool seulementNonSoldees, CancellationToken annulation)
     {
@@ -176,6 +178,7 @@ internal sealed class ServiceDettes(
 
         return new DetailDette(
             VersDette(reception, fournisseur, paiements.Sum(p => p.Montant)),
-            [.. paiements.Select(p => new DetailPaiement(p.Id, p.DateUtc, p.Montant, p.Mode, p.Reference, p.SaisiPar, p.PaiementAnnuleId, p.Motif, annules.Contains(p.Id)))]);
+            [.. paiements.Select(p => new DetailPaiement(p.Id, p.DateUtc, p.Montant, p.Mode, p.Reference, p.SaisiPar, p.PaiementAnnuleId, p.Motif, annules.Contains(p.Id)))],
+            await annuaire.DesignationsAsync(paiements.Select(p => p.SaisiPar), annulation));
     }
 }

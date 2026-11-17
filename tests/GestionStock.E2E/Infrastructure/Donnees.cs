@@ -122,6 +122,13 @@ public sealed class Donnees
         await EnvoyerAsync(jeton, HttpMethod.Post, "api/caisse/sessions", new { numeroCaisse = postes!.AsArray()[0]!.GetValue<string>(), fondCaisse = fond });
     }
 
+    /// <summary>Nombre d'opérations d'un type (« Remboursement », « Vente »…) au journal de crédit d'un client.</summary>
+    public async Task<int> OperationsCreditAsync(Guid clientId, string type)
+    {
+        var fiche = await EnvoyerAsync(await JetonPreparateurAsync(), HttpMethod.Get, $"api/credit/clients/{clientId}", null);
+        return fiche!["operations"]!.AsArray().Count(o => o!["type"]!.GetValue<string>() == type);
+    }
+
     /// <summary>
     /// Libère les postes de caisse : une session restée ouverte (parcours interrompu) est clôturée par le Gérant à la
     /// place de son titulaire (décision 36), comme en boutique.
