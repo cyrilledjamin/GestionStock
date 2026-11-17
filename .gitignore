@@ -27,6 +27,9 @@ artifacts/
 # Secrets et configuration locale (ne jamais versionner)
 .env
 deploy/.env
+# Sauvegardes et accès rclone du poste (jamais versionnés)
+deploy/sauvegardes/
+deploy/rclone/
 appsettings.*.local.json
 *.pfx
 
