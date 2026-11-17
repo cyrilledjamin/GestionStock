@@ -58,7 +58,7 @@
                     <td data-label="@L["MontantDu"]" class="nombre">@Format.Montant(dette.MontantDu)</td>
                     <td data-label="@L["MontantPaye"]" class="nombre">@Format.Montant(dette.MontantPaye)</td>
                     <td data-label="@L["ResteDu"]" class="nombre">@Format.Montant(dette.ResteDu)</td>
-                    <td data-label="@L["Statut"]"><span class="pastille @(dette.Statut == "Payee" ? "validee" : "brouillon")">@L[$"StatutDette.{dette.Statut}"]</span></td>
+                    <td data-label="@L["Statut"]"><Pastille Ton="@(dette.Statut == "Payee" ? Ton.Succes : Ton.Attention)">@L[$"StatutDette.{dette.Statut}"]</Pastille></td>
                 </tr>
             }
             @if (!_charge)

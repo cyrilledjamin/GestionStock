@@ -28,6 +28,9 @@ public abstract class ParcoursBase(Navigateur navigateur) : IAsyncLifetime
     /// <summary>Messages des confirmations acceptées pendant le parcours, dans l'ordre.</summary>
     protected List<string> Confirmations { get; } = [];
 
+    /// <summary>Dialogue de confirmation ouvert (accepté d'office ; un parcours peut retirer ce traitement).</summary>
+    protected ILocator DialogueConfirmation => Page.Locator("dialog.dialogue[open]");
+
     /// <summary>Suffixe unique : les parcours peuvent être rejoués sur la même base sans collision de codes ou de noms.</summary>
     protected string Suffixe { get; } = DateTime.UtcNow.ToString("HHmmssfff", System.Globalization.CultureInfo.InvariantCulture);
 
@@ -44,13 +47,14 @@ public abstract class ParcoursBase(Navigateur navigateur) : IAsyncLifetime
         await Contexte.AddInitScriptAsync($"try {{ window.localStorage.setItem('gestionstock.langue', '{Langue}'); }} catch {{ }}");
         Page = await Contexte.NewPageAsync();
         Page.SetDefaultTimeout(15_000);
-        // Les confirmations (fenêtre « confirm » du navigateur) sont acceptées et gardées : le parcours a décidé du geste,
-        // et peut vérifier qu'une action irréversible a bien demandé confirmation.
-        Page.Dialog += async (_, dialogue) =>
+        // Les confirmations (dialogue de l'application) sont acceptées et gardées : le parcours a décidé du geste, et peut
+        // vérifier qu'une action irréversible a bien demandé confirmation. Playwright traite le dialogue dès qu'il
+        // apparaît, avant l'action ou la vérification suivante.
+        await Page.AddLocatorHandlerAsync(DialogueConfirmation, async dialogue =>
         {
-            Confirmations.Add(dialogue.Message);
-            await dialogue.AcceptAsync();
-        };
+            Confirmations.Add((await dialogue.Locator(".dialogue-message").InnerTextAsync()).Trim());
+            await dialogue.Locator(".actions button").Last.ClickAsync();
+        });
     }
 
     public async ValueTask DisposeAsync()

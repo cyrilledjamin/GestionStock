@@ -1,0 +1,15 @@
+@* État vide d'une liste ou d'un écran : ce qui manque et, si possible, l'action pour commencer. *@
+<div class="etat-vide" role="status">
+    <Icone Nom="@NomIcone" />
+    <p>@Texte</p>
+    @ChildContent
+</div>
+
+@code {
+    [Parameter, EditorRequired] public string Texte { get; set; } = "";
+
+    [Parameter] public string NomIcone { get; set; } = "info";
+
+    /// <summary>Action proposée (lien ou bouton).</summary>
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}

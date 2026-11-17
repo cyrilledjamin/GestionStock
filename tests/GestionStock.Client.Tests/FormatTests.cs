@@ -21,6 +21,20 @@ public sealed class FormatTests
     }
 
     [Theory]
+    [InlineData("fr-CM", 950, "950")]
+    [InlineData("fr-CM", 12500, "12,5 k")]
+    [InlineData("en-GB", 12500, "12.5 k")]
+    [InlineData("en-GB", 40000, "40 k")]
+    [InlineData("fr-CM", 1250000, "1,3 M")]
+    [InlineData("en-GB", -2500, "-2.5 k")]
+    public void Une_graduation_de_graphique_est_abregee(string culture, double valeur, string attendu)
+    {
+        using var _ = Culture(culture);
+
+        Assert.Equal(attendu, Format.Compact((decimal)valeur));
+    }
+
+    [Theory]
     [InlineData("boîte", "box")]
     [InlineData("Boite", "box")]
     [InlineData("pièce", "piece")]

@@ -1,0 +1,54 @@
+@* Tableau du système de design : en-tête, lignes, pied ; chargement et liste vide sur une ligne pleine largeur (jamais
+   « Aucun… » pendant le chargement). Sur téléphone, chaque ligne devient une carte (cellules avec data-label). *@
+<div class="tableau">
+    <table class="@(Cartes ? "cartes" : null)" aria-busy="@(Charge ? null : "true")">
+        @if (!string.IsNullOrEmpty(Legende))
+        {
+            <caption class="lecteur-seul">@Legende</caption>
+        }
+        <thead><tr>@Entete</tr></thead>
+        <tbody>
+            @if (!Charge)
+            {
+                <tr><td colspan="@Colonnes" class="vide"><Chargement /></td></tr>
+            }
+            else if (EstVide)
+            {
+                <tr><td colspan="@Colonnes" class="vide">@TexteVide</td></tr>
+            }
+            else
+            {
+                @Corps
+            }
+        </tbody>
+        @if (Pied is not null && Charge && !EstVide)
+        {
+            <tfoot>@Pied</tfoot>
+        }
+    </table>
+</div>
+
+@code {
+    /// <summary>Cellules d'en-tête (th).</summary>
+    [Parameter, EditorRequired] public RenderFragment Entete { get; set; } = default!;
+
+    /// <summary>Lignes (tr), avec data-label sur chaque cellule pour l'affichage en cartes.</summary>
+    [Parameter, EditorRequired] public RenderFragment Corps { get; set; } = default!;
+
+    [Parameter] public RenderFragment? Pied { get; set; }
+
+    /// <summary>Nombre de colonnes (largeur des lignes de chargement et de liste vide).</summary>
+    [Parameter, EditorRequired] public int Colonnes { get; set; }
+
+    /// <summary>Faux tant que les données ne sont pas arrivées.</summary>
+    [Parameter] public bool Charge { get; set; } = true;
+
+    [Parameter] public bool EstVide { get; set; }
+
+    [Parameter] public string? TexteVide { get; set; }
+
+    /// <summary>Titre lu par les lecteurs d'écran (caption masquée).</summary>
+    [Parameter] public string? Legende { get; set; }
+
+    [Parameter] public bool Cartes { get; set; } = true;
+}

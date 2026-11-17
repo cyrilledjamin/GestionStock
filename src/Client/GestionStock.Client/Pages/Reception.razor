@@ -186,7 +186,7 @@
     @if (_dette is { Dette: var dette })
     {
         <section class="fiche">
-            <h2>@L["DetteFournisseur"] <span class="pastille @(dette.Statut == "Payee" ? "validee" : "brouillon")">@L[$"StatutDette.{dette.Statut}"]</span></h2>
+            <h2>@L["DetteFournisseur"] <Pastille Ton="@(dette.Statut == "Payee" ? Ton.Succes : Ton.Attention)">@L[$"StatutDette.{dette.Statut}"]</Pastille></h2>
             <div class="tuiles">
                 <div class="tuile chiffre"><span>@L["MontantDu"]</span><strong>@Format.Montant(dette.MontantDu)</strong></div>
                 <div class="tuile chiffre"><span>@L["MontantPaye"]</span><strong>@Format.Montant(dette.MontantPaye)</strong></div>
@@ -350,7 +350,7 @@
 
     private async Task Valider()
     {
-        if (!await Confirmation.DemanderAsync(L["ConfirmerValidationReception"].Value))
+        if (!await Confirmation.DemanderAsync(L["ConfirmerValidationReception"].Value, L["ValiderReception"].Value))
         {
             return;
         }
@@ -408,7 +408,7 @@
 
     private async Task RetirerFrais(Guid frais)
     {
-        if (!await Confirmation.DemanderAsync(L["ConfirmerRetraitFrais"].Value))
+        if (!await Confirmation.DemanderAsync(L["ConfirmerRetraitFrais"].Value, L["Retirer"].Value, danger: true))
         {
             return;
         }
@@ -437,7 +437,7 @@
 
     private async Task AnnulerPaiement(Guid paiement)
     {
-        if (!await Confirmation.DemanderAsync(L["ConfirmerAnnulationPaiement"].Value))
+        if (!await Confirmation.DemanderAsync(L["ConfirmerAnnulationPaiement"].Value, null, danger: true))
         {
             return;
         }

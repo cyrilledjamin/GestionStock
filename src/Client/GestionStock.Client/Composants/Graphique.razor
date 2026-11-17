@@ -1,0 +1,126 @@
+@* Graphique en SVG, sans bibliothèque : barres (dernière barre mise en avant : aujourd'hui, ce mois) ou courbe, avec
+   une seconde série facultative en trait pointillé. Chaque point a son infobulle ; un tableau masqué donne les mêmes
+   chiffres aux lecteurs d'écran. Couleurs et polices viennent de la feuille de style (classes .graphique). *@
+@using System.Globalization
+<figure class="graphique">
+    <figcaption>
+        <h3>@Titre</h3>
+        @if (Points.Any(p => p.Secondaire is not null))
+        {
+            <div class="legende" aria-hidden="true">
+                <span><i></i>@LibelleSerie</span>
+                <span><i class="serie-secondaire"></i>@LibelleSecondaire</span>
+            </div>
+        }
+    </figcaption>
+    <svg viewBox="0 0 @Largeur @Hauteur" role="img" aria-label="@Titre" preserveAspectRatio="xMidYMid meet">
+        @foreach (var repere in _echelle.Graduations)
+        {
+            var y = Y(repere);
+            <line class="axe" x1="@N(MargeGauche)" x2="@N(Largeur - MargeDroite)" y1="@N(y)" y2="@N(y)" />
+            @Texte(MargeGauche - 6, y + 4, "end", Format.Compact(repere))
+        }
+        @if (Points.Count > 0)
+        {
+            @if (Type == TypeGraphique.Barres)
+            {
+                @for (var i = 0; i < Points.Count; i++)
+                {
+                    var point = Points[i];
+                    var haut = Y(Math.Max(point.Valeur, 0m));
+                    var bas = Y(Math.Min(point.Valeur, 0m));
+                    <rect class="barre-graphique @(MettreEnAvantDernier && i == Points.Count - 1 ? "actuelle" : "")"
+                          x="@N(X(i) - LargeurBarre / 2)" y="@N(haut)" width="@N(LargeurBarre)" height="@N(Math.Max(bas - haut, 1))" rx="2">
+                        <title>@point.Libelle : @FormatValeur(point.Valeur)</title>
+                    </rect>
+                }
+            }
+            else
+            {
+                <path class="aire" d="@Aire()" />
+                <path class="courbe" d="@Trace(p => p.Valeur)" />
+                @for (var i = 0; i < Points.Count; i++)
+                {
+                    var point = Points[i];
+                    <circle class="point" cx="@N(X(i))" cy="@N(Y(point.Valeur))" r="3"><title>@point.Libelle : @FormatValeur(point.Valeur)</title></circle>
+                }
+            }
+            @if (Points.All(p => p.Secondaire is not null))
+            {
+                <path class="courbe secondaire" d="@Trace(p => p.Secondaire!.Value)" />
+            }
+            @for (var i = 0; i < Points.Count; i += PasLibelles)
+            {
+                @Texte(X(i), Hauteur - 4, "middle", Points[i].Libelle)
+            }
+        }
+    </svg>
+    <table class="lecteur-seul">
+        <caption>@Titre</caption>
+        <thead><tr><th scope="col">@LibelleAbscisse</th><th scope="col">@LibelleSerie</th>@if (Points.Any(p => p.Secondaire is not null)) { <th scope="col">@LibelleSecondaire</th> }</tr></thead>
+        <tbody>
+            @foreach (var point in Points)
+            {
+                <tr><th scope="row">@point.Libelle</th><td>@FormatValeur(point.Valeur)</td>@if (point.Secondaire is { } secondaire) { <td>@FormatValeur(secondaire)</td> }</tr>
+            }
+        </tbody>
+    </table>
+</figure>
+
+@code {
+    private const double Largeur = 900;
+    private const double MargeGauche = 56;
+    private const double MargeDroite = 8;
+    private const double MargeHaute = 8;
+    private const double MargeBasse = 22;
+
+    [Parameter, EditorRequired] public string Titre { get; set; } = "";
+
+    [Parameter, EditorRequired] public IReadOnlyList<PointGraphique> Points { get; set; } = [];
+
+    [Parameter] public TypeGraphique Type { get; set; }
+
+    /// <summary>Nom de la série principale et de la seconde (légende et tableau masqué) ; déjà traduits.</summary>
+    [Parameter] public string LibelleSerie { get; set; } = "";
+
+    [Parameter] public string LibelleSecondaire { get; set; } = "";
+
+    /// <summary>Intitulé de la colonne des libellés dans le tableau masqué (« Jour », « Mois »…).</summary>
+    [Parameter] public string LibelleAbscisse { get; set; } = "";
+
+    /// <summary>Mise en forme des valeurs exactes (infobulles, tableau) ; montants par défaut.</summary>
+    [Parameter] public Func<decimal, string> FormatValeur { get; set; } = Format.Montant;
+
+    [Parameter] public bool MettreEnAvantDernier { get; set; } = true;
+
+    [Parameter] public double Hauteur { get; set; } = 240;
+
+    private EchelleGraphique _echelle = EchelleGraphique.Pour([]);
+
+    protected override void OnParametersSet() =>
+        _echelle = EchelleGraphique.Pour(Points.SelectMany(p => p.Secondaire is { } s ? new[] { p.Valeur, s } : new[] { p.Valeur }));
+
+    private double Pas => (Largeur - MargeGauche - MargeDroite) / Math.Max(Points.Count, 1);
+
+    private double LargeurBarre => Math.Max(Pas * .7, 1);
+
+    /// <summary>Un libellé d'abscisse sur n, pour en garder au plus 7 lisibles.</summary>
+    private int PasLibelles => Math.Max(1, (int)Math.Ceiling(Points.Count / 7.0));
+
+    private double X(int indice) => MargeGauche + Pas * (indice + .5);
+
+    private double Y(decimal valeur) => Hauteur - MargeBasse - _echelle.Position(valeur) * (Hauteur - MargeBasse - MargeHaute);
+
+    private string Trace(Func<PointGraphique, decimal> valeur) =>
+        string.Join(' ', Points.Select((p, i) => $"{(i == 0 ? 'M' : 'L')}{N(X(i))},{N(Y(valeur(p)))}"));
+
+    private string Aire() =>
+        $"{Trace(p => p.Valeur)} L{N(X(Points.Count - 1))},{N(Y(_echelle.Bas))} L{N(X(0))},{N(Y(_echelle.Bas))} Z";
+
+    /// <summary>Graduation (élément SVG « text », que Razor réserve à son propre usage d'où l'écriture directe).</summary>
+    private static MarkupString Texte(double x, double y, string ancrage, string contenu) =>
+        new($"<text class=\"graduation\" x=\"{N(x)}\" y=\"{N(y)}\" text-anchor=\"{ancrage}\">{System.Net.WebUtility.HtmlEncode(contenu)}</text>");
+
+    /// <summary>Coordonnée SVG : point décimal quelle que soit la langue de l'interface.</summary>
+    private static string N(double valeur) => valeur.ToString("0.##", CultureInfo.InvariantCulture);
+}

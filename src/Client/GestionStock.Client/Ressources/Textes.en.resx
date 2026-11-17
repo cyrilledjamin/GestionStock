@@ -596,4 +596,46 @@
   <data name="ConfirmerValidationDemarque" xml:space="preserve"><value>Validate this write-off? The goods leave stock at average cost.</value></data>
   <data name="ConfirmerRefusDemarque" xml:space="preserve"><value>Refuse this write-off? Stock does not change.</value></data>
   <data name="ListeTronquee" xml:space="preserve"><value>Only the first {0} results are shown: refine your search.</value></data>
+  <data name="Confirmer" xml:space="preserve"><value>Confirm</value></data>
+  <data name="ConfirmationTitre" xml:space="preserve"><value>Confirmation</value></data>
+  <data name="GuideStyle" xml:space="preserve"><value>Style guide</value></data>
+  <data name="GuideStyleIntro" xml:space="preserve"><value>Design system tokens and components, to check how the application looks.</value></data>
+  <data name="GuideReserve" xml:space="preserve"><value>Administrators only.</value></data>
+  <data name="GuideCouleurs" xml:space="preserve"><value>Colours</value></data>
+  <data name="GuideTypographie" xml:space="preserve"><value>Typography</value></data>
+  <data name="GuideExempleTitre" xml:space="preserve"><value>Page title</value></data>
+  <data name="GuideExempleSection" xml:space="preserve"><value>Section title</value></data>
+  <data name="GuideExempleTexte" xml:space="preserve"><value>Body text: management screens are dense, figures are aligned.</value></data>
+  <data name="GuideExempleDiscret" xml:space="preserve"><value>Secondary text, for details.</value></data>
+  <data name="GuideBoutons" xml:space="preserve"><value>Buttons</value></data>
+  <data name="GuidePrincipal" xml:space="preserve"><value>Primary</value></data>
+  <data name="GuideSecondaire" xml:space="preserve"><value>Secondary</value></data>
+  <data name="GuideDanger" xml:space="preserve"><value>Danger</value></data>
+  <data name="GuideDiscret" xml:space="preserve"><value>Subtle</value></data>
+  <data name="GuideOccupe" xml:space="preserve"><value>Busy</value></data>
+  <data name="GuidePastilles" xml:space="preserve"><value>Badges</value></data>
+  <data name="GuideNeutre" xml:space="preserve"><value>Neutral</value></data>
+  <data name="GuideSucces" xml:space="preserve"><value>Success</value></data>
+  <data name="GuideAttention" xml:space="preserve"><value>Warning</value></data>
+  <data name="GuideInfo" xml:space="preserve"><value>Information</value></data>
+  <data name="GuideIndicateurs" xml:space="preserve"><value>Key figures</value></data>
+  <data name="GuideDetail" xml:space="preserve"><value>Figure detail</value></data>
+  <data name="GuideChamps" xml:space="preserve"><value>Fields</value></data>
+  <data name="GuideAide" xml:space="preserve"><value>Help text below the field.</value></data>
+  <data name="GuideErreur" xml:space="preserve"><value>Field error message.</value></data>
+  <data name="GuideMessages" xml:space="preserve"><value>Messages</value></data>
+  <data name="GuideEtats" xml:space="preserve"><value>Loading and empty state</value></data>
+  <data name="GuideVide" xml:space="preserve"><value>Nothing to show yet.</value></data>
+  <data name="GuideTableaux" xml:space="preserve"><value>Tables</value></data>
+  <data name="GuideGraphiques" xml:space="preserve"><value>Charts</value></data>
+  <data name="GuideVentes30" xml:space="preserve"><value>Sales over the last 30 days</value></data>
+  <data name="GuideVentesMois" xml:space="preserve"><value>Sales over the last 12 months</value></data>
+  <data name="GuideJour" xml:space="preserve"><value>Day</value></data>
+  <data name="GuideMois" xml:space="preserve"><value>Month</value></data>
+  <data name="GuideIcones" xml:space="preserve"><value>Icons</value></data>
+  <data name="GuideDialogue" xml:space="preserve"><value>Confirmation dialog</value></data>
+  <data name="GuideDialogueOuvrir" xml:space="preserve"><value>Open the dialog</value></data>
+  <data name="GuideDialogueExemple" xml:space="preserve"><value>Confirm this sample action? Nothing is sent to the server.</value></data>
+  <data name="GuideConfirme" xml:space="preserve"><value>Confirmed.</value></data>
+  <data name="GuideAnnule" xml:space="preserve"><value>Cancelled.</value></data>
 </root>

@@ -19,7 +19,7 @@ else
         <header class="barre-haut">
             <span class="marque"><MarqueBoutique AvecLogiciel="false" /></span>
             <button class="ouvrir-menu" aria-expanded="@(_menuOuvert ? "true" : "false")" aria-controls="menu" @onclick="BasculerMenu">
-                <span aria-hidden="true">☰</span> @L["Menu"]
+                <Icone Nom="menu" />@L["Menu"]
             </button>
         </header>
         <div class="voile" @onclick="FermerMenu"></div>
@@ -82,6 +82,10 @@ else
             <div class="pied-menu">
                 <div class="utilisateur">@Session.Profil!.NomComplet<br /><small>@Session.Profil.Identifiant · @string.Join(", ", Session.Profil.Roles.Select(r => L[$"Role.{r}"].Value))</small></div>
                 <NavLink href="mon-compte"><Icone Nom="compte" />@L["MonCompte"]</NavLink>
+                @if (Session.A(Permissions.UtilisateursGerer))
+                {
+                    <NavLink href="guide-style"><Icone Nom="palette" />@L["GuideStyle"]</NavLink>
+                }
                 <button class="lien" @onclick="ChangerLangue"><Icone Nom="langue" />@L["AutreLangue"]</button>
                 <button class="lien" @onclick="Deconnecter"><Icone Nom="deconnexion" />@L["Deconnexion"]</button>
             </div>
@@ -113,6 +117,7 @@ else
             @Body
         </main>
     </div>
+    <DialogueConfirmation />
 }
 
 @code {

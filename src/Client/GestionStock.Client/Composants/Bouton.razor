@@ -1,0 +1,38 @@
+@* Bouton du système de design : variante, icône facultative, état occupé (désactivé et annoncé pendant l'appel :
+   un double clic n'envoie rien deux fois). Sans texte, le bouton n'a que son icône et Libelle devient son nom accessible. *@
+<button type="@Type" class="@(Classes.Bouton(Variante, ChildContent is null))" disabled="@(Desactive || Occupe)"
+        aria-busy="@(Occupe ? "true" : null)" aria-label="@(ChildContent is null ? Libelle : null)" title="@(ChildContent is null ? Libelle : null)"
+        @onclick="OnClick" @attributes="Attributs">
+    @if (Occupe)
+    {
+        <span class="roue" aria-hidden="true"></span>
+    }
+    else if (!string.IsNullOrEmpty(NomIcone))
+    {
+        <Icone Nom="@NomIcone" />
+    }
+    @ChildContent
+</button>
+
+@code {
+    [Parameter] public VarianteBouton Variante { get; set; }
+
+    /// <summary>Icône de <see cref="Icone.Noms"/>, devant le texte.</summary>
+    [Parameter] public string? NomIcone { get; set; }
+
+    /// <summary>Nom accessible d'un bouton sans texte (icône seule) ; déjà traduit.</summary>
+    [Parameter] public string? Libelle { get; set; }
+
+    [Parameter] public bool Occupe { get; set; }
+
+    [Parameter] public bool Desactive { get; set; }
+
+    /// <summary>« button » par défaut ; « submit » dans un formulaire.</summary>
+    [Parameter] public string Type { get; set; } = "button";
+
+    [Parameter] public EventCallback<MouseEventArgs> OnClick { get; set; }
+
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    [Parameter(CaptureUnmatchedValues = true)] public IReadOnlyDictionary<string, object>? Attributs { get; set; }
+}

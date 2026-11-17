@@ -48,6 +48,28 @@ window.gestionStock = {
         return window.matchMedia("(pointer: coarse)").matches;
     },
 
+    // Dialogue de confirmation : fenêtre modale native (focus gardé dedans, rendu à l'élément d'origine à la
+    // fermeture). Échap déclenche « cancel » : la fermeture est laissée à Blazor, qui répond « non » à la question.
+    ouvrirDialogue: function (dialogue, composant) {
+        dialogue.oncancel = function (evenement) {
+            evenement.preventDefault();
+            composant.invokeMethodAsync("Annuler");
+        };
+        if (!dialogue.open) {
+            dialogue.showModal();
+        }
+        const annuler = dialogue.querySelector(".annuler-dialogue");
+        if (annuler) {
+            annuler.focus();
+        }
+    },
+
+    fermerDialogue: function (dialogue) {
+        if (dialogue && dialogue.open) {
+            dialogue.close();
+        }
+    },
+
     // Raccourcis clavier d'une page : les touches choisies sont relayées à la méthode .NET « Raccourci ».
     // Renvoie un objet dont « arreter » retire l'écouteur quand la page se ferme.
     raccourcis: function (composant, touches) {

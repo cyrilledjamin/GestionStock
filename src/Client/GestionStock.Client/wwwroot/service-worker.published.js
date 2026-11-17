@@ -9,7 +9,7 @@ self.addEventListener('fetch', event => event.respondWith(repondre(event)));
 
 const prefixeCache = 'gestionstock-';
 const nomCache = `${prefixeCache}${self.assetsManifest.version}`;
-const aGarder = [/\.dll$/, /\.pdb$/, /\.wasm/, /\.html/, /\.js$/, /\.json$/, /\.css$/, /\.woff$/, /\.png$/, /\.jpe?g$/, /\.gif$/, /\.ico$/, /\.blat$/, /\.dat$/, /\.webmanifest$/, /\.svg$/];
+const aGarder = [/\.dll$/, /\.pdb$/, /\.wasm/, /\.html/, /\.js$/, /\.json$/, /\.css$/, /\.woff2?$/, /\.png$/, /\.jpe?g$/, /\.gif$/, /\.ico$/, /\.blat$/, /\.dat$/, /\.webmanifest$/, /\.svg$/];
 const aIgnorer = [/^service-worker\.js$/];
 
 async function installer() {

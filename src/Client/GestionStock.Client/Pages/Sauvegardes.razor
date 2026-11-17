@@ -44,7 +44,7 @@
                 <td data-label="@L["Date"]" class="court">@Format.Date(passage.FinUtc)</td>
                 <td data-label="@L["Type"]">@L[$"TypeSauvegarde.{passage.Type}"]</td>
                 <td data-label="@L["Resultat"]">
-                    <span class="pastille @(passage.Reussie ? "validee" : "brouillon")">@(passage.Reussie ? L["Reussie"] : L["Echouee"])</span>
+                    <Pastille Ton="@(passage.Reussie ? Ton.Succes : Ton.Danger)">@(passage.Reussie ? L["Reussie"] : L["Echouee"])</Pastille>
                     @if (passage.Message is { Length: > 0 } message)
                     {
                         <br /><small><code>@message</code></small>

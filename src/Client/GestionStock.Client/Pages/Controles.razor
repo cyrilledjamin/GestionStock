@@ -69,7 +69,7 @@
                 <td data-label="@L["Enregistre"]" class="nombre">@Valeur(ecart, ecart.Constate)</td>
                 <td data-label="@L["Detecte"]" class="court">@Format.Date(ecart.DetecteUtc)</td>
                 <td data-label="@L["Statut"]">
-                    <span class="pastille @(ecart.Statut == "Ouvert" ? "brouillon" : ecart.Statut == "Reconstruit" ? "validee" : "")">@L[$"StatutEcart.{ecart.Statut}"]</span>
+                    <Pastille Ton="@(ecart.Statut == "Ouvert" ? Ton.Danger : ecart.Statut == "Reconstruit" ? Ton.Succes : Ton.Neutre)">@L[$"StatutEcart.{ecart.Statut}"]</Pastille>
                     @if (ecart.ResolutionUtc is { } le)
                     {
                         <br /><small class="discret">@(ecart.ResoluPar is { } par ? $"{par} · " : "")@Format.Date(le)</small>
@@ -149,7 +149,7 @@
     /// </summary>
     private async Task Reconstruire(EcartSolde ecart)
     {
-        if (!await Confirmation.DemanderAsync(L["ConfirmerReconstruction", ecart.Libelle].Value))
+        if (!await Confirmation.DemanderAsync(L["ConfirmerReconstruction", ecart.Libelle].Value, L["Reconstruire"].Value))
         {
             return;
         }

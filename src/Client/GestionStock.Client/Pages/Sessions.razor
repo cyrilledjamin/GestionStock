@@ -127,7 +127,7 @@
 
     private async Task Valider(Guid id)
     {
-        if (!await Confirmation.DemanderAsync(L["ConfirmerValidationEcart"].Value))
+        if (!await Confirmation.DemanderAsync(L["ConfirmerValidationEcart"].Value, L["ValiderEcart"].Value))
         {
             return;
         }

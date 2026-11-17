@@ -12,7 +12,7 @@
 @if (_fiche is { Compte: var compte })
 {
     <h1>@compte.NomComplet <small class="discret"><code>@compte.Matricule</code></small>
-        <span class="pastille @(compte.Actif ? "validee" : "brouillon")">@(compte.Actif ? L["Actif"] : L["Desactive"])</span>
+        <Pastille Ton="@(compte.Actif ? Ton.Succes : Ton.Neutre)">@(compte.Actif ? L["Actif"] : L["Desactive"])</Pastille>
     </h1>
     @if (compte.MotDePasseProvisoire)
     {
@@ -113,7 +113,7 @@
 
     private async Task Desactiver()
     {
-        if (!await Confirmation.DemanderAsync(L["ConfirmerDesactivationCompte", _fiche?.Compte.NomComplet ?? ""].Value))
+        if (!await Confirmation.DemanderAsync(L["ConfirmerDesactivationCompte", _fiche?.Compte.NomComplet ?? ""].Value, L["Desactiver"].Value, danger: true))
         {
             return;
         }
@@ -125,7 +125,7 @@
 
     private async Task Reinitialiser()
     {
-        if (!await Confirmation.DemanderAsync(L["ConfirmerReinitialisation", _fiche?.Compte.NomComplet ?? ""].Value))
+        if (!await Confirmation.DemanderAsync(L["ConfirmerReinitialisation", _fiche?.Compte.NomComplet ?? ""].Value, L["Reinitialiser"].Value))
         {
             return;
         }

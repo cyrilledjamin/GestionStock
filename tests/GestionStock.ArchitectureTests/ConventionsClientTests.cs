@@ -123,6 +123,88 @@ public sealed partial class ConventionsClientTests
         Assert.Empty(utilisees.Except(disponibles));
     }
 
+    /// <summary>
+    /// Contrastes des couples de jetons utilisés ensemble (WCAG 2.2 AA) : 4,5:1 pour le texte, 3:1 pour les traits et
+    /// formes qui portent un sens (cadre des champs, barres des graphiques).
+    /// </summary>
+    [Theory]
+    [InlineData("texte", "fond", 4.5)]
+    [InlineData("texte", "surface", 4.5)]
+    [InlineData("texte-menu", "surface", 4.5)]
+    [InlineData("discret", "surface", 4.5)]
+    [InlineData("discret", "fond", 4.5)]
+    [InlineData("discret", "surface-douce", 4.5)]
+    [InlineData("discret", "neutre-clair", 4.5)]
+    [InlineData("accent", "surface", 4.5)]
+    [InlineData("accent", "fond", 4.5)]
+    [InlineData("accent", "surface-douce", 4.5)]
+    [InlineData("accent", "accent-clair", 4.5)]
+    [InlineData("accent-fonce", "accent-clair", 4.5)]
+    [InlineData("sur-accent", "accent", 4.5)]
+    [InlineData("sur-accent", "accent-fonce", 4.5)]
+    [InlineData("sur-accent", "danger", 4.5)]
+    [InlineData("sur-accent", "danger-fonce", 4.5)]
+    [InlineData("succes", "succes-clair", 4.5)]
+    [InlineData("succes", "surface", 4.5)]
+    [InlineData("attention", "attention-clair", 4.5)]
+    [InlineData("danger", "danger-clair", 4.5)]
+    [InlineData("danger", "surface", 4.5)]
+    [InlineData("info", "info-clair", 4.5)]
+    [InlineData("neutre", "neutre-clair", 4.5)]
+    [InlineData("bordure-forte", "surface", 3.0)]
+    [InlineData("accent-doux", "surface", 3.0)]
+    public void Les_couleurs_des_jetons_sont_assez_contrastees(string premier, string second, double minimum)
+    {
+        var jetons = JetonCouleur().Matches(File.ReadAllText(Path.Combine(RepertoireClient, "wwwroot", "css", "app.css")))
+            .ToDictionary(m => m.Groups[1].Value, m => m.Groups[2].Value, StringComparer.Ordinal);
+
+        var rapport = Contraste(jetons[premier], jetons[second]);
+
+        Assert.True(rapport >= minimum, $"--{premier} sur --{second} : {rapport:0.00}:1, il faut {minimum}:1.");
+    }
+
+    [Fact]
+    public void Les_confirmations_passent_par_le_dialogue_de_l_application()
+    {
+        // La fenêtre « confirm » du navigateur n'est pas traduite et bloque la page : Confirmation et son dialogue.
+        var appels = Directory.EnumerateFiles(RepertoireClient, "*.*", SearchOption.AllDirectories)
+            .Where(f => f.EndsWith(".razor", StringComparison.Ordinal) || f.EndsWith(".cs", StringComparison.Ordinal))
+            .Where(f => File.ReadAllText(f).Contains("\"confirm\"", StringComparison.Ordinal))
+            .Select(Path.GetFileName);
+
+        Assert.Empty(appels);
+    }
+
+    [Fact]
+    public void La_police_est_embarquee_et_gardee_hors_ligne()
+    {
+        var feuille = File.ReadAllText(Path.Combine(RepertoireClient, "wwwroot", "css", "app.css"));
+        var serviceWorker = File.ReadAllText(Path.Combine(RepertoireClient, "wwwroot", "service-worker.published.js"));
+
+        Assert.Contains("url(\"../polices/inter-latin.woff2\")", feuille, StringComparison.Ordinal);
+        Assert.True(File.Exists(Path.Combine(RepertoireClient, "wwwroot", "polices", "inter-latin.woff2")));
+        Assert.True(File.Exists(Path.Combine(RepertoireClient, "wwwroot", "polices", "OFL-Inter.txt")));
+        Assert.Contains(@"/\.woff2?$/", serviceWorker, StringComparison.Ordinal);
+        Assert.DoesNotContain("fonts.googleapis", feuille, StringComparison.Ordinal);
+    }
+
+    private static double Contraste(string a, string b)
+    {
+        var (la, lb) = (Luminance(a), Luminance(b));
+        return (Math.Max(la, lb) + .05) / (Math.Min(la, lb) + .05);
+    }
+
+    private static double Luminance(string hexa)
+    {
+        double Canal(int debut)
+        {
+            var c = Convert.ToInt32(hexa.Substring(debut, 2), 16) / 255.0;
+            return c <= .04045 ? c / 12.92 : Math.Pow((c + .055) / 1.055, 2.4);
+        }
+
+        return .2126 * Canal(1) + .7152 * Canal(3) + .0722 * Canal(5);
+    }
+
     [Fact]
     public void La_page_s_adapte_a_la_largeur_de_l_ecran()
     {
@@ -159,6 +241,9 @@ public sealed partial class ConventionsClientTests
         throw new InvalidOperationException("Racine du dépôt (GestionStock.slnx) introuvable.");
     }
 
+    [GeneratedRegex(@"--([a-z-]+):\s*(#[0-9a-fA-F]{6});")]
+    private static partial Regex JetonCouleur();
+
     [GeneratedRegex("public const string (\\w+) = \"([^\"]+)\";")]
     private static partial Regex ConstanteChaine();
 
@@ -174,6 +259,6 @@ public sealed partial class ConventionsClientTests
     [GeneratedRegex("\\[\"([a-z]+)\"\\] = \\[")]
     private static partial Regex NomIcone();
 
-    [GeneratedRegex("<Icone Nom=\"([a-z]+)\"")]
+    [GeneratedRegex("(?:<Icone Nom|NomIcone)=\"([a-z]+)\"")]
     private static partial Regex IconeUtilisee();
 }

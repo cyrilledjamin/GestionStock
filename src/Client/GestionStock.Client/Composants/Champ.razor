@@ -1,0 +1,30 @@
+@* Champ de formulaire : le libellé est obligatoire (aucun champ sans nom accessible), l'aide et l'erreur sont lues
+   avec lui. Le contenu est le champ lui-même (input, select, composant). *@
+<label class="champ">
+    <span>@Libelle@if (Requis)
+        {
+            <span class="requis" aria-hidden="true"> *</span>
+        }</span>
+    @ChildContent
+    @if (!string.IsNullOrEmpty(Aide))
+    {
+        <small class="aide">@Aide</small>
+    }
+    @if (!string.IsNullOrEmpty(Erreur))
+    {
+        <small class="erreur-champ" role="alert">@Erreur</small>
+    }
+</label>
+
+@code {
+    [Parameter, EditorRequired] public string Libelle { get; set; } = "";
+
+    [Parameter] public string? Aide { get; set; }
+
+    [Parameter] public string? Erreur { get; set; }
+
+    /// <summary>Marque visuelle du champ obligatoire ; l'attribut « required » reste posé sur le champ.</summary>
+    [Parameter] public bool Requis { get; set; }
+
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}

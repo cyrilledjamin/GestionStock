@@ -1,0 +1,8 @@
+@* Statut court (« Validée », « Refusée »…), coloré selon son sens. *@
+<span class="@Classes.Pastille(Ton)">@ChildContent</span>
+
+@code {
+    [Parameter] public Ton Ton { get; set; }
+
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}

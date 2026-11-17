@@ -7,6 +7,7 @@
 @inject EtatConnexion Connexion
 @inject Session Session
 @inject Boutique Boutique
+@inject Confirmation Confirmation
 @implements IAsyncDisposable
 
 <PageTitle>@L["Caisse"] · GestionStock</PageTitle>
@@ -737,7 +738,7 @@ else
 
     private async Task AnnulerVente()
     {
-        if (await Js.InvokeAsync<bool>("confirm", L["ConfirmerAnnulationVente"].Value))
+        if (await Confirmation.DemanderAsync(L["ConfirmerAnnulationVente"].Value, L["AnnulerVente"].Value, danger: true))
         {
             NouvelleVente();
         }
