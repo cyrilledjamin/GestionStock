@@ -55,6 +55,21 @@ public sealed class StockEmplacement
     }
 
     /// <summary>
+    /// Reprend la quantité rejouée depuis le journal (<see cref="Recalculer"/>) après un écart signalé par le contrôle
+    /// de cohérence : le journal fait foi, aucun mouvement n'est écrit.
+    /// </summary>
+    public void Reconstruire(StockEmplacement recalcule)
+    {
+        ArgumentNullException.ThrowIfNull(recalcule);
+        if (recalcule.ArticleId != ArticleId || recalcule.EmplacementId != EmplacementId || recalcule.LotId != LotId)
+        {
+            throw new ExceptionDomaineStock(CodesErreurStock.MouvementNonConcerne, "Le solde recalculé ne concerne pas ce solde.");
+        }
+
+        QuantitePhysique = recalcule.QuantitePhysique;
+    }
+
+    /// <summary>
     /// Applique un mouvement dont cet emplacement est la source ou la destination.
     /// Le stock ne peut devenir négatif (RG03), sauf sur un emplacement de vente (RG22) :
     /// un passage en caisse n'est jamais refusé pour stock insuffisant.

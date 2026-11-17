@@ -21,6 +21,7 @@ public static class ModuleStock
         services.AddScoped<IServiceMouvementsStock, ServiceMouvementsStock>();
         services.AddScoped<IConsultationStock, ConsultationStock>();
         services.AddScoped<LecturesStock>();
+        services.AddScoped<IControleSoldesStock, ControleSoldesStock>();
         return services;
     }
 

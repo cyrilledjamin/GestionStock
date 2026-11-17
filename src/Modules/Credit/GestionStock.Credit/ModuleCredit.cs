@@ -20,6 +20,7 @@ public static class ModuleCredit
         services.AjouterContexteModule<CreditDbContext>(CreditDbContext.Schema);
         services.AddScoped<ServiceCredit>();
         services.AddScoped<IServiceCredit>(fournisseur => fournisseur.GetRequiredService<ServiceCredit>());
+        services.AddScoped<IControleSoldesCredit, ControleSoldesCredit>();
         return services;
     }
 

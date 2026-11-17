@@ -34,7 +34,8 @@ src/
     GestionStock.Caisse.Contracts    contrat public : IGenerateurRecu et modèle de reçu (décision 17)
     GestionStock.Caisse              sessions, tickets, avoirs, paiements, remboursements, reçu PDF
   Modules/Credit/
-    GestionStock.Credit.Contracts    contrat public : IServiceCredit (vente à crédit, remboursement, annulation)
+    GestionStock.Credit.Contracts    contrat public : IServiceCredit (vente à crédit, remboursement, annulation),
+                                     IControleSoldesCredit (dette = journal, ENF04)
     GestionStock.Credit              clients, plafonds, journal des opérations, imputations, impayés
   Modules/Exploitation/
     GestionStock.Exploitation.Contracts  contrat public (vide pour l'instant)
@@ -59,7 +60,8 @@ src/
     GestionStock.Reprise.Contracts   contrat public : colonnes du fichier de reprise
     GestionStock.Reprise             import Excel (ClosedXML) : modèle, exemple, contrôle, import tout ou rien
   Modules/Stock/
-    GestionStock.Stock.Contracts     contrat public : IServiceMouvementsStock, IConsultationStock
+    GestionStock.Stock.Contracts     contrat public : IServiceMouvementsStock, IConsultationStock,
+                                     IControleSoldesStock (soldes = rejeu du journal, ENF04)
     GestionStock.Stock.Domain        C# pur : MouvementStock, StockSite, StockEmplacement
     GestionStock.Stock               implémentation : Application / Infrastructure / Endpoints (lecture seule)
 tests/
@@ -723,7 +725,7 @@ sur une machine Linux de GitHub qui dispose de Docker :
 | 46 | Anomalies de synchronisation à traiter | Fait |
 | 47 | Vérification, CI, README, démonstration de la tranche 7 | Fait |
 | 48 | Exploitation : module, suivi des sauvegardes, planificateur (Hangfire) | Fait |
-| 49 | Exploitation : contrôle des soldes de stock et de crédit par contrat | À faire |
+| 49 | Exploitation : contrôle des soldes de stock et de crédit par contrat | Fait |
 | 50 | Exploitation : contrôle nocturne, écarts, reconstruction | À faire |
 | 51 | Exploitation : conteneur de sauvegarde (locale horaire, hors site chiffrée) | À faire |
 | 52 | Exploitation : écrans Contrôles et Sauvegardes, accueil | À faire |

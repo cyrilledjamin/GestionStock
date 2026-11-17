@@ -57,6 +57,24 @@ public sealed class StockSite
     }
 
     /// <summary>
+    /// Reprend les valeurs rejouées depuis le journal (<see cref="Recalculer"/>) après un écart signalé par le contrôle
+    /// de cohérence : le journal fait foi, aucun mouvement n'est écrit.
+    /// </summary>
+    public void Reconstruire(StockSite recalcule)
+    {
+        ArgumentNullException.ThrowIfNull(recalcule);
+        if (recalcule.ArticleId != ArticleId || recalcule.SiteId != SiteId)
+        {
+            throw new ExceptionDomaineStock(CodesErreurStock.MouvementNonConcerne, "Le solde recalculé ne concerne pas ce solde.");
+        }
+
+        QuantitePhysique = recalcule.QuantitePhysique;
+        QuantiteReservee = recalcule.QuantiteReservee;
+        QuantiteBloquee = recalcule.QuantiteBloquee;
+        Cump = recalcule.Cump;
+    }
+
+    /// <summary>
     /// Applique un mouvement. Une entrée recalcule le CUMP (RG17) ; une sortie ne le change pas ;
     /// un mouvement interne ne change pas le site ; une revalorisation (RG30) répartit son montant sur le stock
     /// physique présent, sans changer la quantité. Le site peut devenir négatif par les ventes en caisse (RG22) :
