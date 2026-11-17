@@ -101,6 +101,20 @@ internal sealed class Client
         SoldeDu -= montant;
     }
 
+    /// <summary>
+    /// Reprend la dette recalculée depuis le journal des opérations après un écart signalé par le contrôle de
+    /// cohérence (ENF04) : le journal fait foi, aucune opération n'est écrite.
+    /// </summary>
+    public void Reconstruire(decimal soldeDuJournal)
+    {
+        if (soldeDuJournal < 0m)
+        {
+            throw new ExceptionCredit(CodesErreurCredit.RemboursementSuperieurDette, $"Le journal du client donne une dette négative ({soldeDuJournal}).");
+        }
+
+        SoldeDu = soldeDuJournal;
+    }
+
     private static void ExigerMontant(decimal montant)
     {
         if (montant <= 0m || decimal.Round(montant, 4) != montant)

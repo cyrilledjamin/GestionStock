@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using GestionStock.Credit.Contracts;
 using GestionStock.Identite.Contracts;
 using Microsoft.Extensions.DependencyInjection;
+using Npgsql;
 
 namespace GestionStock.Api.IntegrationTests;
 
@@ -121,7 +122,54 @@ public sealed class CreditTests(ApiDeTest api)
         Assert.Equal(6000m, fiche.Client.SoldeDu);
     }
 
+    [Fact]
+    public async Task La_dette_d_un_client_est_controlee_contre_son_journal_et_reconstruite_sans_operation()
+    {
+        api.ExigerDocker();
+        var client = await ClientAvecPlafondAsync(10000m);
+        var ticket = await VendreAsync(client, 3000m);
+        await VendreAsync(client, 2000m);
+        await RembourserAsync(client, 1500m);
+        Assert.Equal(500m, await AppelerAsync(credit => credit.AnnulerVenteAsync(new AnnulationCredit(client, ticket, Guid.NewGuid(), 500m, "caissier"), Annulation)));
+
+        var juste = await ControlerAsync();
+        await using (var commande = api.Services.GetRequiredService<NpgsqlDataSource>().CreateCommand(
+            "UPDATE credit.client SET solde_du = 9999 WHERE id = @client"))
+        {
+            commande.Parameters.AddWithValue("client", client);
+            await commande.ExecuteNonQueryAsync(Annulation);
+        }
+
+        var faux = await ControlerAsync();
+        var operationsAvant = (await LireFicheAsync(client)).Operations.Count;
+        var corrige = await ReconstruireAsync(client);
+        var deNouveau = await ReconstruireAsync(client);
+
+        // 3 000 + 2 000 − 1 500 − 500 = 3 000.
+        Assert.DoesNotContain(juste.Ecarts, e => e.ClientId == client);
+        Assert.True(juste.SoldesControles >= 1);
+        var ecart = Assert.Single(faux.Ecarts, e => e.ClientId == client);
+        Assert.Equal((3000m, 9999m), (ecart.Journal, ecart.Enregistre));
+        Assert.Equal((3000m, 9999m), (corrige!.Journal, corrige.Enregistre));
+        Assert.Null(deNouveau);
+        var fiche = await LireFicheAsync(client);
+        Assert.Equal(3000m, fiche.Client.SoldeDu);
+        Assert.Equal(operationsAvant, fiche.Operations.Count);
+    }
+
     // --- Aides ---------------------------------------------------------------------------------------------------
+
+    private async Task<ControleCredit> ControlerAsync()
+    {
+        await using var portee = api.Services.CreateAsyncScope();
+        return await portee.ServiceProvider.GetRequiredService<IControleSoldesCredit>().ControlerAsync(Annulation);
+    }
+
+    private async Task<EcartCredit?> ReconstruireAsync(Guid client)
+    {
+        await using var portee = api.Services.CreateAsyncScope();
+        return await portee.ServiceProvider.GetRequiredService<IControleSoldesCredit>().ReconstruireAsync(client, Annulation);
+    }
 
     private static async Task<ClientLu> CreerClientAsync(HttpClient gerant, int? delaiPaiementJours = null)
     {
