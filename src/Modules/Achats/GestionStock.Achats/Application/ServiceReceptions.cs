@@ -91,24 +91,23 @@ internal sealed class ServiceReceptions(
 {
     public async Task<IReadOnlyList<ResumeReception>> ListerAsync(CancellationToken annulation)
     {
-        var receptions = await contexte.Receptions.AsNoTracking()
+        // Résumé calculé par la base (nombre de lignes, valeur, frais) : les lignes, frais et répartitions ne sont pas
+        // chargés pour une liste.
+        return await contexte.Receptions.IgnoreAutoIncludes().AsNoTracking()
             .OrderByDescending(r => r.DateCreationUtc)
+            .Select(r => new ResumeReception(
+                r.Id,
+                r.Numero,
+                r.FournisseurId,
+                contexte.Fournisseurs.Where(f => f.Id == r.FournisseurId).Select(f => f.Nom).Single(),
+                r.NumeroBonLivraison,
+                r.Statut,
+                r.DateCreationUtc,
+                r.DateValidationUtc,
+                r.Lignes.Count,
+                r.Lignes.Sum(l => l.Quantite * l.CoutUnitaire),
+                r.Frais.Sum(f => f.Montant)))
             .ToListAsync(annulation);
-        var fournisseurs = await contexte.Fournisseurs.AsNoTracking()
-            .ToDictionaryAsync(f => f.Id, f => f.Nom, annulation);
-
-        return [.. receptions.Select(r => new ResumeReception(
-            r.Id,
-            r.Numero,
-            r.FournisseurId,
-            fournisseurs[r.FournisseurId],
-            r.NumeroBonLivraison,
-            r.Statut,
-            r.DateCreationUtc,
-            r.DateValidationUtc,
-            r.Lignes.Count,
-            r.ValeurMarchandise,
-            r.TotalFrais))];
     }
 
     public async Task<DetailReception> ObtenirAsync(Guid id, CancellationToken annulation)

@@ -884,8 +884,8 @@ sur une machine Linux de GitHub qui dispose de Docker :
 | 54 | Tests de bout en bout par rôle (Playwright) en CI, grille de recette | Fait |
 | 55 | Corrections du check (double clic, confirmations, erreurs, noms, langue de la page) | Fait |
 | 56 | Jeu de données volumineux et mesures de référence | Fait |
-| 57 | Performances serveur (index, requêtes, pagination) | À faire |
-| 58 | Performances de la caisse et du client | À faire |
+| 57 | Performances serveur (index de dates, requêtes groupées, rapports sans JIT) | Fait |
+| 58 | Performances de la caisse et du client, pagination des listes | À faire |
 | 59 | Direction visuelle (maquettes, choix) | À faire |
 | 60 | Système de design (jetons, composants) | À faire |
 | 61 | Refonte : caisse et pilotage | À faire |

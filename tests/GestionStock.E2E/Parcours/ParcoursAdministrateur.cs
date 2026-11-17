@@ -71,7 +71,9 @@ public sealed class ParcoursAdministrateur(Navigateur navigateur) : ParcoursBase
         await AllerAsync("Controles");
         await Bouton("LancerControle").ClickAsync();
         await Expect(Page.GetByText(new System.Text.RegularExpressions.Regex(
-            System.Text.RegularExpressions.Regex.Escape(T["ControleTermine", "§", "§"]).Replace("§", "[0-9]+")))).ToBeVisibleAsync();
+            System.Text.RegularExpressions.Regex.Escape(T["ControleTermine", "§", "§"]).Replace("§", "[0-9]+"))))
+            // Sur un long historique (jeu volumineux), le contrôle relit des millions de mouvements : jusqu'à 2 minutes.
+            .ToBeVisibleAsync(new() { Timeout = 120_000 });
 
         await AllerAsync("Sauvegardes");
         await VoirAsync("SauvegardeLocale");

@@ -266,10 +266,12 @@ internal sealed class ServiceTickets(
             .Where(t => t.SessionId == sessionId)
             .OrderByDescending(t => t.Numero)
             .ToListAsync(annulation);
-        var resultat = new List<TicketDto>();
+        // Quantités déjà rendues de toutes les lignes de la session en une requête (et non une par ticket).
+        var rendues = await QuantitesRendues(tickets.Where(t => !t.EstAvoir).SelectMany(t => t.Lignes).Select(l => l.Id).ToList(), annulation);
+        var resultat = new List<TicketDto>(tickets.Count);
         foreach (var ticket in tickets)
         {
-            resultat.Add(await VersDto(ticket, annulation));
+            resultat.Add(await VersDto(ticket, ticket.EstAvoir ? [] : rendues, annulation));
         }
 
         return resultat;
@@ -542,9 +544,11 @@ internal sealed class ServiceTickets(
         return lignes;
     }
 
-    private async Task<Dictionary<Guid, decimal>> QuantitesRendues(TicketCaisse origine, CancellationToken annulation)
+    private Task<Dictionary<Guid, decimal>> QuantitesRendues(TicketCaisse origine, CancellationToken annulation) =>
+        QuantitesRendues(origine.Lignes.Select(l => l.Id).ToList(), annulation);
+
+    private async Task<Dictionary<Guid, decimal>> QuantitesRendues(List<Guid> ids, CancellationToken annulation)
     {
-        var ids = origine.Lignes.Select(l => l.Id).ToList();
         return await contexte.Lignes.AsNoTracking()
             .Where(l => l.LigneOrigineId != null && ids.Contains(l.LigneOrigineId.Value))
             .GroupBy(l => l.LigneOrigineId!.Value)
@@ -587,9 +591,11 @@ internal sealed class ServiceTickets(
         return ticket is null ? null : await VersDto(ticket, annulation);
     }
 
-    private async Task<TicketDto> VersDto(TicketCaisse t, CancellationToken annulation)
+    private async Task<TicketDto> VersDto(TicketCaisse t, CancellationToken annulation) =>
+        await VersDto(t, t.EstAvoir ? [] : await QuantitesRendues(t, annulation), annulation);
+
+    private async Task<TicketDto> VersDto(TicketCaisse t, Dictionary<Guid, decimal> rendues, CancellationToken annulation)
     {
-        var rendues = t.EstAvoir ? [] : await QuantitesRendues(t, annulation);
         return new TicketDto(
             t.Id, t.IdIdempotence, t.NumeroComplet, t.DateUtc, t.Caissier, await annuaire.DesignationAsync(t.Caissier, annulation), t.EstAvoir, t.TicketOrigineId, t.ClientId,
             t.TotalTtc, t.TotalHt, t.TotalTva, t.TauxTva, t.Rendu, t.RemiseValideePar, t.CreditValidePar,

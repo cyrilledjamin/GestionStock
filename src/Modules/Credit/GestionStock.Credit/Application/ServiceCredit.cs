@@ -186,8 +186,10 @@ internal sealed class ServiceCredit(CreditDbContext contexte, IUniteDeTravail un
     /// <summary>Ventes à crédit non soldées d'un client, de la plus ancienne à la plus récente.</summary>
     private async Task<List<VenteOuverte>> VentesOuvertes(Guid clientId, CancellationToken annulation)
     {
+        // Les ventes déjà soldées (en base) ne sont pas relues : seul ce qui reste dû compte.
         var ventes = await contexte.Operations.AsNoTracking()
-            .Where(o => o.ClientId == clientId && o.Type == TypeOperationCredit.VenteCredit)
+            .Where(o => o.ClientId == clientId && o.Type == TypeOperationCredit.VenteCredit
+                && o.Montant > (contexte.Imputations.Where(i => i.VenteId == o.Id).Sum(i => (decimal?)i.Montant) ?? 0m))
             .OrderBy(o => o.DateUtc).ThenBy(o => o.Id)
             .ToListAsync(annulation);
         var ids = ventes.Select(v => v.Id).ToList();
@@ -213,15 +215,18 @@ internal sealed class ServiceCredit(CreditDbContext contexte, IUniteDeTravail un
     private async Task<Dictionary<Guid, decimal>> MontantsEnRetard(CancellationToken annulation)
     {
         var maintenant = horloge.MaintenantUtc;
-        var echues = await contexte.Operations.AsNoTracking()
+        // Calculé par la base : seules les sommes par client reviennent.
+        return await contexte.Operations.AsNoTracking()
             .Where(o => o.Type == TypeOperationCredit.VenteCredit && o.EcheanceUtc < maintenant)
             .Select(o => new
             {
                 o.ClientId,
                 Reste = o.Montant - (contexte.Imputations.Where(i => i.VenteId == o.Id).Sum(i => (decimal?)i.Montant) ?? 0m),
             })
-            .ToListAsync(annulation);
-        return echues.Where(e => e.Reste > 0m).GroupBy(e => e.ClientId).ToDictionary(g => g.Key, g => g.Sum(e => e.Reste));
+            .Where(e => e.Reste > 0m)
+            .GroupBy(e => e.ClientId)
+            .Select(g => new { ClientId = g.Key, Montant = g.Sum(e => e.Reste) })
+            .ToDictionaryAsync(g => g.ClientId, g => g.Montant, annulation);
     }
 
     private async Task<Client> VerrouillerClient(Guid id, CancellationToken annulation)

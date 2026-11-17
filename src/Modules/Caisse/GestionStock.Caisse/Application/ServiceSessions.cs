@@ -194,10 +194,15 @@ internal sealed class ServiceSessions(
             .OrderByDescending(s => s.OuvertureUtc)
             .Take(200)
             .ToListAsync(annulation);
-        var resultat = new List<SessionDto>();
+        var totaux = await TotauxAsync(sessions, annulation);
+        var postes = sessions.Select(s => s.NumeroCaisse).Distinct().ToList();
+        var compteurs = await contexte.Compteurs.AsNoTracking()
+            .Where(c => postes.Contains(c.NumeroCaisse))
+            .ToDictionaryAsync(c => c.NumeroCaisse, c => c.DernierNumero, annulation);
+        var resultat = new List<SessionDto>(sessions.Count);
         foreach (var session in sessions)
         {
-            resultat.Add(await VersDto(session, annulation));
+            resultat.Add(await VersDto(session, totaux[session.Id], compteurs.GetValueOrDefault(session.NumeroCaisse), annulation));
         }
 
         return resultat;
@@ -216,40 +221,78 @@ internal sealed class ServiceSessions(
         return contexte.Sessions.SingleOrDefaultAsync(s => s.Caissier == caissier && s.Statut == StatutSession.Ouverte, annulation);
     }
 
+    private async Task<TotauxSession> Totaux(SessionCaisse session, CancellationToken annulation) =>
+        (await TotauxAsync([session], annulation))[session.Id];
+
     /// <summary>
-    /// Totaux de la session. Espèces théoriques = fond + espèces des ventes (moins le rendu) − espèces rendues sur les
-    /// avoirs + remboursements de crédit en espèces.
+    /// Totaux de plusieurs sessions, en trois requêtes groupées (tickets, paiements par mode, remboursements par mode)
+    /// au lieu de charger chaque ticket. Espèces théoriques = fond + espèces des ventes (moins le rendu) − espèces
+    /// rendues sur les avoirs + remboursements de crédit en espèces.
     /// </summary>
-    private async Task<TotauxSession> Totaux(SessionCaisse session, CancellationToken annulation)
+    private async Task<Dictionary<Guid, TotauxSession>> TotauxAsync(IReadOnlyCollection<SessionCaisse> sessions, CancellationToken annulation)
     {
-        var tickets = await contexte.Tickets.AsNoTracking().Where(t => t.SessionId == session.Id).ToListAsync(annulation);
-        var remboursements = await contexte.Remboursements.AsNoTracking().Where(r => r.SessionId == session.Id).ToListAsync(annulation);
-        var ventes = tickets.Where(t => !t.EstAvoir).ToList();
-        var avoirs = tickets.Where(t => t.EstAvoir).ToList();
+        var ids = sessions.Select(s => s.Id).ToList();
+        var tickets = await contexte.Tickets.IgnoreAutoIncludes().AsNoTracking()
+            .Where(t => ids.Contains(t.SessionId))
+            .GroupBy(t => t.SessionId)
+            .Select(g => new
+            {
+                SessionId = g.Key,
+                NombreVentes = g.Count(t => !t.EstAvoir),
+                NombreAvoirs = g.Count(t => t.EstAvoir),
+                Ventes = g.Sum(t => t.EstAvoir ? 0m : t.TotalTtc),
+                Avoirs = g.Sum(t => t.EstAvoir ? t.TotalTtc : 0m),
+                RenduSigne = g.Sum(t => t.EstAvoir ? -t.Rendu : t.Rendu),
+            })
+            .ToDictionaryAsync(x => x.SessionId, annulation);
+        // Paiements signés : ceux d'un avoir sont des sorties.
+        var paiements = await (
+                from paiement in contexte.Set<Paiement>().AsNoTracking()
+                join ticket in contexte.Tickets.IgnoreAutoIncludes() on paiement.TicketId equals ticket.Id
+                where ids.Contains(ticket.SessionId)
+                group new { paiement.Montant, ticket.EstAvoir } by new { ticket.SessionId, paiement.Mode } into g
+                select new { g.Key.SessionId, g.Key.Mode, Montant = g.Sum(x => x.EstAvoir ? -x.Montant : x.Montant) })
+            .ToListAsync(annulation);
+        var remboursements = await contexte.Remboursements.AsNoTracking()
+            .Where(r => ids.Contains(r.SessionId))
+            .GroupBy(r => new { r.SessionId, r.Mode })
+            .Select(g => new { g.Key.SessionId, g.Key.Mode, Montant = g.Sum(r => r.Montant) })
+            .ToListAsync(annulation);
 
-        decimal Encaisse(ModePaiement mode) =>
-            ventes.SelectMany(t => t.Paiements).Where(p => p.Mode == mode).Sum(p => p.Montant)
-            - avoirs.SelectMany(t => t.Paiements).Where(p => p.Mode == mode).Sum(p => p.Montant);
+        var resultat = new Dictionary<Guid, TotauxSession>(sessions.Count);
+        foreach (var session in sessions)
+        {
+            decimal Encaisse(ModePaiement mode) => paiements.Where(p => p.SessionId == session.Id && p.Mode == mode).Sum(p => p.Montant);
+            decimal Rembourse(ModePaiement mode) => remboursements.Where(r => r.SessionId == session.Id && r.Mode == mode).Sum(r => r.Montant);
+            var t = tickets.GetValueOrDefault(session.Id);
+            var especes = Encaisse(ModePaiement.Especes) - (t?.RenduSigne ?? 0m);
+            resultat[session.Id] = new TotauxSession(
+                t?.NombreVentes ?? 0,
+                t?.NombreAvoirs ?? 0,
+                t?.Ventes ?? 0m,
+                t?.Avoirs ?? 0m,
+                especes,
+                Encaisse(ModePaiement.MobileMoney) + Rembourse(ModePaiement.MobileMoney),
+                Encaisse(ModePaiement.Carte),
+                Encaisse(ModePaiement.Credit),
+                remboursements.Where(r => r.SessionId == session.Id).Sum(r => r.Montant),
+                session.FondCaisse + especes + Rembourse(ModePaiement.Especes));
+        }
 
-        var especes = tickets.Sum(t => t.EspecesNettes);
-        var remboursementsEspeces = remboursements.Where(r => r.Mode == ModePaiement.Especes).Sum(r => r.Montant);
-        return new TotauxSession(
-            ventes.Count,
-            avoirs.Count,
-            ventes.Sum(t => t.TotalTtc),
-            avoirs.Sum(t => t.TotalTtc),
-            especes,
-            Encaisse(ModePaiement.MobileMoney) + remboursements.Where(r => r.Mode == ModePaiement.MobileMoney).Sum(r => r.Montant),
-            Encaisse(ModePaiement.Carte),
-            Encaisse(ModePaiement.Credit),
-            remboursements.Sum(r => r.Montant),
-            session.FondCaisse + especes + remboursementsEspeces);
+        return resultat;
     }
 
     private async Task<SessionDto> VersDto(SessionCaisse s, CancellationToken annulation) =>
-        new(s.Id, s.NumeroCaisse, s.Caissier, s.OuvertureUtc, s.FondCaisse, s.Statut, s.ClotureUtc, s.ClotureePar, s.EspecesComptees, s.Ecart, s.ValideePar,
+        await VersDto(
+            s,
             await Totaux(s, annulation),
             await contexte.Compteurs.AsNoTracking().Where(c => c.NumeroCaisse == s.NumeroCaisse).Select(c => c.DernierNumero).SingleOrDefaultAsync(annulation),
+            annulation);
+
+    private async Task<SessionDto> VersDto(SessionCaisse s, TotauxSession totaux, long dernierNumero, CancellationToken annulation) =>
+        new(s.Id, s.NumeroCaisse, s.Caissier, s.OuvertureUtc, s.FondCaisse, s.Statut, s.ClotureUtc, s.ClotureePar, s.EspecesComptees, s.Ecart, s.ValideePar,
+            totaux,
+            dernierNumero,
             await annuaire.DesignationAsync(s.Caissier, annulation),
             s.ClotureePar is null ? null : await annuaire.DesignationAsync(s.ClotureePar, annulation),
             s.ValideePar is null ? null : await annuaire.DesignationAsync(s.ValideePar, annulation));
