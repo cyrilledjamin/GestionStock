@@ -56,17 +56,26 @@ internal sealed class ServiceDettes(
 {
     public async Task<Dettes> ListerAsync(Guid? fournisseurId, bool seulementNonSoldees, CancellationToken annulation)
     {
-        var receptions = await contexte.Receptions.AsNoTracking()
+        // Montants calculés par la base (marchandise, frais, payé) : lignes, frais et répartitions ne sont pas chargés.
+        var receptions = await contexte.Receptions.IgnoreAutoIncludes().AsNoTracking()
             .Where(r => r.Statut == StatutReception.Validee && (fournisseurId == null || r.FournisseurId == fournisseurId))
+            .Select(r => new
+            {
+                r.Id,
+                r.Numero,
+                r.FournisseurId,
+                Fournisseur = contexte.Fournisseurs.Where(f => f.Id == r.FournisseurId).Select(f => f.Nom).Single(),
+                r.NumeroBonLivraison,
+                DateValidationUtc = r.DateValidationUtc!.Value,
+                Du = r.Lignes.Sum(l => l.Quantite * l.CoutUnitaire) + r.Frais.Sum(f => f.Montant),
+                Paye = contexte.PaiementsFournisseurs.Where(p => p.ReceptionId == r.Id).Sum(p => p.Montant),
+            })
             .ToListAsync(annulation);
-        var payes = await contexte.PaiementsFournisseurs.AsNoTracking()
-            .GroupBy(p => p.ReceptionId)
-            .Select(g => new { ReceptionId = g.Key, Paye = g.Sum(p => p.Montant) })
-            .ToDictionaryAsync(p => p.ReceptionId, p => p.Paye, annulation);
-        var noms = await contexte.Fournisseurs.AsNoTracking().ToDictionaryAsync(f => f.Id, f => f.Nom, annulation);
 
         var dettes = receptions
-            .Select(r => VersDette(r, noms[r.FournisseurId], payes.GetValueOrDefault(r.Id)))
+            .Select(r => new DetteReception(
+                r.Id, r.Numero, r.FournisseurId, r.Fournisseur, r.NumeroBonLivraison, r.DateValidationUtc, r.Du, r.Paye, r.Du - r.Paye,
+                PaiementFournisseur.Statut(r.Du, r.Paye)))
             .Where(d => !seulementNonSoldees || d.ResteDu > 0m)
             .OrderBy(d => d.DateValidationUtc)
             .ToList();

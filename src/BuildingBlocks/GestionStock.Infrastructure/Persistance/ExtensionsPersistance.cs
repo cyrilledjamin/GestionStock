@@ -22,7 +22,9 @@ public static class ExtensionsPersistance
         services.AddDbContext<TContexte>((fournisseur, options) => options
             .UseNpgsql(
                 fournisseur.GetRequiredService<ConnexionPartagee>().Connexion,
-                npgsql => npgsql.MigrationsHistoryTable(TableHistoriqueMigrations, schema))
+                // Requêtes séparées par collection incluse (lignes, paiements, frais…) : pas de produit cartésien.
+                npgsql => npgsql.MigrationsHistoryTable(TableHistoriqueMigrations, schema)
+                    .UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery))
             .UseSnakeCaseNamingConvention());
 
         services.AddScoped<IContexteModule>(fournisseur => new ContexteModule(fournisseur.GetRequiredService<TContexte>()));

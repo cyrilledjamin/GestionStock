@@ -136,8 +136,9 @@ internal sealed class ServiceRapports(NpgsqlDataSource sourceDeDonnees, IHorloge
 
     public async Task<RapportVentes> VentesAsync(Periode periode, CancellationToken annulation)
     {
-        // Une ligne par ticket × article : chiffre d'affaires des lignes et coût des mouvements de stock du ticket
-        // (sorties et retours au CUMP du moment), signés : un avoir vient en déduction.
+        // Ticket × article : chiffre d'affaires des lignes et coût des mouvements de stock du ticket (sorties et retours au
+        // CUMP du moment), signés : un avoir vient en déduction. Le regroupement par jour (de Douala), par article et par
+        // caissier est fait par la base (GROUPING SETS) : seules les sommes reviennent, pas chaque ligne de la période.
         const string Sql = """
             WITH lignes AS (
                 SELECT l.ticket_id, l.article_id, l.date_utc, l.caissier, l.signe,
@@ -149,64 +150,67 @@ internal sealed class ServiceRapports(NpgsqlDataSource sourceDeDonnees, IHorloge
             couts AS (
                 SELECT m.document_id AS ticket_id, m.article_id, sum(m.quantite * m.cout_unitaire) AS cout
                 FROM stock.v_mouvements m
-                WHERE m.type IN ('VenteCaisse', 'AvoirCaisse') AND m.document_id IN (SELECT ticket_id FROM lignes)
+                -- type_document en premier : l'index (type_document, document_id) du journal évite de le lire en entier.
+                WHERE m.type_document = 'TicketCaisse' AND m.type IN ('VenteCaisse', 'AvoirCaisse')
+                  AND m.document_id IN (SELECT ticket_id FROM lignes)
                 GROUP BY m.document_id, m.article_id
+            ),
+            detail AS (
+                SELECT l.ticket_id, l.article_id, ((l.date_utc AT TIME ZONE 'UTC') + @Decalage)::date AS jour, l.caissier, l.signe,
+                       l.quantite, l.ttc, l.ht, COALESCE(c.cout, 0) AS cout
+                FROM lignes l
+                LEFT JOIN couts c ON c.ticket_id = l.ticket_id AND c.article_id = l.article_id
             )
-            SELECT l.ticket_id, l.article_id, a.code, a.libelle, a.unite_stock, l.date_utc,
-                   COALESCE(uc.designation, l.caissier) AS caissier, l.signe, l.quantite, l.ttc, l.ht, COALESCE(c.cout, 0) AS cout
-            FROM lignes l
-            JOIN referentiel.v_articles a ON a.article_id = l.article_id
-            LEFT JOIN couts c ON c.ticket_id = l.ticket_id AND c.article_id = l.article_id
-            LEFT JOIN identite.v_utilisateurs uc ON uc.matricule = l.caissier
+            SELECT g.niveau, g.jour, g.article_id, a.code, a.libelle, a.unite_stock, COALESCE(uc.designation, g.caissier) AS caissier,
+                   g.nombre_tickets, g.quantite, g.ttc, g.ht, g.cout
+            FROM (SELECT GROUPING(jour, article_id, caissier) AS niveau, jour, article_id, caissier,
+                         count(DISTINCT ticket_id)::int AS nombre_tickets, sum(signe * quantite) AS quantite,
+                         sum(signe * ttc) AS ttc, sum(signe * ht) AS ht, sum(signe * cout) AS cout
+                  FROM detail
+                  GROUP BY GROUPING SETS ((jour), (article_id), (caissier))) g
+            LEFT JOIN referentiel.v_articles a ON a.article_id = g.article_id
+            LEFT JOIN identite.v_utilisateurs uc ON uc.matricule = g.caissier
             """;
         const string SqlTickets = """
-            SELECT t.ticket_id, t.est_avoir, t.remise, t.signe
+            SELECT count(*) FILTER (WHERE NOT t.est_avoir)::int AS ventes, count(*) FILTER (WHERE t.est_avoir)::int AS avoirs,
+                   COALESCE(sum(t.signe * t.remise), 0) AS remise
             FROM caisse.v_tickets t
             WHERE t.date_utc >= @Debut AND t.date_utc < @Fin
             """;
 
-        var (lignes, tickets) = await LireAsync(
+        var parametres = new { Debut = periode.DebutUtc, Fin = periode.FinUtc, Decalage = Periode.DecalageDouala };
+        var (agregats, tickets) = await LireAsync(
             async (connexion, transaction) => (
-                (await connexion.QueryAsync<LigneVente>(new CommandDefinition(Sql, Parametres(periode), transaction, cancellationToken: annulation))).ToList(),
-                (await connexion.QueryAsync<TicketVente>(new CommandDefinition(SqlTickets, Parametres(periode), transaction, cancellationToken: annulation))).ToList()),
+                (await connexion.QueryAsync<AgregatVentes>(new CommandDefinition(Sql, parametres, transaction, cancellationToken: annulation))).ToList(),
+                await connexion.QuerySingleAsync<SyntheseTickets>(new CommandDefinition(SqlTickets, parametres, transaction, cancellationToken: annulation))),
             annulation);
 
-        var ht = lignes.Sum(l => l.Signe * l.Ht);
-        var cout = lignes.Sum(l => l.Signe * l.Cout);
+        // GROUPING(jour, article_id, caissier) : 3 = par jour, 5 = par article, 6 = par caissier.
+        var jours = agregats.Where(a => a.Niveau == 3).ToList();
+        var ht = jours.Sum(j => j.Ht);
+        var cout = jours.Sum(j => j.Cout);
         var totaux = new TotauxVentes(
-            tickets.Count(t => !t.EstAvoir),
-            tickets.Count(t => t.EstAvoir),
-            lignes.Sum(l => l.Signe * l.Ttc),
+            tickets.Ventes,
+            tickets.Avoirs,
+            jours.Sum(j => j.Ttc),
             ht,
             cout,
             ht - cout,
             Taux(ht - cout, ht),
-            tickets.Sum(t => t.Signe * t.Remise));
+            tickets.Remise);
 
-        var parJour = lignes
-            .GroupBy(l => Periode.JourDouala(l.DateUtc))
-            .Select(g => new VentesDuJour(
-                g.Key,
-                g.Select(l => l.TicketId).Distinct().Count(),
-                g.Sum(l => l.Signe * l.Ttc),
-                g.Sum(l => l.Signe * l.Ht),
-                g.Sum(l => l.Signe * l.Cout),
-                g.Sum(l => l.Signe * (l.Ht - l.Cout))))
+        var parJour = jours
+            .Select(j => new VentesDuJour(j.Jour!.Value, j.NombreTickets, j.Ttc, j.Ht, j.Cout, j.Ht - j.Cout))
             .OrderBy(j => j.Jour)
             .ToList();
-        var parArticle = lignes
-            .GroupBy(l => (l.ArticleId, l.Code, l.Libelle, l.UniteStock))
-            .Select(g =>
-            {
-                var chiffre = g.Sum(l => l.Signe * l.Ht);
-                var marge = chiffre - g.Sum(l => l.Signe * l.Cout);
-                return new VentesArticle(g.Key.ArticleId, g.Key.Code, g.Key.Libelle, g.Key.UniteStock, g.Sum(l => l.Signe * l.Quantite), chiffre, chiffre - marge, marge, Taux(marge, chiffre));
-            })
+        var parArticle = agregats
+            .Where(a => a.Niveau == 5)
+            .Select(a => new VentesArticle(a.ArticleId!.Value, a.Code ?? "", a.Libelle ?? "", a.UniteStock ?? "", a.Quantite, a.Ht, a.Cout, a.Ht - a.Cout, Taux(a.Ht - a.Cout, a.Ht)))
             .OrderByDescending(a => a.Marge)
             .ToList();
-        var parCaissier = lignes
-            .GroupBy(l => l.Caissier)
-            .Select(g => new VentesCaissier(g.Key, g.Select(l => l.TicketId).Distinct().Count(), g.Sum(l => l.Signe * l.Ttc)))
+        var parCaissier = agregats
+            .Where(a => a.Niveau == 6)
+            .Select(a => new VentesCaissier(a.Caissier ?? "", a.NombreTickets, a.Ttc))
             .OrderByDescending(c => c.ChiffreAffairesTtc)
             .ToList();
 
@@ -264,13 +268,17 @@ internal sealed class ServiceRapports(NpgsqlDataSource sourceDeDonnees, IHorloge
             FROM credit.v_clients c
             WHERE c.solde_du > 0
             """;
+        // Les montants de la vue sont des sous-requêtes par réception : calculés une fois dans la sous-requête (OFFSET 0
+        // empêche de la fusionner), et non de nouveau pour le HAVING (×5 sur un historique de 3 ans).
         const string SqlFournisseurs = """
-            SELECT r.fournisseur_id, r.fournisseur, count(*)::int AS nombre_receptions,
-                   sum(r.valeur_marchandise + r.total_frais) AS montant_du, sum(r.montant_paye) AS montant_paye
-            FROM achats.v_receptions r
-            WHERE r.statut = 'Validee'
-            GROUP BY r.fournisseur_id, r.fournisseur
-            HAVING sum(r.valeur_marchandise + r.total_frais) - sum(r.montant_paye) > 0
+            SELECT fournisseur_id, fournisseur, count(*)::int AS nombre_receptions,
+                   sum(du) AS montant_du, sum(paye) AS montant_paye
+            FROM (SELECT r.fournisseur_id, r.fournisseur, r.valeur_marchandise + r.total_frais AS du, r.montant_paye AS paye
+                  FROM achats.v_receptions r
+                  WHERE r.statut = 'Validee'
+                  OFFSET 0) receptions
+            GROUP BY fournisseur_id, fournisseur
+            HAVING sum(du) - sum(paye) > 0
             """;
 
         var maintenant = new { Maintenant = horloge.MaintenantUtc };
@@ -387,7 +395,9 @@ internal sealed class ServiceRapports(NpgsqlDataSource sourceDeDonnees, IHorloge
     {
         await using var connexion = await sourceDeDonnees.OpenConnectionAsync(annulation);
         await using var transaction = await connexion.BeginTransactionAsync(System.Data.IsolationLevel.RepeatableRead, annulation);
-        await connexion.ExecuteAsync(new CommandDefinition("SET TRANSACTION READ ONLY", transaction: transaction, cancellationToken: annulation));
+        // Lecture seule ; sans compilation JIT : elle coûte près d'une seconde sur des requêtes qui en prennent une demie
+        // (estimations hautes sur un long historique), mesuré sur le jeu volumineux.
+        await connexion.ExecuteAsync(new CommandDefinition("SET TRANSACTION READ ONLY; SET LOCAL jit = off", transaction: transaction, cancellationToken: annulation));
         var resultat = await lecture(connexion, transaction);
         await transaction.CommitAsync(annulation);
         return resultat;
@@ -401,23 +411,23 @@ internal sealed class ServiceRapports(NpgsqlDataSource sourceDeDonnees, IHorloge
         chiffre == 0m ? null : decimal.Round(marge * 100m / chiffre, 2, MidpointRounding.AwayFromZero);
 
     // Lignes brutes lues par Dapper (propriétés renseignées par nom de colonne).
-    private sealed class LigneVente
+    private sealed class AgregatVentes
     {
-        public Guid TicketId { get; init; }
+        public int Niveau { get; init; }
 
-        public Guid ArticleId { get; init; }
+        public DateOnly? Jour { get; init; }
 
-        public string Code { get; init; } = "";
+        public Guid? ArticleId { get; init; }
 
-        public string Libelle { get; init; } = "";
+        public string? Code { get; init; }
 
-        public string UniteStock { get; init; } = "";
+        public string? Libelle { get; init; }
 
-        public DateTime DateUtc { get; init; }
+        public string? UniteStock { get; init; }
 
-        public string Caissier { get; init; } = "";
+        public string? Caissier { get; init; }
 
-        public int Signe { get; init; }
+        public int NombreTickets { get; init; }
 
         public decimal Quantite { get; init; }
 
@@ -428,15 +438,13 @@ internal sealed class ServiceRapports(NpgsqlDataSource sourceDeDonnees, IHorloge
         public decimal Cout { get; init; }
     }
 
-    private sealed class TicketVente
+    private sealed class SyntheseTickets
     {
-        public Guid TicketId { get; init; }
+        public int Ventes { get; init; }
 
-        public bool EstAvoir { get; init; }
+        public int Avoirs { get; init; }
 
         public decimal Remise { get; init; }
-
-        public int Signe { get; init; }
     }
 
     private sealed class LigneCreance

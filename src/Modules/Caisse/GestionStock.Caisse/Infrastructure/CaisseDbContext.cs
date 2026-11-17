@@ -62,6 +62,8 @@ internal sealed class CaisseDbContext(DbContextOptions<CaisseDbContext> options)
             ticket.Property(t => t.NumeroComplet).HasMaxLength(40);
             ticket.HasIndex(t => new { t.NumeroCaisse, t.Numero }).IsUnique();
             ticket.HasIndex(t => t.NumeroComplet);
+            // Rapports et exports bornés par date (ventes, caisse, accueil) : sans cet index, tout l'historique est lu.
+            ticket.HasIndex(t => t.DateUtc);
             ticket.Property(t => t.Caissier).HasMaxLength(256);
             ticket.Property(t => t.RemiseValideePar).HasMaxLength(256);
             ticket.Property(t => t.CreditValidePar).HasMaxLength(256);
@@ -114,6 +116,7 @@ internal sealed class CaisseDbContext(DbContextOptions<CaisseDbContext> options)
             remboursement.HasKey(r => r.Id);
             remboursement.Property(r => r.Id).ValueGeneratedNever();
             remboursement.HasIndex(r => r.IdIdempotence).IsUnique();
+            remboursement.HasIndex(r => r.DateUtc);
             remboursement.Property(r => r.Mode).HasConversion<string>().HasMaxLength(20);
             remboursement.Property(r => r.Montant).HasPrecision(19, 4);
             remboursement.Property(r => r.ReferenceTransaction).HasMaxLength(100);

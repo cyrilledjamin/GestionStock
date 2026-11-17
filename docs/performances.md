@@ -84,5 +84,46 @@ tout l'historique) :
 | Catalogue de la caisse : 1,8 Mo, environ 7 Mo à l'échelle 1, téléchargé à chaque ouverture de la caisse | Pas de contrôle de version (ETag) ; la compression le réduit, mais le retéléchargement reste inutile | 58 |
 | Articles, soldes, grille de prix : 0,8 à 1,1 Mo chacun | Listes non paginées, filtrées dans le navigateur | 57 (pagination), 58 (écrans) |
 
-Les mesures « après » des étapes 57 et 58 sont ajoutées dans ce document, avec la même méthode et le même jeu. Le
-workflow **Performances** donne les mesures à l'échelle 1 sur une machine de GitHub.
+Le workflow **Performances** donne les mesures à l'échelle 1 sur une machine de GitHub.
+
+## Étape 57 : performances du serveur
+
+Même jeu (échelle 0,25), même poste, même méthode. Médianes en millisecondes.
+
+| Mesure | Avant | Après | Changement |
+| --- | --- | --- | --- |
+| Accueil : tableau de bord | 697 (95e : 5 434) | **154** (95e : 189) | Ventes du jour par l'index de date des tickets ; coût des ventes par l'index `(type_document, document_id)` du journal ; dettes fournisseurs calculées une fois |
+| Rapport des ventes, 30 jours | 1 116 | **789** | Regroupement par jour, article et caissier dans la base (GROUPING SETS) ; filtre `type_document` ; sans JIT. Le reste du temps vient surtout de la réponse elle-même (1,2 Mo, une ligne par article vendu) |
+| Rapport de caisse, 30 jours | 824 | **283** | Index de date des tickets ; sans JIT |
+| Rapport créances et dettes | 520 | **112** | Montants des réceptions calculés une fois et non de nouveau pour le `HAVING` (524 → 95 ms en SQL) |
+| Sessions de caisse | 2 070 | **106** | Totaux de toutes les sessions en trois requêtes groupées (tickets, paiements, remboursements) au lieu de charger chaque ticket ; compteurs en une requête |
+| Tickets d'une session | 88 | **16** | Quantités déjà rendues en une requête pour toute la session |
+| Réceptions | 1 054 | **95** | Résumé (nombre de lignes, valeur, frais) calculé par la base, sans charger lignes, frais et répartitions |
+| Dettes fournisseurs | 890 | **101** | Même chose, paiements compris |
+| Clients à crédit, fiche d'un client | 63 et 8 | 71 et 9 | Ventes soldées non relues ; retards sommés par la base (sans effet visible sur ce jeu, où les clients sont soldés chaque mois) |
+| Validation d'un ticket de 3 lignes | 33 | 38 | Inchangé : déjà sous la cible |
+| Contrôle des soldes | 9 516 | 11 700 à 21 300 | Variable selon le cache du poste ; la nuit, sans contrainte |
+
+Les autres routes (stock, articles, catalogue, grille, scan, recherche, inventaires) restent sous 75 ms ; leur taille
+est traitée à l'étape 58.
+
+### Décisions
+
+- **JIT de PostgreSQL désactivé pour les lectures de rapports et d'exports** (`SET LOCAL jit = off` dans leur
+  transaction en lecture seule). Sur un long historique, les estimations de coût déclenchent la compilation JIT. Elle
+  coûtait près d'une seconde sur le rapport des ventes, qui s'exécute en une demie sans elle (1 500 → 564 ms en SQL).
+  Le réglage reste local à ces transactions : il s'applique aussi sur un serveur PostgreSQL hébergé.
+- **Nouveaux index** (migration `IndexDates` du module Caisse) : `ticket_caisse.date_utc` et
+  `remboursement_credit.date_utc`.
+- **Requêtes séparées par défaut** (`SplitQuery`) : un ticket ou une réception avec plusieurs collections incluses ne
+  produit plus de produit cartésien.
+- **Grille de prix** : le prix en vigueur et le prochain prix de chaque conditionnement sont choisis par la base, au
+  lieu de relire tout l'historique des prix.
+- **Planificateur** : la file est interrogée chaque minute (15 s par défaut) ; la seule tâche tourne la nuit.
+
+**Prévu au plan mais non fait, mesure à l'appui :**
+- *Regrouper les lectures d'une vente* : la validation d'un ticket prend 38 ms, la cible est d'1 s.
+- *Créer les contextes de modules à la demande dans l'unité de travail* : un contexte créé après l'ouverture de la
+  transaction n'y serait pas enrôlé, et EF tenterait d'en ouvrir une seconde sur la même connexion. Le risque dépasse
+  le gain sur une validation de 38 ms.
+- *La pagination des listes* est reportée à l'étape 58 : l'API et les écrans changent ensemble.

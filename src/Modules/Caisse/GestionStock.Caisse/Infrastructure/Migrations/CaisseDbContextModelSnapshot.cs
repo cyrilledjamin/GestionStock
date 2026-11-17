@@ -274,6 +274,9 @@ namespace GestionStock.Caisse.Infrastructure.Migrations
                     b.HasKey("Id")
                         .HasName("pk_remboursement_credit");
 
+                    b.HasIndex("DateUtc")
+                        .HasDatabaseName("ix_remboursement_credit_date_utc");
+
                     b.HasIndex("IdIdempotence")
                         .IsUnique()
                         .HasDatabaseName("ix_remboursement_credit_id_idempotence");
@@ -457,6 +460,9 @@ namespace GestionStock.Caisse.Infrastructure.Migrations
 
                     b.HasKey("Id")
                         .HasName("pk_ticket_caisse");
+
+                    b.HasIndex("DateUtc")
+                        .HasDatabaseName("ix_ticket_caisse_date_utc");
 
                     b.HasIndex("IdIdempotence")
                         .IsUnique()

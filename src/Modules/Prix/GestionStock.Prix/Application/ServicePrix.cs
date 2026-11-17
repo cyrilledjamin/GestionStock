@@ -89,19 +89,24 @@ internal sealed class ServicePrix(
     /// </summary>
     public async Task<GrillePrix> GrilleAsync(DateOnly date, CancellationToken annulation)
     {
-        var prix = await contexte.Prix.AsNoTracking().ToListAsync(annulation);
-        var grille = prix
+        // Un prix par conditionnement, choisi par la base (pas tout l'historique) : le dernier en vigueur à la date (le
+        // plus récemment saisi à début égal), et le prochain programmé.
+        var actuels = await contexte.Prix.AsNoTracking()
+            .Where(p => p.DebutValidite <= date)
             .GroupBy(p => p.ConditionnementId)
-            .Select(groupe =>
+            .Select(g => g.OrderByDescending(p => p.DebutValidite).ThenByDescending(p => p.DateSaisieUtc).First())
+            .ToListAsync(annulation);
+        var prochains = await contexte.Prix.AsNoTracking()
+            .Where(p => p.DebutValidite > date)
+            .GroupBy(p => p.ConditionnementId)
+            .Select(g => g.OrderBy(p => p.DebutValidite).ThenBy(p => p.DateSaisieUtc).First())
+            .ToDictionaryAsync(p => p.ConditionnementId, annulation);
+        var grille = actuels
+            .Select(actuel =>
             {
-                var ordonnes = groupe.OrderByDescending(p => p.DebutValidite).ThenByDescending(p => p.DateSaisieUtc).ToList();
-                var actuel = ordonnes.FirstOrDefault(p => p.DebutValidite <= date);
-                var prochain = ordonnes.LastOrDefault(p => p.DebutValidite > date);
-                return actuel is null
-                    ? null
-                    : new PrixGrille(groupe.Key, actuel.PrixTtc, actuel.DebutValidite, prochain?.PrixTtc, prochain?.DebutValidite);
+                var prochain = prochains.GetValueOrDefault(actuel.ConditionnementId);
+                return new PrixGrille(actuel.ConditionnementId, actuel.PrixTtc, actuel.DebutValidite, prochain?.PrixTtc, prochain?.DebutValidite);
             })
-            .OfType<PrixGrille>()
             .OrderBy(p => p.ConditionnementId)
             .ToList();
         return new GrillePrix(date, Regime.Assujetti, Regime.TauxApplique, grille);

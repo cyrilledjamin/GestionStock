@@ -220,7 +220,9 @@ internal sealed class ServiceExports(NpgsqlDataSource sourceDeDonnees, IHorloge 
     {
         await using var connexion = await sourceDeDonnees.OpenConnectionAsync(annulation);
         await using var transaction = await connexion.BeginTransactionAsync(System.Data.IsolationLevel.RepeatableRead, annulation);
-        await connexion.ExecuteAsync(new CommandDefinition("SET TRANSACTION READ ONLY", transaction: transaction, cancellationToken: annulation));
+        // Lecture seule ; sans compilation JIT : elle coûte près d'une seconde sur des requêtes qui en prennent une demie
+        // (estimations hautes sur un long historique), mesuré sur le jeu volumineux.
+        await connexion.ExecuteAsync(new CommandDefinition("SET TRANSACTION READ ONLY; SET LOCAL jit = off", transaction: transaction, cancellationToken: annulation));
         var lignes = await Lignes(connexion, transaction, sql, parametres, colonnes.Length, annulation);
         await transaction.CommitAsync(annulation);
         return new JournalExporte(nom, colonnes, lignes);
