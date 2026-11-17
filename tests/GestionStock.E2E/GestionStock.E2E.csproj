@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Tests de bout en bout dans un vrai navigateur (Chromium, Playwright) sur l'application déployée par docker-compose.
+    Ignorés tant que E2E_URL n'est pas défini : `dotnet test` de la solution les compile sans les lancer.
+    Lancement : voir le README (section Tests de bout en bout).
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="Microsoft.Playwright" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Les parcours partagent l'application et son unique poste de caisse : ils s'exécutent l'un après l'autre. -->
+    <Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Les textes de l'interface : les tests cherchent les éléments par clé, en français comme en anglais. -->
+    <None Include="../../src/Client/GestionStock.Client/Ressources/Textes*.resx" Link="Ressources/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

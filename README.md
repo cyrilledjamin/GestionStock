@@ -68,6 +68,7 @@ tests/
   GestionStock.Api.IntegrationTests  API complète par HTTP sur PostgreSQL réelle (Testcontainers)
   GestionStock.ArchitectureTests     règles de dépendance et conventions
   GestionStock.Client.Tests          logique du client (vente en cours), sans navigateur
+  GestionStock.E2E                   parcours de bout en bout par rôle dans Chromium (Playwright), sur l'application déployée
   GestionStock.Infrastructure.Tests  briques transverses
   GestionStock.Stock.Domain.Tests    règles du domaine Stock
   GestionStock.Stock.IntegrationTests  PostgreSQL réelle (Testcontainers)
@@ -706,11 +707,50 @@ Chaque permission est attribuée à des rôles dans
 | `GestionStock.ArchitectureTests` | Dépendances entre projets, visibilité, couches, traductions, conventions de style du client | Non |
 | `GestionStock.Client.Tests` | Vente en cours au comptoir : panier, arrondi identique au serveur, billets rapides, compte juste, pas de saisie | Non |
 | `GestionStock.Stock.IntegrationTests` | PostgreSQL 17 réelle : migration, transaction partagée, idempotence, journal immuable, mouvements simultanés | Oui |
+| `GestionStock.E2E` | Parcours de bout en bout par rôle dans Chromium, sur l'application déployée (ignorés sans `E2E_URL`) | Application déployée |
 
 Les tests d'intégration démarrent un conteneur `postgres:17-alpine` (Testcontainers), appliquent les
 migrations comme au démarrage de l'API, puis passent par le contrat public du module. Sans Docker, ils sont
 **ignorés** sur un poste de développement (la raison est affichée) et **échouent** en intégration continue
 (variable `CI=true`, définie par GitHub Actions).
+
+### Tests de bout en bout (navigateur)
+
+`GestionStock.E2E` joue dans un vrai Chromium (Playwright) les parcours de chaque rôle sur l'application déployée par
+docker-compose. Les éléments sont cherchés par leur rôle et par la **clé** de leur texte dans les fichiers de
+ressources du client : un parcours tourne en français comme en anglais, et survit à un changement de libellé ou
+d'apparence. Les données nécessaires (comptes, articles en stock, clients…) sont préparées par l'API avec un suffixe
+unique : les parcours peuvent être rejoués sur la même base. Ils s'exécutent l'un après l'autre (un seul poste de
+caisse). Sans `E2E_URL`, `dotnet test` les compile et les ignore.
+
+| Parcours | Contenu |
+| --- | --- |
+| Administrateur | Compte créé (matricule généré, deux rôles, mot de passe provisoire), changement par l'employé, droits des rôles, désactivation qui refuse la connexion ; contrôle des soldes ; sauvegardes |
+| Caissier | Ouverture, scan, quantité, compte juste, vente à crédit, remise validée par le Gérant, remboursement de crédit, avoir, clôture ; vente **hors ligne** (réseau du navigateur coupé) puis synchronisation et ticket au serveur avec le numéro du poste |
+| Magasinier | Fournisseur, réception (brouillon puis validation), stock, inventaire partiel compté au scan, démarque déclarée |
+| Gérant | Article, conditionnement « carton de 12 », prix de l'unité et du carton, article rapide, client ; session restée ouverte clôturée à la place du caissier puis écart validé ; les quatre rapports, anomalies |
+| Comptable | Frais d'approche, paiement partiel et dette, plafond de crédit, validation d'un inventaire et d'une démarque, export téléchargé |
+| Anglais | Caissier dont le compte est en anglais : vente et clôture, textes lus dans `Textes.en.resx` |
+| Téléphone | 390 × 844 : menu en tiroir, vente par la barre du total en bas de l'écran |
+
+**Ne jamais les lancer sur la base d'une boutique** : ils créent des comptes, des articles et des ventes. Contre
+l'application de docker-compose (valeurs de `deploy/.env.example`) :
+
+```bash
+dotnet build tests/GestionStock.E2E -c Release
+```
+
+```bash
+pwsh tests/GestionStock.E2E/bin/Release/net10.0/playwright.ps1 install chromium
+```
+
+```bash
+E2E_URL=http://localhost:8080 E2E_ADMIN=admin E2E_MOT_DE_PASSE=<ADMIN_MOT_DE_PASSE> dotnet tests/GestionStock.E2E/bin/Release/net10.0/GestionStock.E2E.dll
+```
+
+`-class GestionStock.E2E.Parcours.ParcoursCaissier` lance un seul parcours ; `E2E_VISIBLE=1` montre le navigateur ;
+`E2E_TRACES=<dossier>` garde la trace d'un parcours en échec (`playwright show-trace <fichier>.zip`). Correspondance
+entre cas d'utilisation, règles et tests : [docs/recette.md](docs/recette.md).
 
 ## Intégration continue
 
@@ -732,7 +772,8 @@ sur une machine Linux de GitHub qui dispose de Docker :
   `local` ; passage de sauvegarde consigné en base et dans `GET /api/exploitation/etat`, copie hors site chiffrée,
   archive locale complète, refus sans `--oui`, puis un compte créé après la sauvegarde, l'API arrêtée et la copie hors
   site restaurée : le compte a disparu, le jeton émis avant reste valide car les clés sont revenues avec les fichiers,
-  et le contrôle des soldes ne trouve aucun écart), et que le client
+  et le contrôle des soldes ne trouve aucun écart), que les parcours de bout en bout passent dans Chromium (la trace
+  d'un parcours en échec est gardée en artefact `traces-e2e`), et que le client
   Blazor est servi. Les tests du client (`GestionStock.Client.Tests`) tournent avec les autres dans le job de build.
 
 ## Avancement du squelette
@@ -793,6 +834,17 @@ sur une machine Linux de GitHub qui dispose de Docker :
 | 51 | Exploitation : conteneur de sauvegarde (locale horaire, hors site chiffrée) | Fait |
 | 52 | Exploitation : écrans Contrôles et Sauvegardes, accueil | Fait |
 | 53 | Vérification, CI, README, démonstration de la tranche 8 | Fait |
+| 54 | Tests de bout en bout par rôle (Playwright) en CI, grille de recette | Fait |
+| 55 | Corrections du check (double clic, confirmations, erreurs, noms, langue de la page) | À faire |
+| 56 | Jeu de données volumineux et mesures de référence | À faire |
+| 57 | Performances serveur (index, requêtes, pagination) | À faire |
+| 58 | Performances de la caisse et du client | À faire |
+| 59 | Direction visuelle (maquettes, choix) | À faire |
+| 60 | Système de design (jetons, composants) | À faire |
+| 61 | Refonte : caisse et pilotage | À faire |
+| 62 | Refonte : stock et achats | À faire |
+| 63 | Refonte : le reste, accessibilité | À faire |
+| 64 | Vérification, CI, README, démonstration de la tranche 9 | À faire |
 
 ## Démonstration
 

@@ -1,5 +1,5 @@
 # Intégration continue : build, tests (y compris PostgreSQL réelle via Testcontainers),
-# puis image de l'API et docker-compose démarrés comme en boutique.
+# puis image de l'API et docker-compose démarrés comme en boutique, et parcours de bout en bout dans Chromium.
 name: CI
 
 on:
@@ -160,6 +160,31 @@ jobs:
           for route in referentiel/catalogue-caisse prix/grille caisse/anomalies caisse/postes/occupation; do
             test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/api/$route)" = "401"
           done
+
+      # Tests de bout en bout (tranche 9) : un vrai Chromium joue les parcours de chaque rôle sur l'application
+      # déployée. La trace Playwright d'un parcours en échec est gardée en artefact (playwright show-trace).
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+
+      - name: Tests de bout en bout (navigateur)
+        env:
+          E2E_URL: http://localhost:8080
+          E2E_TRACES: ${{ runner.temp }}/traces
+        run: |
+          source deploy/.env
+          dotnet build tests/GestionStock.E2E --configuration Release
+          pwsh tests/GestionStock.E2E/bin/Release/net10.0/playwright.ps1 install --with-deps chromium
+          mkdir -p "$E2E_TRACES"
+          E2E_ADMIN="$ADMIN_IDENTIFIANT" E2E_MOT_DE_PASSE="$ADMIN_MOT_DE_PASSE"             dotnet tests/GestionStock.E2E/bin/Release/net10.0/GestionStock.E2E.dll
+
+      - name: Traces des parcours en échec
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: traces-e2e
+          path: ${{ runner.temp }}/traces
+          if-no-files-found: ignore
 
       - name: Sauvegarde, copie chiffrée hors site et restauration (tranche 8)
         run: |
