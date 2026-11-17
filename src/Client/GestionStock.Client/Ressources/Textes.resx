@@ -493,4 +493,30 @@
   <data name="TicketHorsPoste" xml:space="preserve"><value>Ticket introuvable sur ce poste : hors ligne, seuls les tickets de la session en cours sont disponibles.</value></data>
   <data name="AvoirCreditEnLigne" xml:space="preserve"><value>Ce ticket a une part à crédit : son avoir exige le serveur (dette à annuler).</value></data>
   <data name="QuantiteARendreInvalide" xml:space="preserve"><value>Indiquez une quantité à rendre, sans dépasser ce qui reste à rendre.</value></data>
+  <data name="Anomalies" xml:space="preserve"><value>Anomalies hors ligne</value></data>
+  <data name="Anomalie" xml:space="preserve"><value>Anomalie</value></data>
+  <data name="AnomaliesAide" xml:space="preserve"><value>Écarts relevés quand une opération faite hors ligne arrive au serveur : elle a été enregistrée telle qu'elle a eu lieu, sans jamais être refusée. Le Gérant vérifie et note ce qu'il a fait.</value></data>
+  <data name="ATraiter" xml:space="preserve"><value>À traiter</value></data>
+  <data name="Traitees" xml:space="preserve"><value>Traitées</value></data>
+  <data name="Toutes" xml:space="preserve"><value>Toutes</value></data>
+  <data name="Traitement" xml:space="preserve"><value>Traitement</value></data>
+  <data name="CommentaireTraitement" xml:space="preserve"><value>Ce qui a été vérifié ou fait</value></data>
+  <data name="Traiter" xml:space="preserve"><value>Marquer traitée</value></data>
+  <data name="AnomalieTraitee" xml:space="preserve"><value>Anomalie traitée.</value></data>
+  <data name="AucuneAnomalie" xml:space="preserve"><value>Aucune anomalie.</value></data>
+  <data name="AnomaliesATraiter" xml:space="preserve"><value>Anomalies hors ligne</value></data>
+  <data name="AnomaliesHorsLigne" xml:space="preserve"><value>à traiter</value></data>
+  <data name="VoirAnomalies" xml:space="preserve"><value>Les traiter</value></data>
+  <data name="Anomalie.NumeroManquant" xml:space="preserve"><value>Numéros manquants</value></data>
+  <data name="Anomalie.NumeroReattribue" xml:space="preserve"><value>Numéro réattribué</value></data>
+  <data name="Anomalie.PrixDifferent" xml:space="preserve"><value>Prix différent</value></data>
+  <data name="Anomalie.PlafondDepasse" xml:space="preserve"><value>Plafond de crédit dépassé</value></data>
+  <data name="Anomalie.SessionCloturee" xml:space="preserve"><value>Session déjà clôturée</value></data>
+  <data name="Anomalie.DateCorrigee" xml:space="preserve"><value>Heure corrigée</value></data>
+  <data name="AnomalieAide.NumeroManquant" xml:space="preserve"><value>Des tickets de ce poste ne sont jamais arrivés : vérifier les reçus papier du poste.</value></data>
+  <data name="AnomalieAide.NumeroReattribue" xml:space="preserve"><value>Le numéro du poste était déjà pris : le reçu imprimé porte un autre numéro que le ticket enregistré.</value></data>
+  <data name="AnomalieAide.PrixDifferent" xml:space="preserve"><value>Le poste a vendu à un autre prix que celui du jour (données du poste anciennes) : le prix payé fait foi.</value></data>
+  <data name="AnomalieAide.PlafondDepasse" xml:space="preserve"><value>La vente à crédit dépasse le plafond du client, connu seulement à la synchronisation.</value></data>
+  <data name="AnomalieAide.SessionCloturee" xml:space="preserve"><value>L'opération est arrivée après la clôture de sa session : l'écart de caisse de cette session est à revoir.</value></data>
+  <data name="AnomalieAide.DateCorrigee" xml:space="preserve"><value>L'heure du poste était fausse (avant l'ouverture ou dans le futur) : elle a été ramenée dans la session.</value></data>
 </root>

@@ -1,0 +1,96 @@
+@page "/anomalies"
+@inject Api Api
+@inject Session Session
+
+<PageTitle>@L["Anomalies"] · GestionStock</PageTitle>
+
+<h1>@L["Anomalies"]</h1>
+<p class="discret">@L["AnomaliesAide"]</p>
+
+<div class="barre">
+    <select @bind="_filtre" @bind:after="Charger" aria-label="@L["Statut"]">
+        <option value="false">@L["ATraiter"]</option>
+        <option value="true">@L["Traitees"]</option>
+        <option value="">@L["Toutes"]</option>
+    </select>
+</div>
+
+<Message Texte="@_erreur" />
+<Message Texte="@_succes" Erreur="false" />
+
+<table class="cartes">
+    <thead>
+        <tr><th>@L["Anomalie"]</th><th>@L["Date"]</th><th>@L["Poste"]</th><th>@L["Caissier"]</th><th>@L["Document"]</th><th>@L["Detail"]</th><th>@L["Traitement"]</th></tr>
+    </thead>
+    <tbody>
+        @foreach (var anomalie in _anomalies)
+        {
+            <tr class="@(anomalie.Traitee ? "inactif" : "")">
+                <td data-label="@L["Anomalie"]">
+                    <strong>@L[$"Anomalie.{anomalie.Type}"]</strong><br />
+                    <small class="discret">@L[$"AnomalieAide.{anomalie.Type}"]</small>
+                </td>
+                <td data-label="@L["Date"]" class="court">@Format.Date(anomalie.DateUtc)</td>
+                <td data-label="@L["Poste"]">@anomalie.NumeroCaisse</td>
+                <td data-label="@L["Caissier"]">@anomalie.Caissier</td>
+                <td data-label="@L["Document"]">@anomalie.NumeroDocument</td>
+                <td data-label="@L["Detail"]"><code>@anomalie.Detail</code></td>
+                <td data-label="@L["Traitement"]">
+                    @if (anomalie.Traitee)
+                    {
+                        <span>@anomalie.Commentaire</span><br /><small class="discret">@anomalie.TraiteePar · @(anomalie.TraitementUtc is { } le ? Format.Date(le) : "")</small>
+                    }
+                    else if (Session.A(Permissions.AnomaliesTraiter))
+                    {
+                        <form class="traitement" @onsubmit="() => Traiter(anomalie)">
+                            <input placeholder="@L["CommentaireTraitement"]" aria-label="@L["CommentaireTraitement"]" maxlength="500" @bind="_commentaires[anomalie.Id]" required />
+                            <button type="submit" class="valider">@L["Traiter"]</button>
+                        </form>
+                    }
+                    else
+                    {
+                        <span class="pastille brouillon">@L["ATraiter"]</span>
+                    }
+                </td>
+            </tr>
+        }
+        @if (_anomalies.Count == 0)
+        {
+            <tr><td colspan="7" class="vide">@L["AucuneAnomalie"]</td></tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    private List<AnomalieCaisse> _anomalies = [];
+    private Dictionary<Guid, string?> _commentaires = [];
+    private string _filtre = "false";
+    private string? _erreur;
+    private string? _succes;
+
+    protected override Task OnInitializedAsync() => Charger();
+
+    private async Task Charger()
+    {
+        var url = _filtre.Length == 0 ? "api/caisse/anomalies" : $"api/caisse/anomalies?traitees={_filtre}";
+        var resultat = await Api.GetAsync<List<AnomalieCaisse>>(url);
+        _anomalies = resultat.Valeur ?? [];
+        _erreur = resultat.Erreur;
+        foreach (var anomalie in _anomalies)
+        {
+            _commentaires.TryAdd(anomalie.Id, null);
+        }
+    }
+
+    /// <summary>Traitement par le Gérant (7.8) : un commentaire dit ce qui a été fait ; l'anomalie reste dans l'historique.</summary>
+    private async Task Traiter(AnomalieCaisse anomalie)
+    {
+        var resultat = await Api.PostAsync<AnomalieCaisse>($"api/caisse/anomalies/{anomalie.Id}/traitement", new { Commentaire = _commentaires[anomalie.Id] });
+        _erreur = resultat.Erreur;
+        _succes = resultat.Reussi ? L["AnomalieTraitee"].Value : null;
+        if (resultat.Reussi)
+        {
+            await Charger();
+        }
+    }
+}

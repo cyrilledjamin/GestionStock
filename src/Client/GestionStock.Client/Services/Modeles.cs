@@ -151,7 +151,8 @@ public sealed record TableauDeBord(
     decimal ValeurStock,
     decimal TotalCreances,
     decimal TotalEnRetard,
-    decimal TotalDettes);
+    decimal TotalDettes,
+    int AnomaliesATraiter = 0);
 
 public sealed record TotauxVentes(int NombreVentes, int NombreAvoirs, decimal ChiffreAffairesTtc, decimal ChiffreAffairesHt, decimal CoutDesVentes, decimal Marge, decimal? TauxMarge, decimal Remises);
 
@@ -188,7 +189,27 @@ public sealed record RapportCaisse(
     List<TicketSignale> Avoirs,
     List<TicketSignale> CreditsValides,
     List<LigneStockRapport> StocksNegatifs,
-    List<FraisNonIncorpore> FraisNonIncorpores);
+    List<FraisNonIncorpore> FraisNonIncorpores,
+    List<AnomalieRapport>? Anomalies = null);
+
+/// <summary>Anomalie de synchronisation dans le rapport de caisse (7.8).</summary>
+public sealed record AnomalieRapport(Guid AnomalieId, string Type, string NumeroCaisse, string Caissier, string? NumeroDocument, string Detail, DateTime DateUtc, bool Traitee, string? TraiteePar, string? Commentaire);
+
+/// <summary>Anomalie de synchronisation d'une opération faite hors ligne (7.8), à traiter par le Gérant.</summary>
+public sealed record AnomalieCaisse(
+    Guid Id,
+    string Type,
+    Guid SessionId,
+    string NumeroCaisse,
+    string Caissier,
+    Guid DocumentId,
+    string? NumeroDocument,
+    string Detail,
+    DateTime DateUtc,
+    bool Traitee,
+    string? TraiteePar,
+    DateTime? TraitementUtc,
+    string? Commentaire);
 
 /// <summary>Journaux exportables (mêmes noms que l'API, <c>JournauxComptables</c>).</summary>
 public static class JournauxComptables

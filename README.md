@@ -248,10 +248,10 @@ Si le port 5432 est déjà pris (PostgreSQL installé sur le poste), choisir un 
 | `POST /api/reprise/simulation` | `Reprise.Importer` | Corps : le classeur (`application/octet-stream`, 5 Mo au plus) ; rapport ligne par ligne, rien n'est écrit |
 | `POST /api/reprise/import` | `Reprise.Importer` | Même contrôle, puis import tout ou rien et inventaire d'ouverture ; rapport |
 | `GET /api/rapports/ventes?du=&au=` | `Rapports.Consulter` | Ventes et marge : totaux, par jour, par article, par caissier (avoirs déduits, coût au CUMP) |
-| `GET /api/rapports/tableau-de-bord` | `Rapports.Consulter` | Accueil : ventes du jour (Douala), sessions ouvertes et à valider (toutes dates) avec leurs écarts, stocks négatifs et valeur du stock, créances et retards, dettes fournisseurs |
+| `GET /api/rapports/tableau-de-bord` | `Rapports.Consulter` | Accueil : ventes du jour (Douala), sessions ouvertes et à valider (toutes dates) avec leurs écarts, anomalies hors ligne à traiter, stocks négatifs et valeur du stock, créances et retards, dettes fournisseurs |
 | `GET /api/rapports/stock` | `Rapports.Consulter` | Quantité, CUMP et valeur par article ; total ; stocks négatifs |
 | `GET /api/rapports/creances-dettes` | `Rapports.Consulter` | Clients (dû, en retard RG43, plus ancienne échéance) et fournisseurs (dû, payé, reste) |
-| `GET /api/rapports/caisse?du=&au=` | `Rapports.Consulter` | Sessions et écarts, remises, avoirs, crédits validés par un responsable, stocks négatifs, frais non incorporés |
+| `GET /api/rapports/caisse?du=&au=` | `Rapports.Consulter` | Sessions et écarts, remises, avoirs, crédits validés par un responsable, stocks négatifs, frais non incorporés, anomalies hors ligne et leur traitement |
 | `GET /api/rapports/journaux` | `Rapports.Consulter` | Journaux comptables exportables |
 | `GET /api/exports/{journal}?du=&au=&format=xlsx\|csv` | `Rapports.Exports.Produire` | `ventes`, `achats`, `encaissements`, `creances`, `valeur-stock` (du jour) ; Excel par défaut |
 | `GET /api/stock/soldes` | `Stock.Consulter` | Soldes article × site de la boutique : physique, réservé, bloqué, disponible, CUMP |
@@ -278,6 +278,7 @@ Ouvrir http://localhost:8080 (docker-compose) puis se connecter. Le menu dépend
 | Fiche article | Conditionnements, codes-barres (saisis, générés, désactivés), case « Vente rapide » (Gérant) et prix (en vigueur, programmé, nouveau) |
 | Caisse | Ouverture de session : poste occupé signalé (titulaire, heure d'ouverture, à qui s'adresser ; un poste libre est proposé d'abord), fond saisi ou ajouté par billets ; clôture guidée : comptage par billet et pièce (ou total), sans afficher le théorique, l'écart apparaissant après la clôture ; écran du reçu : « Nouvelle vente » a le curseur (Entrée ou F2) ; plein comptoir pendant la vente (menu en tiroir) ; un seul champ : code-barres ou code article à la touche Entrée, recherche en direct dès qu'il contient une lettre (un résultat unique est ajouté) ; résultats et articles rapides en tuiles ; panier à lignes larges (− / +, remise repliée, ligne choisie pour le pavé) ; pavé numérique (quantité ou espèces reçues), affiché d'office sur écran tactile ; billets rapides (500 à 10 000 XAF, cumulés) et « Compte juste » ; raccourcis F2 (scan), F4 (compte juste), F8 (encaisser), Échap ; le curseur revient au scan après chaque bouton (douchette) ; client et crédit ; paiements combinés avec rendu (une ligne par mode, un nouveau clic sur un mode lui ajoute le reste à payer) ; validation d'un responsable si remise ou plafond dépassé ; reçu 80 mm imprimable et PDF ; remboursement de crédit ; clôture avec écart |
 | Tickets de la session, ticket | Recherche par numéro, réimpression, avoir (quantités à rendre, mode de remboursement) |
+| Anomalies hors ligne | Écarts relevés à la synchronisation des opérations faites hors ligne (numéros manquants ou réattribués, prix différent, plafond dépassé, session déjà clôturée, heure corrigée), chacun avec ce qu'il faut vérifier ; filtre à traiter / traitées / toutes ; le Gérant les marque traitées avec un commentaire (auteur et heure gardés) |
 | Sessions de caisse | Supervision (Gérant, Comptable) : ventes nettes, espèces théoriques et comptées, écart, validation ; « Clôturer à sa place » sur une session ouverte (Gérant, comptage guidé), signalée ensuite « comptée par » |
 | Clients, fiche client | Clients à crédit, impayés, création (Gérant), plafond (Comptable), ventes non soldées, journal |
 | Utilisateurs | Liste (nom complet, matricule, rôles, téléphone, statut ; comptes désactivés sur demande) ; création : prénom, nom, téléphone, matricule saisi ou généré, langue, rôles à cocher, mot de passe provisoire (Administrateur) |
@@ -710,7 +711,7 @@ sur une machine Linux de GitHub qui dispose de Docker :
 | 43 | Hors ligne : tickets du terrain côté serveur, anomalies, clôture gardée | Fait |
 | 44 | Hors ligne : application installable (PWA), stockage du poste, état de connexion | Fait |
 | 45 | Hors ligne : vente, avoir, remboursement en file, synchronisation | Fait |
-| 46 | Anomalies de synchronisation à traiter | À faire |
+| 46 | Anomalies de synchronisation à traiter | Fait |
 | 47 | Vérification, CI, README, démonstration de la tranche 7 | À faire |
 
 ## Démonstration
