@@ -519,4 +519,68 @@
   <data name="AnomalieAide.PlafondDepasse" xml:space="preserve"><value>The credit sale exceeds the customer's limit, known only at synchronisation.</value></data>
   <data name="AnomalieAide.SessionCloturee" xml:space="preserve"><value>The operation arrived after its session was closed: that session's cash difference needs reviewing.</value></data>
   <data name="AnomalieAide.DateCorrigee" xml:space="preserve"><value>The till's clock was wrong (before opening or in the future): it was brought back within the session.</value></data>
+  <data name="Exploitation" xml:space="preserve"><value>Operations</value></data>
+  <data name="Controles" xml:space="preserve"><value>Balance check</value></data>
+  <data name="ControlesAide" xml:space="preserve"><value>Every night at 2 am, every stock balance and customer debt is compared with its journal. The journal is authoritative: a discrepancy is fixed by rebuilding the balance, never by writing a movement.</value></data>
+  <data name="ControleDesSoldes" xml:space="preserve"><value>Balance check</value></data>
+  <data name="DernierControle" xml:space="preserve"><value>Last check</value></data>
+  <data name="DernierControleLe" xml:space="preserve"><value>Last check: {0}</value></data>
+  <data name="ControlePlanifie" xml:space="preserve"><value>nightly run</value></data>
+  <data name="StatutControle.EnCours" xml:space="preserve"><value>Running</value></data>
+  <data name="StatutControle.Termine" xml:space="preserve"><value>Completed</value></data>
+  <data name="StatutControle.Echoue" xml:space="preserve"><value>Failed</value></data>
+  <data name="SoldesControles" xml:space="preserve"><value>{0} balances checked, {1} discrepancy(ies)</value></data>
+  <data name="AucunControle" xml:space="preserve"><value>No check has run yet</value></data>
+  <data name="EcartsOuverts" xml:space="preserve"><value>Open discrepancies</value></data>
+  <data name="NombreEcarts" xml:space="preserve"><value>{0} discrepancy(ies)</value></data>
+  <data name="ControleNocturne" xml:space="preserve"><value>Checked every night at 2 am</value></data>
+  <data name="ControleEnCours" xml:space="preserve"><value>Check running…</value></data>
+  <data name="LancerControle" xml:space="preserve"><value>Run the check now</value></data>
+  <data name="ControleTermine" xml:space="preserve"><value>Check completed: {0} balances checked, {1} discrepancy(ies).</value></data>
+  <data name="Ecarts" xml:space="preserve"><value>Discrepancies</value></data>
+  <data name="StatutEcart.Ouvert" xml:space="preserve"><value>Open</value></data>
+  <data name="StatutEcart.Reconstruit" xml:space="preserve"><value>Rebuilt</value></data>
+  <data name="StatutEcart.Disparu" xml:space="preserve"><value>Gone</value></data>
+  <data name="Solde" xml:space="preserve"><value>Balance</value></data>
+  <data name="Designation" xml:space="preserve"><value>Item</value></data>
+  <data name="SelonJournal" xml:space="preserve"><value>Per journal</value></data>
+  <data name="Enregistre" xml:space="preserve"><value>Recorded</value></data>
+  <data name="Detecte" xml:space="preserve"><value>Detected on</value></data>
+  <data name="DomaineSolde.StockSite" xml:space="preserve"><value>Site stock</value></data>
+  <data name="DomaineSolde.StockEmplacement" xml:space="preserve"><value>Location stock</value></data>
+  <data name="DomaineSolde.CreditClient" xml:space="preserve"><value>Customer debt</value></data>
+  <data name="GrandeurSolde.QuantitePhysique" xml:space="preserve"><value>Physical quantity</value></data>
+  <data name="GrandeurSolde.QuantiteReservee" xml:space="preserve"><value>Reserved quantity</value></data>
+  <data name="GrandeurSolde.QuantiteBloquee" xml:space="preserve"><value>Blocked quantity</value></data>
+  <data name="GrandeurSolde.Cump" xml:space="preserve"><value>Average cost (WAC)</value></data>
+  <data name="GrandeurSolde.SoldeDu" xml:space="preserve"><value>Debt</value></data>
+  <data name="Reconstruire" xml:space="preserve"><value>Rebuild</value></data>
+  <data name="AucunEcart" xml:space="preserve"><value>No discrepancy.</value></data>
+  <data name="ConfirmerReconstruction" xml:space="preserve"><value>Rebuild the balances of “{0}” from the journal? The journal is authoritative; no movement will be written.</value></data>
+  <data name="SoldeReconstruit" xml:space="preserve"><value>Balance rebuilt from its journal.</value></data>
+  <data name="Sauvegardes" xml:space="preserve"><value>Backups</value></data>
+  <data name="SauvegardesAide" xml:space="preserve"><value>A full backup every hour to the external disk, and an encrypted copy every day outside the shop.</value></data>
+  <data name="SauvegardesTuile" xml:space="preserve"><value>Latest backups and restore</value></data>
+  <data name="SauvegardeLocale" xml:space="preserve"><value>Last local backup</value></data>
+  <data name="SauvegardeHorsSite" xml:space="preserve"><value>Last off-site copy</value></data>
+  <data name="SauvegardeLocaleEnRetard" xml:space="preserve"><value>More than 2 hours without a backup: check the external disk and the backup container.</value></data>
+  <data name="SauvegardeLocaleAJour" xml:space="preserve"><value>Up to date (hourly)</value></data>
+  <data name="SauvegardeHorsSiteEnRetard" xml:space="preserve"><value>More than 26 hours without a copy: check the Internet connection and the online storage settings.</value></data>
+  <data name="SauvegardeHorsSiteAJour" xml:space="preserve"><value>Up to date (daily)</value></data>
+  <data name="SauvegardesEnRetard" xml:space="preserve"><value>Late: needs checking</value></data>
+  <data name="SauvegardesAJour" xml:space="preserve"><value>Up to date</value></data>
+  <data name="Jamais" xml:space="preserve"><value>Never</value></data>
+  <data name="DerniersPassages" xml:space="preserve"><value>Latest runs</value></data>
+  <data name="TypeSauvegarde.Locale" xml:space="preserve"><value>Local</value></data>
+  <data name="TypeSauvegarde.HorsSite" xml:space="preserve"><value>Off-site</value></data>
+  <data name="Resultat" xml:space="preserve"><value>Result</value></data>
+  <data name="Fichier" xml:space="preserve"><value>File</value></data>
+  <data name="Taille" xml:space="preserve"><value>Size</value></data>
+  <data name="TailleMo" xml:space="preserve"><value>{0} MB</value></data>
+  <data name="TailleKo" xml:space="preserve"><value>{0} KB</value></data>
+  <data name="Reussie" xml:space="preserve"><value>Succeeded</value></data>
+  <data name="Echouee" xml:space="preserve"><value>Failed</value></data>
+  <data name="AucuneSauvegarde" xml:space="preserve"><value>No backup recorded.</value></data>
+  <data name="Restauration" xml:space="preserve"><value>Restore</value></data>
+  <data name="RestaurationAide" xml:space="preserve"><value>A restore replaces the database and files with a backup: it is done on the server PC, with the application stopped, using the restaurer.sh script (procedure in docs/exploitation.md). An off-site copy can only be read with the owner's private key.</value></data>
 </root>

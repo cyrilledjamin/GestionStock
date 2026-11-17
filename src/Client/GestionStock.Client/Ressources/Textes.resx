@@ -519,4 +519,68 @@
   <data name="AnomalieAide.PlafondDepasse" xml:space="preserve"><value>La vente à crédit dépasse le plafond du client, connu seulement à la synchronisation.</value></data>
   <data name="AnomalieAide.SessionCloturee" xml:space="preserve"><value>L'opération est arrivée après la clôture de sa session : l'écart de caisse de cette session est à revoir.</value></data>
   <data name="AnomalieAide.DateCorrigee" xml:space="preserve"><value>L'heure du poste était fausse (avant l'ouverture ou dans le futur) : elle a été ramenée dans la session.</value></data>
+  <data name="Exploitation" xml:space="preserve"><value>Exploitation</value></data>
+  <data name="Controles" xml:space="preserve"><value>Contrôle des soldes</value></data>
+  <data name="ControlesAide" xml:space="preserve"><value>Chaque nuit à 2 h, chaque solde de stock et chaque dette client est comparé à son journal. Le journal fait foi : un écart se corrige en reconstruisant le solde, jamais en écrivant un mouvement.</value></data>
+  <data name="ControleDesSoldes" xml:space="preserve"><value>Contrôle des soldes</value></data>
+  <data name="DernierControle" xml:space="preserve"><value>Dernier contrôle</value></data>
+  <data name="DernierControleLe" xml:space="preserve"><value>Dernier contrôle : {0}</value></data>
+  <data name="ControlePlanifie" xml:space="preserve"><value>passage nocturne</value></data>
+  <data name="StatutControle.EnCours" xml:space="preserve"><value>En cours</value></data>
+  <data name="StatutControle.Termine" xml:space="preserve"><value>Terminé</value></data>
+  <data name="StatutControle.Echoue" xml:space="preserve"><value>Échoué</value></data>
+  <data name="SoldesControles" xml:space="preserve"><value>{0} soldes contrôlés, {1} écart(s)</value></data>
+  <data name="AucunControle" xml:space="preserve"><value>Aucun contrôle n'a encore eu lieu</value></data>
+  <data name="EcartsOuverts" xml:space="preserve"><value>Écarts ouverts</value></data>
+  <data name="NombreEcarts" xml:space="preserve"><value>{0} écart(s)</value></data>
+  <data name="ControleNocturne" xml:space="preserve"><value>Contrôle chaque nuit à 2 h</value></data>
+  <data name="ControleEnCours" xml:space="preserve"><value>Contrôle en cours…</value></data>
+  <data name="LancerControle" xml:space="preserve"><value>Lancer le contrôle maintenant</value></data>
+  <data name="ControleTermine" xml:space="preserve"><value>Contrôle terminé : {0} soldes contrôlés, {1} écart(s).</value></data>
+  <data name="Ecarts" xml:space="preserve"><value>Écarts</value></data>
+  <data name="StatutEcart.Ouvert" xml:space="preserve"><value>Ouvert</value></data>
+  <data name="StatutEcart.Reconstruit" xml:space="preserve"><value>Reconstruit</value></data>
+  <data name="StatutEcart.Disparu" xml:space="preserve"><value>Disparu</value></data>
+  <data name="Solde" xml:space="preserve"><value>Solde</value></data>
+  <data name="Designation" xml:space="preserve"><value>Désignation</value></data>
+  <data name="SelonJournal" xml:space="preserve"><value>Selon le journal</value></data>
+  <data name="Enregistre" xml:space="preserve"><value>Enregistré</value></data>
+  <data name="Detecte" xml:space="preserve"><value>Détecté le</value></data>
+  <data name="DomaineSolde.StockSite" xml:space="preserve"><value>Stock du site</value></data>
+  <data name="DomaineSolde.StockEmplacement" xml:space="preserve"><value>Stock d'un emplacement</value></data>
+  <data name="DomaineSolde.CreditClient" xml:space="preserve"><value>Dette d'un client</value></data>
+  <data name="GrandeurSolde.QuantitePhysique" xml:space="preserve"><value>Quantité physique</value></data>
+  <data name="GrandeurSolde.QuantiteReservee" xml:space="preserve"><value>Quantité réservée</value></data>
+  <data name="GrandeurSolde.QuantiteBloquee" xml:space="preserve"><value>Quantité bloquée</value></data>
+  <data name="GrandeurSolde.Cump" xml:space="preserve"><value>Coût moyen (CUMP)</value></data>
+  <data name="GrandeurSolde.SoldeDu" xml:space="preserve"><value>Dette</value></data>
+  <data name="Reconstruire" xml:space="preserve"><value>Reconstruire</value></data>
+  <data name="AucunEcart" xml:space="preserve"><value>Aucun écart.</value></data>
+  <data name="ConfirmerReconstruction" xml:space="preserve"><value>Reconstruire depuis le journal les soldes de « {0} » ? Le journal fait foi ; aucun mouvement ne sera écrit.</value></data>
+  <data name="SoldeReconstruit" xml:space="preserve"><value>Solde reconstruit depuis son journal.</value></data>
+  <data name="Sauvegardes" xml:space="preserve"><value>Sauvegardes</value></data>
+  <data name="SauvegardesAide" xml:space="preserve"><value>Une sauvegarde complète chaque heure sur le disque externe, et une copie chiffrée chaque jour hors de la boutique.</value></data>
+  <data name="SauvegardesTuile" xml:space="preserve"><value>Dernières sauvegardes et restauration</value></data>
+  <data name="SauvegardeLocale" xml:space="preserve"><value>Dernière sauvegarde locale</value></data>
+  <data name="SauvegardeHorsSite" xml:space="preserve"><value>Dernière copie hors de la boutique</value></data>
+  <data name="SauvegardeLocaleEnRetard" xml:space="preserve"><value>Plus de 2 h sans sauvegarde : vérifier le disque externe et le conteneur de sauvegarde.</value></data>
+  <data name="SauvegardeLocaleAJour" xml:space="preserve"><value>À jour (chaque heure)</value></data>
+  <data name="SauvegardeHorsSiteEnRetard" xml:space="preserve"><value>Plus de 26 h sans copie : vérifier la connexion Internet et la configuration du stockage en ligne.</value></data>
+  <data name="SauvegardeHorsSiteAJour" xml:space="preserve"><value>À jour (chaque jour)</value></data>
+  <data name="SauvegardesEnRetard" xml:space="preserve"><value>En retard : à vérifier</value></data>
+  <data name="SauvegardesAJour" xml:space="preserve"><value>À jour</value></data>
+  <data name="Jamais" xml:space="preserve"><value>Jamais</value></data>
+  <data name="DerniersPassages" xml:space="preserve"><value>Derniers passages</value></data>
+  <data name="TypeSauvegarde.Locale" xml:space="preserve"><value>Locale</value></data>
+  <data name="TypeSauvegarde.HorsSite" xml:space="preserve"><value>Hors site</value></data>
+  <data name="Resultat" xml:space="preserve"><value>Résultat</value></data>
+  <data name="Fichier" xml:space="preserve"><value>Fichier</value></data>
+  <data name="Taille" xml:space="preserve"><value>Taille</value></data>
+  <data name="TailleMo" xml:space="preserve"><value>{0} Mo</value></data>
+  <data name="TailleKo" xml:space="preserve"><value>{0} Ko</value></data>
+  <data name="Reussie" xml:space="preserve"><value>Réussie</value></data>
+  <data name="Echouee" xml:space="preserve"><value>Échouée</value></data>
+  <data name="AucuneSauvegarde" xml:space="preserve"><value>Aucune sauvegarde enregistrée.</value></data>
+  <data name="Restauration" xml:space="preserve"><value>Restauration</value></data>
+  <data name="RestaurationAide" xml:space="preserve"><value>Une restauration remplace la base et les fichiers par une sauvegarde : elle se fait sur le PC serveur, l'application arrêtée, avec le script restaurer.sh (procédure dans docs/exploitation.md). Une copie hors site ne se relit qu'avec la clé privée du propriétaire.</value></data>
 </root>

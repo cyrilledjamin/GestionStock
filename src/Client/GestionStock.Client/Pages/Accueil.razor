@@ -102,6 +102,26 @@
             </section>
         }
 
+        @if (_exploitation is { } e)
+        {
+            @* Administrateur, Gérant, Comptable : cohérence des soldes (ENF04) et sauvegardes (décision 32). *@
+            <section class="bloc-accueil">
+                <h2>@L["Exploitation"]</h2>
+                <div class="indicateurs">
+                    <a class="indicateur @(e.EcartsOuverts > 0 ? "alerte" : e.ControleEnRetard ? "attention" : "")" href="controles">
+                        <span>@L["ControleDesSoldes"]</span>
+                        <strong>@L["NombreEcarts", e.EcartsOuverts]</strong>
+                        <small>@(e.DernierControle is { } c ? L["DernierControleLe", Format.Date(c.DebutUtc)] : L["AucunControle"])</small>
+                    </a>
+                    <a class="indicateur @(e.SauvegardeLocaleEnRetard || e.SauvegardeHorsSiteEnRetard ? "alerte" : "")" href="sauvegardes">
+                        <span>@L["Sauvegardes"]</span>
+                        <strong>@(e.DerniereSauvegardeLocale is { } s ? Format.Date(s.FinUtc) : L["Jamais"].Value)</strong>
+                        <small>@(e.SauvegardeLocaleEnRetard || e.SauvegardeHorsSiteEnRetard ? L["SauvegardesEnRetard"] : L["SauvegardesAJour"])</small>
+                    </a>
+                </div>
+            </section>
+        }
+
         @if (_receptionsBrouillon is not null || _inventairesEnCours is not null || _demarquesDeclarees is not null)
         {
             <section class="bloc-accueil">
@@ -180,6 +200,10 @@
         {
             <a class="tuile" href="reprise"><Icone Nom="reprise" /><strong>@L["Reprise"]</strong><span>@L["RepriseAide"]</span></a>
         }
+        @if (Session.A(Permissions.ExploitationConsulter))
+        {
+            <a class="tuile" href="sauvegardes"><Icone Nom="sauvegardes" /><strong>@L["Sauvegardes"]</strong><span>@L["SauvegardesTuile"]</span></a>
+        }
         @if (Session.A(Permissions.UtilisateursGerer))
         {
             <a class="tuile" href="utilisateurs"><Icone Nom="utilisateurs" /><strong>@L["Utilisateurs"]</strong><span>@L["UtilisateursAide"]</span></a>
@@ -194,6 +218,7 @@
     private int? _receptionsBrouillon;
     private int? _inventairesEnCours;
     private int? _demarquesDeclarees;
+    private EtatExploitation? _exploitation;
 
     /// <summary>
     /// Chaque bloc ne se charge qu'avec la permission correspondante, en parallèle ; un bloc dont la lecture échoue
@@ -221,6 +246,11 @@
         {
             lectures.Add(Lire(async () => _inventairesEnCours = (await Api.GetAsync<List<ResumeInventaire>>("api/inventaires?statut=EnCours")).Valeur?.Count));
             lectures.Add(Lire(async () => _demarquesDeclarees = (await Api.GetAsync<List<DeclarationDemarque>>("api/demarques?statut=Declaree")).Valeur?.Count));
+        }
+
+        if (Session.A(Permissions.ExploitationConsulter))
+        {
+            lectures.Add(Lire(async () => _exploitation = (await Api.GetAsync<EtatExploitation>("api/exploitation/etat")).Valeur));
         }
 
         await Task.WhenAll(lectures);
