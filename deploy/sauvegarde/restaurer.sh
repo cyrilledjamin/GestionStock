@@ -60,6 +60,13 @@ fi
 tar -xf "$archive" -C "$travail" base.dump fichiers.tar.gz
 pg_restore --list "$travail/base.dump" >/dev/null
 
+# Fichiers extraits d'abord à part (propriétaires numériques conservés, l'API ne tourne pas sous root) : une archive
+# illisible arrête tout avant que la base ou le volume ne soient touchés.
+if [ "$fichiers" = true ]; then
+  mkdir "$travail/fichiers"
+  tar -xzf "$travail/fichiers.tar.gz" -C "$travail/fichiers" --numeric-owner
+fi
+
 if ! psql -X -tAc "SELECT 1 FROM pg_database WHERE datname = '$base'" -d postgres | grep -q 1; then
   echo "Création de la base $base…"
   createdb "$base"
@@ -72,7 +79,7 @@ if [ "$fichiers" = true ]; then
   repertoire="${SAUVEGARDE_FICHIERS:-/donnees/fichiers}"
   echo "Restauration des fichiers dans $repertoire…"
   find "$repertoire" -mindepth 1 -delete
-  tar -xzf "$travail/fichiers.tar.gz" -C "$repertoire" --same-owner
+  cp -a "$travail/fichiers/." "$repertoire/"
 fi
 
-echo "Restauration terminée. Redémarrer l'API : docker compose -f deploy/docker-compose.yml start api"
+echo "Restauration terminée. Redémarrer : docker compose -f deploy/docker-compose.yml start api sauvegarde"

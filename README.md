@@ -76,7 +76,7 @@ deploy/
   sauvegarde/                        image et scripts de sauvegarde : sauvegarder.sh, restaurer.sh, boucle.sh
   Dockerfile                         image Linux de l'API
   .env.example                       variables à copier dans deploy/.env
-docs/                                dossier d'analyse
+docs/                                dossier d'analyse, plans des tranches, exploitation.md (sauvegardes, restauration)
 ```
 
 Règles de dépendance, vérifiées par `tests/GestionStock.ArchitectureTests` :
@@ -583,7 +583,9 @@ docker compose -f deploy/docker-compose.yml run --rm --entrypoint restaurer.sh s
 ```
 
 Une copie hors site se restaure de la même façon avec `--cle <clé privée>` (chemin monté dans le conteneur) ;
-`--base <nom> --sans-fichiers` restaure dans une base d'essai sans toucher à la boutique.
+`--base <nom> --sans-fichiers` restaure dans une base d'essai sans toucher à la boutique. Le script vérifie la base et
+extrait les fichiers à part avant de remplacer quoi que ce soit. Installation du disque externe, clés age, rclone,
+surveillance, écarts et restauration pas à pas : [docs/exploitation.md](docs/exploitation.md).
 
 ## Rapports (décision 33)
 
@@ -725,7 +727,12 @@ sur une machine Linux de GitHub qui dispose de Docker :
   refuse la connexion), que seuls le nom et la présence d'un logo de la boutique sont publics (l'en-tête des reçus
   exige une connexion), que la feuille de style à jetons et les raccourcis de la caisse sont servis, que l'application
   installable est servie (manifeste, service worker, liste des fichiers à garder) et que les données de la caisse et les
-  anomalies exigent une connexion, et que le client
+  anomalies exigent une connexion, que les sauvegardes fonctionnent
+  ([.github/scripts/verifier-sauvegarde.sh](.github/scripts/verifier-sauvegarde.sh) : clé age jetable et distant rclone
+  `local` ; passage de sauvegarde consigné en base et dans `GET /api/exploitation/etat`, copie hors site chiffrée,
+  archive locale complète, refus sans `--oui`, puis un compte créé après la sauvegarde, l'API arrêtée et la copie hors
+  site restaurée : le compte a disparu, le jeton émis avant reste valide car les clés sont revenues avec les fichiers,
+  et le contrôle des soldes ne trouve aucun écart), et que le client
   Blazor est servi. Les tests du client (`GestionStock.Client.Tests`) tournent avec les autres dans le job de build.
 
 ## Avancement du squelette
@@ -785,7 +792,7 @@ sur une machine Linux de GitHub qui dispose de Docker :
 | 50 | Exploitation : contrôle nocturne, écarts, reconstruction | Fait |
 | 51 | Exploitation : conteneur de sauvegarde (locale horaire, hors site chiffrée) | Fait |
 | 52 | Exploitation : écrans Contrôles et Sauvegardes, accueil | Fait |
-| 53 | Vérification, CI, README, démonstration de la tranche 8 | À faire |
+| 53 | Vérification, CI, README, démonstration de la tranche 8 | Fait |
 
 ## Démonstration
 
@@ -922,6 +929,23 @@ Le prix différent, le plafond dépassé, la session clôturée entre-temps, l'h
 le refus sous le compte d'un autre caissier et la clôture gardée par le serveur sont couverts par les tests
 d'intégration (`HorsLigneTests`).
 
+### Démonstration du contrôle des soldes et des sauvegardes (tranche 8)
+
+Vérifiée dans le navigateur sur la base de démonstration, compte `admin` :
+
+1. **Sauvegardes** : passage du conteneur (`exec sauvegarde sauvegarder.sh`) ; la page montre la sauvegarde locale
+   « À jour » (archive `horaire/gestionstock-…tar`, 158 Ko) et la copie hors site « Jamais », en alerte, faute de
+   stockage en ligne configuré ; la tuile de l'accueil est donc rouge ;
+2. deux soldes faussés en SQL : stock des allumettes 20 → 25, dette de Mme Ngo Mballa 40 000 → 45 000 XAF ;
+3. **Contrôle des soldes → Lancer le contrôle maintenant** : 41 soldes contrôlés, 2 écarts, chacun avec la valeur du
+   journal (20 ; 40 000 XAF) et la valeur enregistrée ; l'accueil affiche « 2 écart(s) » en rouge ;
+4. **Reconstruire** sur chacun (confirmation) : les soldes reviennent à 20 et 40 000 XAF en base, le journal garde ses
+   41 mouvements ; filtre « Reconstruit » : `admin` et l'heure ;
+5. nouveau contrôle : aucun écart ; écran lisible sur téléphone.
+
+La copie hors site chiffrée et la restauration complète (base et fichiers) sont vérifiées par la CI et ont été
+rejouées sur une pile docker-compose séparée.
+
 ## Points ouverts
 
 - Validation par un responsable au poste du caissier (ses identifiants), et attribution au Gérant de la validation
@@ -965,3 +989,7 @@ d'intégration (`HorsLigneTests`).
   intégré à l'application de bureau de Claude n'accepte pas les service workers) ; une opération refusée au rejeu
   (cas qui ne devrait pas arriver, le poste faisant les contrôles du serveur) reste en file avec son message et demande
   une intervention.
+- Exploitation (tranche 8, décisions 42 à 44) : le conteneur de sauvegarde se connecte avec le compte PostgreSQL de
+  l'application (`pg_dump` doit tout lire) et non avec un rôle limité à `exploitation.sauvegarde`, comme le plan
+  l'envisageait ; pas de bouton « sauvegarder maintenant » ni de restauration depuis l'interface (restauration sur le
+  PC serveur, l'application arrêtée, docs/exploitation.md) ; tableau de bord Hangfire non exposé.
