@@ -95,6 +95,15 @@ public static class Permissions
     /// <summary>Importer les données de reprise (décision 29) : articles, codes, prix, inventaire d'ouverture.</summary>
     public const string RepriseImporter = "Reprise.Importer";
 
+    /// <summary>Consulter le contrôle des soldes (ENF04) et le suivi des sauvegardes (décision 32).</summary>
+    public const string ExploitationConsulter = "Exploitation.Consulter";
+
+    /// <summary>Lancer le contrôle des soldes hors de son passage nocturne.</summary>
+    public const string ControlesLancer = "Exploitation.Controles.Lancer";
+
+    /// <summary>Reconstruire un solde depuis son journal après un écart signalé par le contrôle.</summary>
+    public const string SoldesReconstruire = "Exploitation.Soldes.Reconstruire";
+
     /// <summary>Consulter les disponibilités et les mouvements (UC14).</summary>
     public const string StockConsulter = "Stock.Consulter";
 }

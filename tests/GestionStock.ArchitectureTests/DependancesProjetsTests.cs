@@ -26,6 +26,8 @@ public sealed class DependancesProjetsTests
             "GestionStock.Caisse.Contracts",
             "GestionStock.Credit",
             "GestionStock.Credit.Contracts",
+            "GestionStock.Exploitation",
+            "GestionStock.Exploitation.Contracts",
             "GestionStock.Identite",
             "GestionStock.Identite.Contracts",
             "GestionStock.Inventaire",
