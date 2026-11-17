@@ -102,7 +102,7 @@ Lancement : voir le README, section « Tests ».
 | ENF01, ENF02 | Survente sous réservations, traçabilité des lots | V2 | — |
 | ENF03 | Audit (auteur, heure UTC, document) | V1 | Dom `MouvementStockTests.Le_document_d_origine_et_l_utilisateur_sont_obligatoires` ; StockIT `JournalImmuableTests.Supprimer_un_mouvement_enregistre_est_refuse` ; Api `CaisseTests.Une_remise_exige_la_validation_d_un_responsable_tracee_sur_le_ticket` |
 | ENF04 | Contrôle nocturne des soldes | V1 | E2E `ParcoursAdministrateur.Lance_le_controle_des_soldes_et_consulte_les_sauvegardes` ; StockIT `ControleSoldesTests.Un_solde_fausse_donne_un_ecart_exact_par_grandeur_et_par_emplacement` |
-| ENF05 | Ticket validé en moins d'1 s | V1 | **Aucun** : mesures de l'étape 56 |
+| ENF05 | Ticket validé en moins d'1 s | V1 | Mesure `deploy/volume/mesurer.py` sur le jeu volumineux : 33 ms médiane, 55 ms au 95e centile à l'échelle 0,25 ([performances.md](performances.md)) ; workflow Performances à l'échelle 1 |
 | ENF06 | Comptes nominatifs et rôles | V1, comptes locaux | E2E `ParcoursAdministrateur.Cree_un_compte_que_l_employe_active_puis_le_desactive` ; Api `ComptesTests.Seul_l_administrateur_gere_les_comptes` ; Arch `ConventionsIdentiteTests.Chaque_permission_est_attribuee_a_au_moins_un_role_connu` |
 | ENF07 | Précision des nombres, dates UTC et Douala | V1 | Dom `MouvementStockTests.Une_quantite_a_plus_de_quatre_decimales_est_refusee` ; Dom `MouvementStockTests.Une_date_non_UTC_est_refusee` ; Infra `HorlogeSystemeTests.La_date_du_jour_est_celle_de_Douala` |
 | ENF08 | Hors ligne sans doublon | V1, caisse seule | E2E `ParcoursCaissier.Vend_hors_ligne_puis_synchronise_au_retour_du_reseau` ; Api `HorsLigneTests.Une_vente_rejouee_deux_fois_n_est_enregistree_qu_une_fois_avec_son_numero_et_son_heure` ; Client `TicketLocalTests.Le_plafond_hors_ligne_compte_le_credit_deja_en_file_et_les_remboursements` |
@@ -114,7 +114,6 @@ Lancement : voir le README, section « Tests ».
 
 **À couvrir pendant la tranche 9 :**
 - **RG41** (vente à crédit et sortie de stock) ;
-- **ENF05** (moins d'1 s pour valider un ticket) ;
 - **ENF10** (compression et pagination).
 
 **À trancher avec le client avant d'ajouter des tests :**

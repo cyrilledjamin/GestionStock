@@ -75,6 +75,7 @@ tests/
 deploy/
   docker-compose.yml                 PostgreSQL 17 (db), API (api) et sauvegardes (sauvegarde)
   sauvegarde/                        image et scripts de sauvegarde : sauvegarder.sh, restaurer.sh, boucle.sh
+  volume/                            jeu de données volumineux (generer.sql) et mesures de performance (mesurer.py)
   Dockerfile                         image Linux de l'API
   .env.example                       variables à copier dans deploy/.env
 docs/                                dossier d'analyse, plans des tranches, exploitation.md (sauvegardes, restauration)
@@ -761,6 +762,43 @@ E2E_URL=http://localhost:8080 E2E_ADMIN=admin E2E_MOT_DE_PASSE=<ADMIN_MOT_DE_PAS
 `E2E_TRACES=<dossier>` garde la trace d'un parcours en échec (`playwright show-trace <fichier>.zip`). Correspondance
 entre cas d'utilisation, règles et tests : [docs/recette.md](docs/recette.md).
 
+### Performances (jeu volumineux)
+
+[deploy/volume/generer.sql](deploy/volume/generer.sql) remplit une base de **test** d'un historique réaliste.
+À l'échelle 1, c'est une grosse boutique sur 3 ans :
+
+| Contenu | Volume |
+| --- | --- |
+| Articles | 20 000 |
+| Tickets | 2 000 par jour sur 4 postes, ≈ 2,2 millions |
+| Mouvements de stock | ≈ 6,5 millions |
+| Clients à crédit | 1 000, remboursés chaque mois |
+| Réceptions | 50 fournisseurs, une réception par fournisseur et par mois |
+
+L'échelle réduit le volume par jour, pas la durée. Le jeu reste cohérent :
+- le contrôle des soldes ne trouve aucun écart ;
+- aucun stock ne devient négatif ;
+- la dette de chaque client est égale à ses ventes non remboursées.
+
+Il refuse de s'exécuter deux fois sur la même base. **Ne jamais le lancer sur la base d'une boutique.**
+
+```bash
+docker compose -f deploy/docker-compose.yml exec -T db psql -U gestionstock -d gestionstock -v echelle=0.25 < deploy/volume/generer.sql
+```
+
+[deploy/volume/mesurer.py](deploy/volume/mesurer.py) (Python, bibliothèque standard) mesure :
+- les routes chaudes : médiane, 95e centile, maximum et taille de la réponse ;
+- la validation d'un ticket de 3 lignes (ENF05, moins d'1 s) ;
+- la durée du contrôle des soldes.
+
+```bash
+python3 deploy/volume/mesurer.py --url http://localhost:8080 --mot-de-passe <ADMIN_MOT_DE_PASSE> --sortie mesures.md
+```
+
+Le workflow **Performances** ([.github/workflows/performances.yml](.github/workflows/performances.yml)) fait le tout à
+la demande (onglet Actions, échelle au choix, 1 par défaut). Il publie le tableau dans le résumé de l'exécution.
+Mesures et analyse : [docs/performances.md](docs/performances.md).
+
 ## Intégration continue
 
 [.github/workflows/ci.yml](.github/workflows/ci.yml) s'exécute à chaque push sur `master` et à chaque pull request,
@@ -845,7 +883,7 @@ sur une machine Linux de GitHub qui dispose de Docker :
 | 53 | Vérification, CI, README, démonstration de la tranche 8 | Fait |
 | 54 | Tests de bout en bout par rôle (Playwright) en CI, grille de recette | Fait |
 | 55 | Corrections du check (double clic, confirmations, erreurs, noms, langue de la page) | Fait |
-| 56 | Jeu de données volumineux et mesures de référence | À faire |
+| 56 | Jeu de données volumineux et mesures de référence | Fait |
 | 57 | Performances serveur (index, requêtes, pagination) | À faire |
 | 58 | Performances de la caisse et du client | À faire |
 | 59 | Direction visuelle (maquettes, choix) | À faire |
