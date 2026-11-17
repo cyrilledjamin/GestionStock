@@ -1,6 +1,7 @@
 using GestionStock.Achats;
 using GestionStock.Caisse;
 using GestionStock.Credit;
+using GestionStock.Exploitation;
 using GestionStock.Identite;
 using GestionStock.Infrastructure;
 using GestionStock.Infrastructure.Persistance;
@@ -42,6 +43,7 @@ builder.Services.AddCaisseModule(builder.Configuration);
 builder.Services.AddInventaireModule(builder.Configuration);
 builder.Services.AddRepriseModule(builder.Configuration);
 builder.Services.AddRapportsModule(builder.Configuration);
+builder.Services.AddExploitationModule(builder.Configuration);
 
 var app = builder.Build();
 
@@ -93,6 +95,7 @@ app.MapCaisseEndpoints();
 app.MapInventaireEndpoints();
 app.MapRepriseEndpoints();
 app.MapRapportsEndpoints();
+app.MapExploitationEndpoints();
 
 await app.RunAsync();
 

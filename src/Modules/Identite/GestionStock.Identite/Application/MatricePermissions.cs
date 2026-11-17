@@ -83,6 +83,13 @@ internal static class MatricePermissions
 
             // 8.3 : le Comptable produit les exports. Provisoire : le Gérant aussi (« tous les rapports »).
             [Permissions.ExportsProduire] = [Roles.Comptable, Roles.Gerant],
+
+            // 8.3 : l'Administrateur a les sauvegardes et les paramètres ; le Gérant et le Comptable (lecture de tout)
+            // voient aussi l'état des contrôles et des sauvegardes. Reconstruire un solde est une opération technique,
+            // réservée à l'Administrateur (décision du 17/11/2026).
+            [Permissions.ExploitationConsulter] = [Roles.Administrateur, Roles.Gerant, Roles.Comptable],
+            [Permissions.ControlesLancer] = [Roles.Administrateur],
+            [Permissions.SoldesReconstruire] = [Roles.Administrateur],
         };
 
     /// <summary>Permissions détenues par un utilisateur ayant ces rôles.</summary>

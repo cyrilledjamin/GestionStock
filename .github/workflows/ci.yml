@@ -70,22 +70,34 @@ jobs:
 
       - name: La migration Initial de chaque module est appliquée
         run: |
-          for schema in identite referentiel prix stock achats credit caisse inventaire; do
+          for schema in identite referentiel prix stock achats credit caisse inventaire exploitation; do
             $COMPOSE exec -T db psql -U gestionstock -d gestionstock -tAc \
               "SELECT migration_id FROM $schema.__ef_migrations_history" | tee migrations.txt
             grep -q "_Initial$" migrations.txt
           done
 
-      - name: Les vues de lecture des rapports existent (16)
+      - name: Les vues de lecture publiées existent (18)
         run: |
           for vue in identite.v_utilisateurs referentiel.v_articles caisse.v_tickets caisse.v_lignes_vendues caisse.v_paiements \
                      caisse.v_remboursements_credit caisse.v_sessions credit.v_clients credit.v_operations \
                      credit.v_ventes_credit stock.v_mouvements stock.v_soldes achats.v_receptions achats.v_frais \
-                     achats.v_paiements_fournisseurs caisse.v_anomalies; do
+                     achats.v_paiements_fournisseurs caisse.v_anomalies exploitation.v_ecarts exploitation.v_sauvegardes; do
             $COMPOSE exec -T db psql -U gestionstock -d gestionstock -v ON_ERROR_STOP=1 -tAc "SELECT count(*) FROM $vue" > /dev/null
           done
           # Sans la permission Rapports.Consulter, les rapports sont refusés.
           test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/api/rapports/stock)" = "401"
+
+      - name: Le planificateur (Hangfire) a créé ses tables et s'est déclaré
+        run: |
+          for essai in $(seq 1 15); do
+            serveurs=$($COMPOSE exec -T db psql -U gestionstock -d gestionstock -tAc "SELECT count(*) FROM hangfire.server" 2>/dev/null || echo 0)
+            if [ "${serveurs:-0}" -ge 1 ]; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Aucun serveur Hangfire déclaré."
+          exit 1
 
       - name: Sans jeton, une route métier est refusée (401)
         run: test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/api/identite/moi)" = "401"

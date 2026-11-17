@@ -17,7 +17,7 @@ En cas de doute sur une règle métier, s'y référer ; ne jamais inventer une r
 - Déploiement : Docker Compose (PC serveur en boutique en V1, cloud plus tard).
 
 ## Architecture : monolithe modulaire
-- Modules : Referentiel, Prix, Stock, Achats, Caisse, Credit, Inventaire, Rapports, Identite.
+- Modules : Referentiel, Prix, Stock, Achats, Caisse, Credit, Inventaire, Rapports, Identite, Reprise, Exploitation.
 - Chaque module = `GestionStock.<Module>.Contracts` (public) + `GestionStock.<Module>` (interne :
   dossiers Domain / Application / Infrastructure / Endpoints).
 - Exception : Stock a en plus `GestionStock.Stock.Domain`, en C# pur, sans aucune dépendance.

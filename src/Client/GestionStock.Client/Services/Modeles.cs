@@ -283,6 +283,9 @@ public static class Permissions
     public const string DemarqueDeclarer = "Inventaire.Demarque.Declarer";
     public const string DemarqueValider = "Inventaire.Demarque.Valider";
     public const string RepriseImporter = "Reprise.Importer";
+    public const string ExploitationConsulter = "Exploitation.Consulter";
+    public const string ControlesLancer = "Exploitation.Controles.Lancer";
+    public const string SoldesReconstruire = "Exploitation.Soldes.Reconstruire";
 }
 
 // --- Conditionnements, codes, prix -------------------------------------------------------------------------------

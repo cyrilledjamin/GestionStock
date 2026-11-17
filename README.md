@@ -36,6 +36,10 @@ src/
   Modules/Credit/
     GestionStock.Credit.Contracts    contrat public : IServiceCredit (vente à crédit, remboursement, annulation)
     GestionStock.Credit              clients, plafonds, journal des opérations, imputations, impayés
+  Modules/Exploitation/
+    GestionStock.Exploitation.Contracts  contrat public (vide pour l'instant)
+    GestionStock.Exploitation        contrôle nocturne des soldes (ENF04), suivi des sauvegardes (décision 32),
+                                     planificateur Hangfire (schéma hangfire)
   Modules/Identite/
     GestionStock.Identite.Contracts  contrat public : Roles, Permissions, IValidationResponsable
     GestionStock.Identite            comptes locaux (ASP.NET Core Identity), jetons porteurs, matrice des permissions
@@ -229,6 +233,7 @@ Si le port 5432 est déjà pris (PostgreSQL installé sur le poste), choisir un 
 | `POST /api/caisse/sessions/courante/cloture` | `Caisse.Vendre` | `{ especesComptees, dernierNumero? }` : clôture, écart calculé ; refusée (409 `Caisse.VentesNonSynchronisees`) tant que le dernier ticket numéroté par le poste n'est pas arrivé (RG36) |
 | `GET /api/caisse/anomalies?traitees=` | `Caisse.Sessions.Consulter` | Anomalies de synchronisation des opérations faites hors ligne (7.8) |
 | `POST /api/caisse/anomalies/{id}/traitement` | `Caisse.Anomalies.Traiter` | `{ commentaire }` : traitement par le Gérant, une fois, tracé |
+| `GET /api/exploitation/sauvegardes?type=&nombre=` | `Exploitation.Consulter` | Comptes rendus des sauvegardes (`Locale`, `HorsSite`), du plus récent au plus ancien (50 par défaut, 200 au plus) |
 | `GET /api/caisse/sessions`, `GET /api/caisse/sessions/{id}` | `Caisse.Sessions.Consulter` | Sessions (`?statut=Ouverte|Comptee|Validee`) et leurs totaux |
 | `POST /api/caisse/sessions/{id}/validation` | `Caisse.Sessions.Valider` | Valide une session clôturée et son écart |
 | `POST /api/caisse/tickets` | `Caisse.Vendre` | Vente : `{ idIdempotence, clientId?, lignes: [{ conditionnementId, quantite, remise?, codeScanne? }], paiements: [{ mode, montant, reference? }], validation? }` ; 201, ou 200 si déjà reçue |
@@ -628,6 +633,8 @@ Chaque permission est attribuée à des rôles dans
 | `Achats.Receptions.Saisir`, `Achats.Receptions.Valider` | Magasinier, Gerant *(validation provisoire)* |
 | `Achats.Frais.Saisir` | Comptable, Gerant *(Gérant provisoire)* |
 | `Achats.Paiements.Saisir` | Comptable |
+| `Exploitation.Consulter` | Administrateur, Gerant, Comptable *(contrôle des soldes, sauvegardes)* |
+| `Exploitation.Controles.Lancer`, `Exploitation.Soldes.Reconstruire` | Administrateur |
 
 ## Tests
 
@@ -715,6 +722,12 @@ sur une machine Linux de GitHub qui dispose de Docker :
 | 45 | Hors ligne : vente, avoir, remboursement en file, synchronisation | Fait |
 | 46 | Anomalies de synchronisation à traiter | Fait |
 | 47 | Vérification, CI, README, démonstration de la tranche 7 | Fait |
+| 48 | Exploitation : module, suivi des sauvegardes, planificateur (Hangfire) | Fait |
+| 49 | Exploitation : contrôle des soldes de stock et de crédit par contrat | À faire |
+| 50 | Exploitation : contrôle nocturne, écarts, reconstruction | À faire |
+| 51 | Exploitation : conteneur de sauvegarde (locale horaire, hors site chiffrée) | À faire |
+| 52 | Exploitation : écrans Contrôles et Sauvegardes, accueil | À faire |
+| 53 | Vérification, CI, README, démonstration de la tranche 8 | À faire |
 
 ## Démonstration
 
