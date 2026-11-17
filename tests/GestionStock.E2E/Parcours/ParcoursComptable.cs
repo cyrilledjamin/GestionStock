@@ -35,9 +35,11 @@ public sealed class ParcoursComptable(Navigateur navigateur) : ParcoursBase(navi
         await Bouton("EnregistrerPaiement").ClickAsync();
         await Expect(Page.GetByRole(AriaRole.Heading, new() { Level = 2 }).Filter(new() { HasText = T["DetteFournisseur"] }))
             .ToContainTextAsync(T["StatutDette.PartiellementPayee"]);
+        await CapturerAsync("reception");
 
         await AllerAsync("DettesFournisseurs");
         await Expect(Ligne(reception)).ToBeVisibleAsync();
+        await CapturerAsync("dettes");
 
         // Plafond de crédit (RG38).
         await AllerAsync("Clients");

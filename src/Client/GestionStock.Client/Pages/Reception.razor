@@ -7,19 +7,23 @@
 
 <PageTitle>@Titre · GestionStock</PageTitle>
 
-<p><a href="receptions">← @L["Receptions"]</a></p>
+<p><a href="receptions"><Icone Nom="retour" />@L["Receptions"]</a></p>
 <h1>@Titre</h1>
 
 <Message Texte="@_erreur" />
 <Message Texte="@_succes" Erreur="false" />
 
-@if (_chargee)
+@if (!_chargee)
+{
+    <Chargement />
+}
+else
 {
     @if (Modifiable)
     {
         <form class="fiche" @onsubmit="Enregistrer">
             <div class="grille">
-                <label>@L["Fournisseur"]
+                <Champ Libelle="@L["Fournisseur"]" Requis="true">
                     <select @bind="_fournisseurId" required>
                         <option value="">@L["Choisir"]</option>
                         @foreach (var fournisseur in _fournisseurs)
@@ -27,10 +31,8 @@
                             <option value="@fournisseur.Id">@fournisseur.Nom</option>
                         }
                     </select>
-                </label>
-                <label>@L["BonLivraison"]
-                    <input @bind="_bonLivraison" maxlength="50" />
-                </label>
+                </Champ>
+                <Champ Libelle="@L["BonLivraison"]"><input @bind="_bonLivraison" maxlength="50" /></Champ>
             </div>
 
             <table class="saisie">
@@ -46,18 +48,18 @@
                                 <ChoixArticle Article="ligne.Article" ArticleChanged="a => Choisir(ligne, a)" />
                             </td>
                             <td class="nombre">
-                                <input type="number" min="0" step="@Pas(article)" @bind="ligne.Quantite" required />
+                                <input type="number" min="0" step="@Pas(article)" aria-label="@L["Quantite"]" @bind="ligne.Quantite" required />
                                 <small class="discret">@Format.Unite(article?.UniteStock)</small>
                             </td>
-                            <td class="nombre"><input type="number" min="0" step="any" @bind="ligne.CoutUnitaire" required /></td>
+                            <td class="nombre"><input type="number" min="0" step="any" aria-label="@L["CoutUnitaire"]" @bind="ligne.CoutUnitaire" required /></td>
                             <td class="nombre">@Format.Montant(ligne.Quantite * ligne.CoutUnitaire)</td>
-                            <td><button type="button" class="lien" @onclick="() => _lignes.Remove(ligne)" disabled="@(_lignes.Count == 1)">@L["Retirer"]</button></td>
+                            <td><Bouton Variante="VarianteBouton.Discret" NomIcone="supprimer" Libelle="@L["Retirer"]" Desactive="@(_lignes.Count == 1)" OnClick="() => _lignes.Remove(ligne)" /></td>
                         </tr>
                     }
                 </tbody>
                 <tfoot>
                     <tr>
-                        <td><button type="button" class="lien" @onclick="() => _lignes.Add(new Ligne())">+ @L["AjouterLigne"]</button></td>
+                        <td><Bouton Variante="VarianteBouton.Discret" NomIcone="ajouter" OnClick="() => _lignes.Add(new Ligne())">@L["AjouterLigne"]</Bouton></td>
                         <td></td>
                         <th class="nombre">@L["Total"]</th>
                         <th class="nombre">@Format.Montant(_lignes.Sum(l => l.Quantite * l.CoutUnitaire))</th>
@@ -66,12 +68,12 @@
                 </tfoot>
             </table>
 
-            <p class="discret">@L["ReceptionAide"]</p>
+            <div class="message info" role="status"><Icone Nom="info" /><span>@L["ReceptionAide"]</span></div>
             <div class="actions">
-                <button type="submit" class="principal" disabled="@_enCours">@L["EnregistrerBrouillon"]</button>
+                <Bouton Type="submit" Desactive="_enCours">@L["EnregistrerBrouillon"]</Bouton>
                 @if (_reception is not null && Session.A(Permissions.ReceptionsValider))
                 {
-                    <button type="button" class="valider" disabled="@_enCours" @onclick="Valider">@L["ValiderReception"]</button>
+                    <Bouton Variante="VarianteBouton.Principal" NomIcone="valider" Desactive="_enCours" OnClick="Valider">@L["ValiderReception"]</Bouton>
                 }
             </div>
         </form>
@@ -80,7 +82,7 @@
     {
         <div class="fiche">
             <dl class="grille">
-                <div><dt>@L["Statut"]</dt><dd><span class="pastille @_reception.Statut.ToLowerInvariant()">@L[$"Statut.{_reception.Statut}"]</span></dd></div>
+                <div><dt>@L["Statut"]</dt><dd><Pastille Ton="@Receptions.TonStatut(_reception.Statut)">@L[$"Statut.{_reception.Statut}"]</Pastille></dd></div>
                 <div><dt>@L["Fournisseur"]</dt><dd>@_reception.Fournisseur</dd></div>
                 <div><dt>@L["BonLivraison"]</dt><dd>@(_reception.NumeroBonLivraison ?? "—")</dd></div>
                 <div><dt>@L["SaisiePar"]</dt><dd>@Format.Personne(_reception.Personnel, _reception.CreePar), @Format.Date(_reception.DateCreationUtc)</dd></div>
@@ -90,7 +92,7 @@
                 }
             </dl>
         </div>
-        <table>
+        <div class="tableau"><table>
             <thead>
                 <tr><th>@L["Article"]</th><th class="nombre">@L["Quantite"]</th><th class="nombre">@L["CoutUnitaire"]</th><th class="nombre">@L["Valeur"]</th><th class="nombre">@L["FraisAlloues"]</th><th class="nombre">@L["CoutRevient"]</th></tr>
             </thead>
@@ -110,7 +112,7 @@
             <tfoot>
                 <tr><td colspan="3" class="nombre">@L["Total"]</td><th class="nombre">@Format.Montant(_reception.Valeur)</th><th class="nombre">@Format.Montant(_reception.TotalFrais)</th><th></th></tr>
             </tfoot>
-        </table>
+        </table></div>
     }
 
     @if (_reception is not null)
@@ -126,7 +128,7 @@
                         @foreach (var frais in _reception.Frais)
                         {
                             <tr>
-                                <td>@L[$"TypeFrais.{frais.Type}"] @if (frais.ApresValidation) { <small class="pastille brouillon">@L["Tardif"]</small> }</td>
+                                <td>@L[$"TypeFrais.{frais.Type}"] @if (frais.ApresValidation) { <Pastille Ton="Ton.Attention">@L["Tardif"]</Pastille> }</td>
                                 <td>@frais.Libelle</td>
                                 <td>@L[$"Cle.{frais.Cle}"]</td>
                                 <td class="nombre">@Format.Montant(frais.Montant)</td>
@@ -135,7 +137,7 @@
                                 <td>
                                     @if (!EstValidee && Session.A(Permissions.FraisSaisir))
                                     {
-                                        <button class="lien" @onclick="() => RetirerFrais(frais.Id)">@L["Retirer"]</button>
+                                        <Bouton Variante="VarianteBouton.Discret" NomIcone="supprimer" Desactive="_enCours" OnClick="() => RetirerFrais(frais.Id)">@L["Retirer"]</Bouton>
                                     }
                                 </td>
                             </tr>
@@ -147,25 +149,25 @@
             @if (Session.A(Permissions.FraisSaisir))
             {
                 <form class="grille" @onsubmit="AjouterFrais">
-                    <label>@L["Type"]
+                    <Champ Libelle="@L["Type"]">
                         <select @bind="_fraisType">
                             @foreach (var type in TypesFrais.Tous)
                             {
                                 <option value="@type">@L[$"TypeFrais.{type}"]</option>
                             }
                         </select>
-                    </label>
-                    <label>@L["Montant"] <input type="number" min="0" step="1" @bind="_fraisMontant" required /></label>
-                    <label>@L["Cle"]
+                    </Champ>
+                    <Champ Libelle="@L["Montant"]" Requis="true"><input type="number" min="0" step="1" @bind="_fraisMontant" required /></Champ>
+                    <Champ Libelle="@L["Cle"]">
                         <select @bind="_fraisCle">
                             @foreach (var cle in ClesRepartition.Toutes)
                             {
                                 <option value="@cle">@L[$"Cle.{cle}"]</option>
                             }
                         </select>
-                    </label>
-                    <label>@L["Libelle"] <input @bind="_fraisLibelle" maxlength="100" /></label>
-                    <div class="actions"><button type="submit" class="principal" disabled="@_enCours">@L["AjouterFrais"]</button></div>
+                    </Champ>
+                    <Champ Libelle="@L["Libelle"]"><input @bind="_fraisLibelle" maxlength="100" /></Champ>
+                    <div class="actions"><Bouton Type="submit" Variante="VarianteBouton.Principal" NomIcone="ajouter" Occupe="_enCours">@L["AjouterFrais"]</Bouton></div>
                 </form>
             }
             @if (!EstValidee && _reception.Frais.Count > 0)
@@ -187,10 +189,10 @@
     {
         <section class="fiche">
             <h2>@L["DetteFournisseur"] <Pastille Ton="@(dette.Statut == "Payee" ? Ton.Succes : Ton.Attention)">@L[$"StatutDette.{dette.Statut}"]</Pastille></h2>
-            <div class="tuiles">
-                <div class="tuile chiffre"><span>@L["MontantDu"]</span><strong>@Format.Montant(dette.MontantDu)</strong></div>
-                <div class="tuile chiffre"><span>@L["MontantPaye"]</span><strong>@Format.Montant(dette.MontantPaye)</strong></div>
-                <div class="tuile chiffre"><span>@L["ResteDu"]</span><strong>@Format.Montant(dette.ResteDu)</strong></div>
+            <div class="indicateurs resume">
+                <Indicateur Libelle="@L["MontantDu"]" Valeur="@Format.Montant(dette.MontantDu)" />
+                <Indicateur Libelle="@L["MontantPaye"]" Valeur="@Format.Montant(dette.MontantPaye)" />
+                <Indicateur Libelle="@L["ResteDu"]" Valeur="@Format.Montant(dette.ResteDu)" Ton="@(dette.ResteDu > 0 ? Ton.Attention : Ton.Succes)" />
             </div>
             @if (_dette.Paiements.Count > 0)
             {
@@ -208,12 +210,12 @@
                                 <td class="actions-ligne">
                                     @if (paiement.PaiementAnnuleId is null && !paiement.EstAnnule && Session.A(Permissions.PaiementsFournisseursSaisir))
                                     {
-                                        <input class="motif-refus" placeholder="@L["MotifAnnulation"]" @bind="_motifsAnnulation[paiement.Id]" />
-                                        <button class="lien" @onclick="() => AnnulerPaiement(paiement.Id)">@L["AnnulerPaiement"]</button>
+                                        <input class="motif-refus" placeholder="@L["MotifAnnulation"]" aria-label="@L["MotifAnnulation"]" @bind="_motifsAnnulation[paiement.Id]" />
+                                        <Bouton Variante="VarianteBouton.Discret" Desactive="_enCours" OnClick="() => AnnulerPaiement(paiement.Id)">@L["AnnulerPaiement"]</Bouton>
                                     }
                                     else if (paiement.EstAnnule)
                                     {
-                                        <small class="discret">@L["Annule"]</small>
+                                        <Pastille>@L["Annule"]</Pastille>
                                     }
                                 </td>
                             </tr>
@@ -224,17 +226,17 @@
             @if (dette.ResteDu > 0 && Session.A(Permissions.PaiementsFournisseursSaisir))
             {
                 <form class="grille" @onsubmit="Payer">
-                    <label>@L["Montant"] <input type="number" min="0" step="1" @bind="_paiementMontant" required /></label>
-                    <label>@L["Mode"]
+                    <Champ Libelle="@L["Montant"]" Requis="true"><input type="number" min="0" step="1" @bind="_paiementMontant" required /></Champ>
+                    <Champ Libelle="@L["Mode"]">
                         <select @bind="_paiementMode">
                             @foreach (var mode in ModesPaiementFournisseur.Tous)
                             {
                                 <option value="@mode">@L[$"Mode.{mode}"]</option>
                             }
                         </select>
-                    </label>
-                    <label>@L["Reference"] <input @bind="_paiementReference" maxlength="50" required="@(_paiementMode != "Especes")" /></label>
-                    <div class="actions"><button type="submit" class="valider" disabled="@_enCours">@L["EnregistrerPaiement"]</button></div>
+                    </Champ>
+                    <Champ Libelle="@L["Reference"]" Requis="@(_paiementMode != "Especes")"><input @bind="_paiementReference" maxlength="50" required="@(_paiementMode != "Especes")" /></Champ>
+                    <div class="actions"><Bouton Type="submit" Variante="VarianteBouton.Valider" NomIcone="valider" Occupe="_enCours">@L["EnregistrerPaiement"]</Bouton></div>
                 </form>
             }
         </section>

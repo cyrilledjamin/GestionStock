@@ -10,7 +10,7 @@
     <label class="case"><input type="checkbox" @bind="_inclureInactifs" @bind:after="Charger" /> @L["InclureInactifs"]</label>
     @if (Session.A(Permissions.FournisseursGerer) && _edition is null)
     {
-        <button class="principal" @onclick="() => _edition = new Edition()">@L["NouveauFournisseur"]</button>
+        <Bouton Variante="VarianteBouton.Principal" NomIcone="ajouter" OnClick="() => _edition = new Edition()">@L["NouveauFournisseur"]</Bouton>
     }
 </div>
 
@@ -21,51 +21,39 @@
     <form class="fiche" @onsubmit="Enregistrer">
         <h2>@(_edition.Id is null ? L["NouveauFournisseur"] : _edition.Nom)</h2>
         <div class="grille">
-            <label>@L["Nom"]
-                <input @bind="_edition.Nom" required maxlength="200" />
-            </label>
-            <label>@L["Telephone"]
-                <input @bind="_edition.Telephone" maxlength="30" placeholder="+237 6…" />
-            </label>
+            <Champ Libelle="@L["Nom"]" Requis="true"><input @bind="_edition.Nom" required maxlength="200" /></Champ>
+            <Champ Libelle="@L["Telephone"]"><input @bind="_edition.Telephone" maxlength="30" placeholder="+237 6…" /></Champ>
             @if (_edition.Id is not null)
             {
                 <label class="case"><input type="checkbox" @bind="_edition.Actif" /> @L["Actif"]</label>
             }
         </div>
         <div class="actions">
-            <button type="submit" class="principal" disabled="@_enCours">@L["Enregistrer"]</button>
-            <button type="button" @onclick="() => _edition = null">@L["Annuler"]</button>
+            <Bouton Type="submit" Variante="VarianteBouton.Principal" Occupe="_enCours">@L["Enregistrer"]</Bouton>
+            <Bouton OnClick="() => _edition = null">@L["Annuler"]</Bouton>
         </div>
     </form>
 }
 
-<table>
-    <thead><tr><th>@L["Nom"]</th><th>@L["Telephone"]</th><th>@L["Etat"]</th><th></th></tr></thead>
-    <tbody>
+<Tableau Colonnes="4" Charge="_charge" EstVide="_fournisseurs.Count == 0" TexteVide="@L["AucunFournisseur"]" Legende="@L["Fournisseurs"]">
+    <Entete><th>@L["Nom"]</th><th>@L["Telephone"]</th><th>@L["Etat"]</th><th></th></Entete>
+    <Corps>
         @foreach (var fournisseur in _fournisseurs)
         {
             <tr class="@(fournisseur.Actif ? "" : "inactif")">
-                <td>@fournisseur.Nom</td>
-                <td>@fournisseur.Telephone</td>
-                <td>@(fournisseur.Actif ? L["Actif"] : L["Inactif"])</td>
+                <td data-label="@L["Nom"]"><strong>@fournisseur.Nom</strong></td>
+                <td data-label="@L["Telephone"]">@fournisseur.Telephone</td>
+                <td data-label="@L["Etat"]"><Pastille Ton="@(fournisseur.Actif ? Ton.Succes : Ton.Neutre)">@(fournisseur.Actif ? L["Actif"] : L["Inactif"])</Pastille></td>
                 <td class="actions-ligne">
                     @if (Session.A(Permissions.FournisseursGerer))
                     {
-                        <button class="lien" @onclick="() => _edition = new Edition { Id = fournisseur.Id, Nom = fournisseur.Nom, Telephone = fournisseur.Telephone, Actif = fournisseur.Actif }">@L["Modifier"]</button>
+                        <Bouton Variante="VarianteBouton.Discret" NomIcone="modifier" OnClick="() => _edition = new Edition { Id = fournisseur.Id, Nom = fournisseur.Nom, Telephone = fournisseur.Telephone, Actif = fournisseur.Actif }">@L["Modifier"]</Bouton>
                     }
                 </td>
             </tr>
         }
-        @if (!_charge)
-        {
-            <tr><td colspan="4"><Chargement /></td></tr>
-        }
-        else if (_fournisseurs.Count == 0)
-        {
-            <tr><td colspan="4" class="vide">@L["AucunFournisseur"]</td></tr>
-        }
-    </tbody>
-</table>
+    </Corps>
+</Tableau>
 
 @code {
     // Premier chargement terminé : jusque-là, la liste montre l'attente et non « Aucun… ».

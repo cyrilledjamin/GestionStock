@@ -9,39 +9,31 @@
 <div class="barre">
     @if (Session.A(Permissions.ReceptionsSaisir))
     {
-        <a class="bouton principal" href="receptions/nouvelle">@L["NouvelleReception"]</a>
+        <a class="bouton principal" href="receptions/nouvelle"><Icone Nom="ajouter" />@L["NouvelleReception"]</a>
     }
 </div>
 
 <Message Texte="@_erreur" />
 
-<table class="cartes">
-    <thead>
-        <tr><th>@L["Numero"]</th><th>@L["Date"]</th><th>@L["Fournisseur"]</th><th>@L["BonLivraison"]</th><th class="nombre">@L["Lignes"]</th><th class="nombre">@L["Valeur"]</th><th>@L["Statut"]</th></tr>
-    </thead>
-    <tbody>
+<Tableau Colonnes="7" Charge="_charge" EstVide="_receptions.Count == 0" TexteVide="@L["AucuneReception"]" Legende="@L["Receptions"]">
+    <Entete>
+        <th>@L["Numero"]</th><th>@L["Date"]</th><th>@L["Fournisseur"]</th><th>@L["BonLivraison"]</th><th class="nombre">@L["Lignes"]</th><th class="nombre">@L["Valeur"]</th><th>@L["Statut"]</th>
+    </Entete>
+    <Corps>
         @foreach (var reception in _receptions)
         {
             <tr>
-                <td data-label="@L["Numero"]" class="court"><a href="receptions/@reception.Id">@reception.Numero</a></td>
+                <td data-label="@L["Numero"]" class="court"><a href="receptions/@reception.Id"><code>@reception.Numero</code></a></td>
                 <td data-label="@L["Date"]" class="court">@Format.Date(reception.DateValidationUtc ?? reception.DateCreationUtc)</td>
                 <td data-label="@L["Fournisseur"]">@reception.Fournisseur</td>
                 <td data-label="@L["BonLivraison"]" class="court">@reception.NumeroBonLivraison</td>
                 <td data-label="@L["Lignes"]" class="nombre">@reception.NombreLignes</td>
                 <td data-label="@L["Valeur"]" class="nombre">@Format.Montant(reception.Valeur)</td>
-                <td data-label="@L["Statut"]"><span class="pastille @reception.Statut.ToLowerInvariant()">@L[$"Statut.{reception.Statut}"]</span></td>
+                <td data-label="@L["Statut"]"><Pastille Ton="@TonStatut(reception.Statut)">@L[$"Statut.{reception.Statut}"]</Pastille></td>
             </tr>
         }
-        @if (!_charge)
-        {
-            <tr><td colspan="7"><Chargement /></td></tr>
-        }
-        else if (_receptions.Count == 0)
-        {
-            <tr><td colspan="7" class="vide">@L["AucuneReception"]</td></tr>
-        }
-    </tbody>
-</table>
+    </Corps>
+</Tableau>
 
 @code {
     // Premier chargement terminé : jusque-là, la liste montre l'attente et non « Aucun… ».
@@ -49,6 +41,9 @@
 
     private List<ResumeReception> _receptions = [];
     private string? _erreur;
+
+    /// <summary>Brouillon : reste à valider (orange) ; validée : marchandise entrée en stock (vert).</summary>
+    internal static Ton TonStatut(string statut) => statut == "Validee" ? Ton.Succes : Ton.Attention;
 
     protected override async Task OnInitializedAsync()
     {

@@ -363,6 +363,18 @@ ouvertes, clôtures à valider et écarts cumulés) et des statuts en pastilles 
 en vert) ; caisse avec icônes, boutons de retrait nommés pour les lecteurs d'écran, ouverture, clôture et remboursement
 protégés contre le double appui (bouton occupé pendant l'appel) ; reçu avec impression et PDF en boutons à icône.
 
+**Refonte du stock et des achats** (étape 62) : stock, journal d'un article, articles, fiche article, réceptions,
+fournisseurs, dettes, inventaires et démarque passent aux composants du système de design. Listes en `Tableau`
+(attente puis liste, cartes sur téléphone, total en pied) ; recherches avec icône et nom accessible ; chiffres clés en
+indicateurs (journal : physique en rouge s'il est négatif ; dette : reste dû en orange ; inventaire : articles comptés,
+valeur des écarts) ; statuts en pastilles (réception en brouillon en orange, validée en vert ; frais tardif ; paiement
+annulé ; article ou fournisseur actif ou inactif) ; formulaires en `Champ` (astérisque sur les champs obligatoires) ;
+champs de saisie dans les lignes nommés (quantité, coût, prix, date d'effet, motif, comptage) ; boutons « ✕ » remplacés
+par des boutons à icône nommés ; annulation d'inventaire en bouton rouge. Toutes les actions irréversibles de ces écrans
+(validation de réception et d'inventaire, retrait de frais, annulation de paiement, démarque, désactivation d'un code)
+passent par le dialogue de confirmation ; les ajouts de la fiche article et les créations d'inventaire sont protégés
+contre le double clic.
+
 **Identité et finitions** : nom de la boutique (et logo s'il est configuré) dans le menu, à la connexion et sur le
 reçu ; quantités sans zéros inutiles (« 20 kg », « 2,5 kg ») ; unités courantes traduites en anglais (boîte → box,
 pièce → piece, sac → bag…, liste fixe côté client ; une unité absente de la liste reste telle quelle) ; caissier
@@ -916,7 +928,7 @@ sur une machine Linux de GitHub qui dispose de Docker :
 | 59 | Direction visuelle (maquettes de deux directions, choix : « sobre et dense ») | Fait |
 | 60 | Système de design : jetons, police embarquée, composants, dialogue de confirmation, guide de style | Fait |
 | 61 | Refonte : caisse et pilotage | Fait |
-| 62 | Refonte : stock et achats | À faire |
+| 62 | Refonte : stock et achats | Fait |
 | 63 | Refonte : le reste, accessibilité | À faire |
 | 64 | Vérification, CI, README, démonstration de la tranche 9 | À faire |
 

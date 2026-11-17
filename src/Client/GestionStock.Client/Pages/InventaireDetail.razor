@@ -6,17 +6,23 @@
 
 <PageTitle>@(_detail?.Inventaire.Numero ?? L["Inventaires"]) · GestionStock</PageTitle>
 
-<p><a href="inventaires">← @L["Inventaires"]</a></p>
+<p><a href="inventaires"><Icone Nom="retour" />@L["Inventaires"]</a></p>
 <Message Texte="@_erreur" />
 <Message Texte="@_succes" Erreur="false" />
 
-@if (_detail is { Inventaire: var inventaire })
+@if (_detail is null && _erreur is null)
 {
-    <h1>@inventaire.Numero <small class="discret">@L[$"TypeInventaire.{inventaire.Type}"] · @L[$"StatutInventaire.{inventaire.Statut}"]</small></h1>
+    <Chargement />
+}
+else if (_detail is { Inventaire: var inventaire })
+{
+    <h1>@inventaire.Numero <small class="discret">@L[$"TypeInventaire.{inventaire.Type}"]</small>
+        <Pastille Ton="@(inventaire.Statut switch { "EnCours" => Ton.Attention, "Annule" => Ton.Neutre, _ => Ton.Succes })">@L[$"StatutInventaire.{inventaire.Statut}"]</Pastille></h1>
 
-    <div class="tuiles">
-        <div class="tuile chiffre"><span>@L["Comptes"]</span><strong>@inventaire.NombreComptees / @inventaire.NombreLignes</strong></div>
-        <div class="tuile chiffre"><span>@L["ValeurEcarts"]</span><strong>@Format.Montant(_detail.ValeurEcarts)</strong></div>
+    <div class="indicateurs resume">
+        <Indicateur Libelle="@L["Comptes"]" Valeur="@($"{inventaire.NombreComptees} / {inventaire.NombreLignes}")"
+                    Ton="@(inventaire.NombreComptees < inventaire.NombreLignes ? Ton.Attention : Ton.Succes)" />
+        <Indicateur Libelle="@L["ValeurEcarts"]" Valeur="@Format.Montant(_detail.ValeurEcarts)" Ton="@(_detail.ValeurEcarts < 0 ? Ton.Danger : Ton.Neutre)" />
     </div>
 
     @if (EnCours)
@@ -29,17 +35,17 @@
             <label class="case"><input type="checkbox" @bind="_seulementNonComptes" /> @L["SeulementNonComptes"]</label>
             @if (Session.A(Permissions.InventaireValider))
             {
-                <button class="valider" disabled="@_enCours" @onclick="Valider">@L["ValiderInventaire"]</button>
+                <Bouton Variante="VarianteBouton.Principal" NomIcone="valider" Desactive="_enCours" OnClick="Valider">@L["ValiderInventaire"]</Bouton>
             }
             @if (Session.A(Permissions.InventaireCompter))
             {
-                <button disabled="@_enCours" @onclick="Annuler">@L["AnnulerInventaire"]</button>
+                <Bouton Variante="VarianteBouton.Danger" NomIcone="fermer" Desactive="_enCours" OnClick="Annuler">@L["AnnulerInventaire"]</Bouton>
             }
         </div>
-        <p class="discret">@L["InventaireAide"]</p>
+        <div class="message info" role="status"><Icone Nom="info" /><span>@L["InventaireAide"]</span></div>
     }
 
-    <table class="saisie">
+    <div class="tableau"><table class="saisie">
         <thead>
             <tr>
                 <th>@L["Code"]</th><th>@L["Libelle"]</th><th class="nombre">@L["Theorique"]</th><th class="nombre">@L["Compte"]</th>
@@ -51,24 +57,24 @@
             {
                 <tr class="@(ligne.Ecart < 0 ? "negatif" : "")">
                     <td><code>@ligne.CodeArticle</code></td>
-                    <td>@ligne.Libelle <small class="discret">@Format.Unite(ligne.UniteStock)</small></td>
+                    <td><strong>@ligne.Libelle</strong> <small class="discret">@Format.Unite(ligne.UniteStock)</small></td>
                     <td class="nombre">@(ligne.QuantiteTheorique is { } t ? Format.Quantite(t, ligne.PrecisionQuantite) : "—")</td>
                     <td class="nombre">
                         @if (EnCours && Session.A(Permissions.InventaireCompter))
                         {
-                            <input type="number" min="0" step="@Pas(ligne)" @bind="_saisies[ligne.ArticleId]" />
+                            <input type="number" min="0" step="@Pas(ligne)" aria-label="@L["Compte"]" @bind="_saisies[ligne.ArticleId]" />
                         }
                         else
                         {
                             @(ligne.QuantiteComptee is { } c ? Format.Quantite(c, ligne.PrecisionQuantite) : "—")
                         }
                     </td>
-                    <td class="nombre">@(ligne.Ecart is { } e ? (e > 0 ? "+" : "") + Format.Quantite(e, ligne.PrecisionQuantite) : "")</td>
+                    <td class="nombre @(ligne.Ecart < 0 ? "sortie" : ligne.Ecart > 0 ? "entree" : "")">@(ligne.Ecart is { } e ? (e > 0 ? "+" : "") + Format.Quantite(e, ligne.PrecisionQuantite) : "")</td>
                     <td class="nombre">@(ligne.ValeurEcart is { } v ? Format.Montant(v) : "")</td>
                     <td>
                         @if (EnCours && Session.A(Permissions.InventaireCompter))
                         {
-                            <input type="checkbox" @bind="_freintes[ligne.ArticleId]" title="@L["FreinteAide"]" />
+                            <input type="checkbox" @bind="_freintes[ligne.ArticleId]" title="@L["FreinteAide"]" aria-label="@L["Freinte"]" />
                         }
                         else if (ligne.MotifEcart == "Freinte")
                         {
@@ -78,7 +84,7 @@
                     <td>
                         @if (EnCours && Session.A(Permissions.InventaireCompter))
                         {
-                            <button class="lien" @onclick="() => Enregistrer(ligne.ArticleId)">@L["Enregistrer"]</button>
+                            <Bouton Variante="VarianteBouton.Discret" NomIcone="valider" OnClick="() => Enregistrer(ligne.ArticleId)">@L["Enregistrer"]</Bouton>
                         }
                     </td>
                 </tr>
@@ -88,7 +94,7 @@
                 <tr><td colspan="8" class="vide">@L["AucunArticleACompter"]</td></tr>
             }
         </tbody>
-    </table>
+    </table></div>
 }
 
 @code {

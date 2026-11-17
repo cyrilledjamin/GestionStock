@@ -7,12 +7,15 @@
 
 <h1>@L["Articles"]</h1>
 
-<div class="barre">
-    <input type="search" placeholder="@L["Rechercher"]" @bind="_recherche" @bind:event="oninput" @bind:after="RechercherDiffere" />
+<div class="barre" role="search">
+    <div class="champ-recherche">
+        <Icone Nom="rechercher" />
+        <input type="search" placeholder="@L["Rechercher"]" aria-label="@L["Rechercher"]" @bind="_recherche" @bind:event="oninput" @bind:after="RechercherDiffere" />
+    </div>
     <label class="case"><input type="checkbox" @bind="_inclureInactifs" @bind:after="Charger" /> @L["InclureInactifs"]</label>
     @if (Session.A(Permissions.ArticlesGerer) && _edition is null)
     {
-        <button class="principal" @onclick="Nouveau">@L["NouvelArticle"]</button>
+        <Bouton Variante="VarianteBouton.Principal" NomIcone="ajouter" OnClick="Nouveau">@L["NouvelArticle"]</Bouton>
     }
 </div>
 
@@ -23,26 +26,18 @@
     <form class="fiche" @onsubmit="Enregistrer">
         <h2>@(_edition.Id is null ? L["NouvelArticle"] : L["ModifierArticle", _edition.Code])</h2>
         <div class="grille">
-            <label>@L["Code"]
-                <input @bind="_edition.Code" disabled="@(_edition.Id is not null)" required maxlength="50" />
-            </label>
-            <label>@L["Libelle"]
-                <input @bind="_edition.Libelle" required maxlength="200" />
-            </label>
-            <label>@L["LibelleTraduit"]
-                <input @bind="_edition.LibelleTraduit" maxlength="200" />
-            </label>
-            <label>@L["UniteStock"]
-                <input @bind="_edition.UniteStock" disabled="@(_edition.Id is not null)" required maxlength="20" placeholder="@L["UniteExemple"]" />
-            </label>
-            <label>@L["Precision"]
+            <Champ Libelle="@L["Code"]" Requis="true"><input @bind="_edition.Code" disabled="@(_edition.Id is not null)" required maxlength="50" /></Champ>
+            <Champ Libelle="@L["Libelle"]" Requis="true"><input @bind="_edition.Libelle" required maxlength="200" /></Champ>
+            <Champ Libelle="@L["LibelleTraduit"]"><input @bind="_edition.LibelleTraduit" maxlength="200" /></Champ>
+            <Champ Libelle="@L["UniteStock"]" Requis="true"><input @bind="_edition.UniteStock" disabled="@(_edition.Id is not null)" required maxlength="20" placeholder="@L["UniteExemple"]" /></Champ>
+            <Champ Libelle="@L["Precision"]">
                 <select @bind="_edition.PrecisionQuantite" disabled="@(_edition.Id is not null)">
                     <option value="0">@L["Precision0"]</option>
                     <option value="1">1</option>
                     <option value="2">2</option>
                     <option value="3">@L["Precision3"]</option>
                 </select>
-            </label>
+            </Champ>
             @if (_edition.Id is not null)
             {
                 <label class="case"><input type="checkbox" @bind="_edition.Actif" /> @L["Actif"]</label>
@@ -50,20 +45,18 @@
         </div>
         @if (_edition.Id is not null)
         {
-            <p class="discret">@L["ArticleFige"]</p>
+            <div class="message info" role="status"><Icone Nom="info" /><span>@L["ArticleFige"]</span></div>
         }
         <div class="actions">
-            <button type="submit" class="principal" disabled="@_enCours">@L["Enregistrer"]</button>
-            <button type="button" @onclick="() => _edition = null">@L["Annuler"]</button>
+            <Bouton Type="submit" Variante="VarianteBouton.Principal" Occupe="_enCours">@L["Enregistrer"]</Bouton>
+            <Bouton OnClick="() => _edition = null">@L["Annuler"]</Bouton>
         </div>
     </form>
 }
 
-<table class="cartes">
-    <thead>
-        <tr><th>@L["Code"]</th><th>@L["Libelle"]</th><th>@L["UniteStock"]</th><th class="nombre">@L["Precision"]</th><th>@L["Etat"]</th><th></th></tr>
-    </thead>
-    <tbody>
+<Tableau Colonnes="6" Charge="_charge" EstVide="_articles.Count == 0" TexteVide="@L["AucunArticle"]" Legende="@L["Articles"]">
+    <Entete><th>@L["Code"]</th><th>@L["Libelle"]</th><th>@L["UniteStock"]</th><th class="nombre">@L["Precision"]</th><th>@L["Etat"]</th><th></th></Entete>
+    <Corps>
         @foreach (var article in _articles)
         {
             <tr class="@(article.Actif ? "" : "inactif")">
@@ -71,29 +64,21 @@
                 <td data-label="@L["Libelle"]">@article.Libelle @if (article.LibelleTraduit is not null) { <small class="discret"> · @article.LibelleTraduit</small> }</td>
                 <td data-label="@L["UniteStock"]">@Format.Unite(article.UniteStock)</td>
                 <td data-label="@L["Precision"]" class="nombre">@article.PrecisionQuantite</td>
-                <td data-label="@L["Etat"]">@(article.Actif ? L["Actif"] : L["Inactif"])</td>
+                <td data-label="@L["Etat"]"><Pastille Ton="@(article.Actif ? Ton.Succes : Ton.Neutre)">@(article.Actif ? L["Actif"] : L["Inactif"])</Pastille></td>
                 <td class="actions-ligne">
                     @if (Session.A(Permissions.StockConsulter))
                     {
-                        <a href="stock/@article.Id">@L["Journal"]</a>
+                        <a class="bouton bouton-discret" href="stock/@article.Id"><Icone Nom="stock" />@L["Journal"]</a>
                     }
                     @if (Session.A(Permissions.ArticlesGerer))
                     {
-                        <button class="lien" @onclick="() => Modifier(article)">@L["Modifier"]</button>
+                        <Bouton Variante="VarianteBouton.Discret" NomIcone="modifier" OnClick="() => Modifier(article)">@L["Modifier"]</Bouton>
                     }
                 </td>
             </tr>
         }
-        @if (!_charge)
-        {
-            <tr><td colspan="6"><Chargement /></td></tr>
-        }
-        else if (_articles.Count == 0)
-        {
-            <tr><td colspan="6" class="vide">@L["AucunArticle"]</td></tr>
-        }
-    </tbody>
-</table>
+    </Corps>
+</Tableau>
 @if (_tronquee)
 {
     <p class="discret">@L["ListeTronquee", TailleListe]</p>

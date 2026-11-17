@@ -12,17 +12,22 @@
 
 <Message Texte="@_erreur" />
 
-@if (_dettes is not null)
+@if (!_charge)
 {
-    <div class="tuiles">
-        <div class="tuile chiffre"><span>@L["ResteDu"]</span><strong>@Format.Montant(_dettes.Fournisseurs.Sum(f => f.ResteDu))</strong></div>
-        <div class="tuile chiffre"><span>@L["Fournisseurs"]</span><strong>@_dettes.Fournisseurs.Count</strong></div>
+    <Chargement />
+}
+else if (_dettes is not null)
+{
+    var resteDu = _dettes.Fournisseurs.Sum(f => f.ResteDu);
+    <div class="indicateurs resume">
+        <Indicateur Libelle="@L["ResteDu"]" Valeur="@Format.Montant(resteDu)" Ton="@(resteDu > 0 ? Ton.Attention : Ton.Succes)" />
+        <Indicateur Libelle="@L["Fournisseurs"]" Valeur="@_dettes.Fournisseurs.Count.ToString(System.Globalization.CultureInfo.CurrentCulture)" />
     </div>
 
     <h2>@L["ParFournisseur"]</h2>
-    <table class="cartes">
-        <thead><tr><th>@L["Fournisseur"]</th><th class="nombre">@L["Receptions"]</th><th class="nombre">@L["MontantDu"]</th><th class="nombre">@L["MontantPaye"]</th><th class="nombre">@L["ResteDu"]</th></tr></thead>
-        <tbody>
+    <Tableau Colonnes="5" EstVide="_dettes.Fournisseurs.Count == 0" TexteVide="@L["AucuneDette"]" Legende="@L["ParFournisseur"]">
+        <Entete><th>@L["Fournisseur"]</th><th class="nombre">@L["Receptions"]</th><th class="nombre">@L["MontantDu"]</th><th class="nombre">@L["MontantPaye"]</th><th class="nombre">@L["ResteDu"]</th></Entete>
+        <Corps>
             @foreach (var fournisseur in _dettes.Fournisseurs)
             {
                 <tr>
@@ -33,25 +38,17 @@
                     <td data-label="@L["ResteDu"]" class="nombre"><strong>@Format.Montant(fournisseur.ResteDu)</strong></td>
                 </tr>
             }
-            @if (!_charge)
-            {
-                <tr><td colspan="5"><Chargement /></td></tr>
-            }
-            else if (_dettes.Fournisseurs.Count == 0)
-            {
-                <tr><td colspan="5" class="vide">@L["AucuneDette"]</td></tr>
-            }
-        </tbody>
-    </table>
+        </Corps>
+    </Tableau>
 
     <h2>@L["ParReception"]</h2>
-    <table class="cartes">
-        <thead><tr><th>@L["Numero"]</th><th>@L["Date"]</th><th>@L["Fournisseur"]</th><th>@L["BonLivraison"]</th><th class="nombre">@L["MontantDu"]</th><th class="nombre">@L["MontantPaye"]</th><th class="nombre">@L["ResteDu"]</th><th>@L["Statut"]</th></tr></thead>
-        <tbody>
+    <Tableau Colonnes="8" EstVide="_dettes.Receptions.Count == 0" TexteVide="@L["AucuneDette"]" Legende="@L["ParReception"]">
+        <Entete><th>@L["Numero"]</th><th>@L["Date"]</th><th>@L["Fournisseur"]</th><th>@L["BonLivraison"]</th><th class="nombre">@L["MontantDu"]</th><th class="nombre">@L["MontantPaye"]</th><th class="nombre">@L["ResteDu"]</th><th>@L["Statut"]</th></Entete>
+        <Corps>
             @foreach (var dette in _dettes.Receptions)
             {
                 <tr>
-                    <td data-label="@L["Numero"]" class="court"><a href="receptions/@dette.ReceptionId">@dette.Numero</a></td>
+                    <td data-label="@L["Numero"]" class="court"><a href="receptions/@dette.ReceptionId"><code>@dette.Numero</code></a></td>
                     <td data-label="@L["Date"]" class="court">@Format.Date(dette.DateValidationUtc)</td>
                     <td data-label="@L["Fournisseur"]">@dette.Fournisseur</td>
                     <td data-label="@L["BonLivraison"]">@dette.NumeroBonLivraison</td>
@@ -61,16 +58,8 @@
                     <td data-label="@L["Statut"]"><Pastille Ton="@(dette.Statut == "Payee" ? Ton.Succes : Ton.Attention)">@L[$"StatutDette.{dette.Statut}"]</Pastille></td>
                 </tr>
             }
-            @if (!_charge)
-            {
-                <tr><td colspan="8"><Chargement /></td></tr>
-            }
-            else if (_dettes.Receptions.Count == 0)
-            {
-                <tr><td colspan="8" class="vide">@L["AucuneDette"]</td></tr>
-            }
-        </tbody>
-    </table>
+        </Corps>
+    </Tableau>
 }
 
 @code {

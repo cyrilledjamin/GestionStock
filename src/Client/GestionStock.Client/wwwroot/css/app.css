@@ -325,6 +325,9 @@ a.indicateur:hover { border-color: var(--accent); box-shadow: var(--ombre-haute)
 .entete-caisse { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--e-4); }
 .entete-caisse .actions { margin: 0; }
 .caisse { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: var(--e-5); align-items: start; }
+.champ-recherche { position: relative; display: flex; align-items: center; flex: 1 1 18rem; max-width: 28rem; }
+.champ-recherche > .icone { position: absolute; left: var(--e-3); color: var(--discret); pointer-events: none; }
+.champ-recherche input { width: 100%; padding-left: 2.5rem; }
 .champ-scan { position: relative; display: flex; align-items: center; }
 .champ-scan > .icone { position: absolute; left: var(--e-3); color: var(--accent); pointer-events: none; }
 .champ-scan input { width: 100%; font-size: var(--t-l); min-height: 3.5rem; padding-left: 2.75rem; padding-right: 3.5rem; }

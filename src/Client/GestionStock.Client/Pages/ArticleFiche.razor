@@ -5,27 +5,29 @@
 
 <PageTitle>@(_article?.Code ?? L["Article"]) · GestionStock</PageTitle>
 
-<p><a href="articles">← @L["Articles"]</a></p>
+<p><a href="articles"><Icone Nom="retour" />@L["Articles"]</a></p>
 <Message Texte="@_erreur" />
 <Message Texte="@_succes" Erreur="false" />
 
-@if (_article is not null)
+@if (_article is null && _erreur is null)
+{
+    <Chargement />
+}
+else if (_article is not null)
 {
     <h1><code>@_article.Code</code> @Format.Libelle(_article)</h1>
     <p class="discret">@L["UniteStock"] : @Format.Unite(_article.UniteStock) · @L["Precision"] : @_article.PrecisionQuantite</p>
 
     <h2>@L["ConditionnementsEtPrix"]</h2>
-    <table class="fiche-article">
-        <thead>
-            <tr><th>@L["Conditionnement"]</th><th class="nombre">@L["Contenu"]</th><th>@L["Codes"]</th><th class="nombre">@L["PrixActuel"]</th><th>@L["PrixProgramme"]</th><th></th></tr>
-        </thead>
-        <tbody>
+    <Tableau Colonnes="6" EstVide="_conditionnements.Count == 0" TexteVide="@L["AucunConditionnement"]" Legende="@L["ConditionnementsEtPrix"]">
+        <Entete><th>@L["Conditionnement"]</th><th class="nombre">@L["Contenu"]</th><th>@L["Codes"]</th><th class="nombre">@L["PrixActuel"]</th><th>@L["PrixProgramme"]</th><th></th></Entete>
+        <Corps>
             @foreach (var conditionnement in _conditionnements)
             {
                 var prix = _prix.FirstOrDefault(p => p.ConditionnementId == conditionnement.Id);
                 <tr class="@(conditionnement.Actif ? "" : "inactif")">
-                    <td>
-                        @conditionnement.Libelle <small class="discret">@L[$"Niveau.{conditionnement.Niveau}"]</small>
+                    <td data-label="@L["Conditionnement"]">
+                        <strong>@conditionnement.Libelle</strong> <small class="discret">@L[$"Niveau.{conditionnement.Niveau}"]</small>
                         @if (Session.A(Permissions.ArticlesGerer) && conditionnement.Actif)
                         {
                             @* Grille d'articles rapides de la caisse : choix du Gérant (articles sans code-barres, au poids…). *@
@@ -36,32 +38,32 @@
                         }
                         else if (conditionnement.VenteRapide)
                         {
-                            <small class="pastille validee">@L["VenteRapide"]</small>
+                            <Pastille Ton="Ton.Succes">@L["VenteRapide"]</Pastille>
                         }
                     </td>
-                    <td class="nombre">@Format.Quantite(conditionnement.QuantiteUniteStock) @Format.Unite(_article.UniteStock)</td>
-                    <td>
+                    <td data-label="@L["Contenu"]" class="nombre">@Format.Quantite(conditionnement.QuantiteUniteStock) @Format.Unite(_article.UniteStock)</td>
+                    <td data-label="@L["Codes"]">
                         @foreach (var codeBarres in conditionnement.Codes.Where(c => c.Actif))
                         {
                             <div class="code">
                                 <code>@codeBarres.Valeur</code>
                                 @if (Session.A(Permissions.ArticlesGerer))
                                 {
-                                    <button class="lien" title="@L["DesactiverCode"]" @onclick="() => DesactiverCode(codeBarres.Id)">✕</button>
+                                    <Bouton Variante="VarianteBouton.Discret" NomIcone="fermer" Libelle="@L["DesactiverCode"]" OnClick="() => DesactiverCode(codeBarres.Id)" />
                                 }
                             </div>
                         }
                         @if (Session.A(Permissions.ArticlesGerer) && conditionnement.Actif)
                         {
                             <div class="code-ajout">
-                                <input placeholder="@L["CodeBarresAide"]" @bind="_nouveauxCodes[conditionnement.Id]" />
-                                <button class="lien" @onclick="() => AjouterCode(conditionnement.Id)">@L["Ajouter"]</button>
-                                <button class="lien" @onclick="() => GenererCode(conditionnement.Id)">@L["GenererCodeInterne"]</button>
+                                <input placeholder="@L["CodeBarresAide"]" aria-label="@L["CodeBarresAide"]" @bind="_nouveauxCodes[conditionnement.Id]" />
+                                <Bouton Variante="VarianteBouton.Discret" NomIcone="ajouter" Desactive="_enCours" OnClick="() => AjouterCode(conditionnement.Id)">@L["Ajouter"]</Bouton>
+                                <Bouton Variante="VarianteBouton.Discret" Desactive="_enCours" OnClick="() => GenererCode(conditionnement.Id)">@L["GenererCodeInterne"]</Bouton>
                             </div>
                         }
                     </td>
-                    <td class="nombre">@(prix?.PrixTtc is { } p ? Format.Montant(p) : "—")</td>
-                    <td>
+                    <td data-label="@L["PrixActuel"]" class="nombre">@(prix?.PrixTtc is { } p ? Format.Montant(p) : "—")</td>
+                    <td data-label="@L["PrixProgramme"]">
                         @if (prix?.ProchainPrixTtc is { } prochain)
                         {
                             <span>@Format.Montant(prochain) <small class="discret">@L["ALaDate", prix.ProchaineValidite!.Value.ToString("d", CultureInfo.CurrentCulture)]</small></span>
@@ -71,34 +73,34 @@
                         @if (Session.A(Permissions.PrixGerer) && conditionnement.Actif)
                         {
                             <div class="code-ajout">
-                                <input type="number" min="1" step="1" placeholder="@L["NouveauPrix"]" @bind="_nouveauxPrix[conditionnement.Id]" />
-                                <input type="date" @bind="_datesPrix[conditionnement.Id]" />
-                                <button class="lien" @onclick="() => FixerPrix(conditionnement.Id)">@L["Fixer"]</button>
+                                <input type="number" min="1" step="1" placeholder="@L["NouveauPrix"]" aria-label="@L["NouveauPrix"]" @bind="_nouveauxPrix[conditionnement.Id]" />
+                                <input type="date" aria-label="@L["DebutValidite"]" @bind="_datesPrix[conditionnement.Id]" />
+                                <Bouton Variante="VarianteBouton.Valider" Desactive="_enCours" OnClick="() => FixerPrix(conditionnement.Id)">@L["Fixer"]</Bouton>
                             </div>
                         }
                     </td>
                 </tr>
             }
-        </tbody>
-    </table>
+        </Corps>
+    </Tableau>
 
     @if (Session.A(Permissions.ArticlesGerer))
     {
         <form class="fiche" @onsubmit="AjouterConditionnement">
             <h2>@L["NouveauConditionnement"]</h2>
             <div class="grille">
-                <label>@L["Libelle"] <input @bind="_libelle" required maxlength="50" placeholder="@L["ConditionnementExemple"]" /></label>
-                <label>@L["Niveau"]
+                <Champ Libelle="@L["Libelle"]" Requis="true"><input @bind="_libelle" required maxlength="50" placeholder="@L["ConditionnementExemple"]" /></Champ>
+                <Champ Libelle="@L["Niveau"]">
                     <select @bind="_niveau">
                         @foreach (var niveau in new[] { "Pack", "Carton", "Sac", "Palette" })
                         {
                             <option value="@niveau">@L[$"Niveau.{niveau}"]</option>
                         }
                     </select>
-                </label>
-                <label>@L["Contenu"] (@Format.Unite(_article.UniteStock)) <input type="number" min="0" step="any" @bind="_facteur" required /></label>
+                </Champ>
+                <Champ Libelle="@($"{L["Contenu"]} ({Format.Unite(_article.UniteStock)})")" Requis="true"><input type="number" min="0" step="any" @bind="_facteur" required /></Champ>
             </div>
-            <div class="actions"><button type="submit" class="principal">@L["Ajouter"]</button></div>
+            <div class="actions"><Bouton Type="submit" Variante="VarianteBouton.Principal" NomIcone="ajouter" Occupe="_enCours">@L["Ajouter"]</Bouton></div>
         </form>
     }
 }
@@ -138,9 +140,27 @@
         }
     }
 
-    private async Task Executer<T>(Task<Resultat<T>> appel, string succes)
+    private bool _enCours;
+
+    /// <summary>Un seul envoi à la fois (boutons désactivés pendant l'appel) : un double clic n'ajoute rien deux fois.</summary>
+    private async Task Executer<T>(Func<Task<Resultat<T>>> appel, string succes)
     {
-        var resultat = await appel;
+        if (_enCours)
+        {
+            return;
+        }
+
+        _enCours = true;
+        Resultat<T> resultat;
+        try
+        {
+            resultat = await appel();
+        }
+        finally
+        {
+            _enCours = false;
+        }
+
         _erreur = resultat.Erreur;
         _succes = resultat.Reussi ? succes : null;
         if (resultat.Reussi)
@@ -151,7 +171,7 @@
 
     private async Task AjouterConditionnement()
     {
-        await Executer(Api.PostAsync<Conditionnement>($"api/referentiel/articles/{Id}/conditionnements", new { Libelle = _libelle, Niveau = _niveau, QuantiteUniteStock = _facteur }), L["ConditionnementAjoute"]);
+        await Executer(() => Api.PostAsync<Conditionnement>($"api/referentiel/articles/{Id}/conditionnements", new { Libelle = _libelle, Niveau = _niveau, QuantiteUniteStock = _facteur }), L["ConditionnementAjoute"]);
         if (_erreur is null)
         {
             _libelle = "";
@@ -161,7 +181,7 @@
 
     private async Task AjouterCode(Guid conditionnement)
     {
-        await Executer(Api.PostAsync<Conditionnement>($"api/referentiel/conditionnements/{conditionnement}/codes", new { Valeur = _nouveauxCodes[conditionnement] ?? "" }), L["CodeAjoute"]);
+        await Executer(() => Api.PostAsync<Conditionnement>($"api/referentiel/conditionnements/{conditionnement}/codes", new { Valeur = _nouveauxCodes[conditionnement] ?? "" }), L["CodeAjoute"]);
         if (_erreur is null)
         {
             _nouveauxCodes[conditionnement] = null;
@@ -169,11 +189,11 @@
     }
 
     private Task ChoisirVenteRapide(Guid conditionnement, bool venteRapide) =>
-        Executer(Api.PutAsync<Conditionnement>($"api/referentiel/conditionnements/{conditionnement}/vente-rapide", new { VenteRapide = venteRapide }),
+        Executer(() => Api.PutAsync<Conditionnement>($"api/referentiel/conditionnements/{conditionnement}/vente-rapide", new { VenteRapide = venteRapide }),
             venteRapide ? L["VenteRapideAjoutee"] : L["VenteRapideRetiree"]);
 
     private Task GenererCode(Guid conditionnement) =>
-        Executer(Api.PostAsync<Conditionnement>($"api/referentiel/conditionnements/{conditionnement}/codes/interne"), L["CodeAjoute"]);
+        Executer(() => Api.PostAsync<Conditionnement>($"api/referentiel/conditionnements/{conditionnement}/codes/interne"), L["CodeAjoute"]);
 
     private async Task DesactiverCode(Guid code)
     {
@@ -182,12 +202,12 @@
             return;
         }
 
-        await Executer(Api.PostAsync<Conditionnement>($"api/referentiel/codes/{code}/desactivation"), L["CodeDesactive"]);
+        await Executer(() => Api.PostAsync<Conditionnement>($"api/referentiel/codes/{code}/desactivation"), L["CodeDesactive"]);
     }
 
     private async Task FixerPrix(Guid conditionnement)
     {
-        await Executer(Api.PostAsync<object>($"api/prix/conditionnements/{conditionnement}", new { PrixTtc = _nouveauxPrix[conditionnement] ?? 0, DebutValidite = _datesPrix[conditionnement] }), L["PrixFixe"]);
+        await Executer(() => Api.PostAsync<object>($"api/prix/conditionnements/{conditionnement}", new { PrixTtc = _nouveauxPrix[conditionnement] ?? 0, DebutValidite = _datesPrix[conditionnement] }), L["PrixFixe"]);
         if (_erreur is null)
         {
             _nouveauxPrix[conditionnement] = null;
