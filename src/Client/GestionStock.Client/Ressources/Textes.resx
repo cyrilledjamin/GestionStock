@@ -645,4 +645,12 @@
   <data name="Traitee" xml:space="preserve"><value>Traitée</value></data>
   <data name="AucunConditionnement" xml:space="preserve"><value>Aucun conditionnement.</value></data>
   <data name="DebutValidite" xml:space="preserve"><value>Date d'effet du prix</value></data>
+  <data name="AucuneOperation" xml:space="preserve"><value>Aucune opération.</value></data>
+  <data name="AucunCompte" xml:space="preserve"><value>Aucun compte.</value></data>
+  <data name="Periode" xml:space="preserve"><value>Période</value></data>
+  <data name="Periode7Jours" xml:space="preserve"><value>7 derniers jours</value></data>
+  <data name="Periode30Jours" xml:space="preserve"><value>30 derniers jours</value></data>
+  <data name="CeMois" xml:space="preserve"><value>Ce mois-ci</value></data>
+  <data name="VentesParJourGraphique" xml:space="preserve"><value>Ventes et marge par jour</value></data>
+  <data name="FichierReprise" xml:space="preserve"><value>Classeur Excel (.xlsx)</value></data>
 </root>

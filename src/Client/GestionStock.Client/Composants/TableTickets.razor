@@ -1,29 +1,25 @@
 @* Tickets signalés par le rapport de caisse : remises, avoirs, crédits validés par un responsable. *@
 <h2>@Titre</h2>
-<table>
-    <thead>
-        <tr>
-            <th>@L["Numero"]</th><th>@L["Date"]</th><th>@L["Caissier"]</th><th class="nombre">@L["TotalTtc"]</th>
-            @if (AvecRemise) { <th class="nombre">@L["Remise"]</th> }
-            @if (AvecOrigine) { <th>@L["TicketOrigine"]</th> } else { <th>@L["ValideePar"]</th> }
-        </tr>
-    </thead>
-    <tbody>
+<Tableau Colonnes="@(AvecRemise ? 6 : 5)" EstVide="Tickets.Count == 0" TexteVide="@L["Aucun"]" Legende="@Titre">
+    <Entete>
+        <th>@L["Numero"]</th><th>@L["Date"]</th><th>@L["Caissier"]</th><th class="nombre">@L["TotalTtc"]</th>
+        @if (AvecRemise) { <th class="nombre">@L["Remise"]</th> }
+        @if (AvecOrigine) { <th>@L["TicketOrigine"]</th> } else { <th>@L["ValideePar"]</th> }
+    </Entete>
+    <Corps>
         @foreach (var ticket in Tickets)
         {
             <tr>
-                <td class="court">@ticket.Numero</td><td class="court">@Format.Date(ticket.DateUtc)</td><td>@ticket.Caissier</td>
-                <td class="nombre">@Format.Montant(ticket.TotalTtc)</td>
-                @if (AvecRemise) { <td class="nombre">@Format.Montant(ticket.Remise)</td> }
-                @if (AvecOrigine) { <td>@ticket.TicketOrigine</td> } else { <td>@ticket.ValidePar</td> }
+                <td data-label="@L["Numero"]" class="court"><code>@ticket.Numero</code></td>
+                <td data-label="@L["Date"]" class="court">@Format.Date(ticket.DateUtc)</td>
+                <td data-label="@L["Caissier"]">@ticket.Caissier</td>
+                <td data-label="@L["TotalTtc"]" class="nombre">@Format.Montant(ticket.TotalTtc)</td>
+                @if (AvecRemise) { <td data-label="@L["Remise"]" class="nombre">@Format.Montant(ticket.Remise)</td> }
+                @if (AvecOrigine) { <td data-label="@L["TicketOrigine"]"><code>@ticket.TicketOrigine</code></td> } else { <td data-label="@L["ValideePar"]">@ticket.ValidePar</td> }
             </tr>
         }
-        @if (Tickets.Count == 0)
-        {
-            <tr><td colspan="6" class="vide">@L["Aucun"]</td></tr>
-        }
-    </tbody>
-</table>
+    </Corps>
+</Tableau>
 
 @code {
     [Parameter, EditorRequired] public string Titre { get; set; } = "";

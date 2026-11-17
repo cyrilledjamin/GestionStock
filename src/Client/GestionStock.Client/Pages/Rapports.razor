@@ -1,215 +1,281 @@
 @page "/rapports"
 @inject Api Api
+@inject IJSRuntime Js
 
 <PageTitle>@L["Rapports"] · GestionStock</PageTitle>
 
 <h1>@L["Rapports"]</h1>
 
-<div class="barre">
+@* Onglets annoncés comme tels (tablist / tab / tabpanel) ; flèches gauche et droite, Début et Fin pour passer de l'un à l'autre. *@
+<div class="onglets" role="tablist" aria-label="@L["Rapports"]" @onkeydown="ClavierOnglets">
     @foreach (var onglet in Onglets)
     {
-        <button class="@(_onglet == onglet ? "principal" : "")" @onclick="() => Choisir(onglet)">@L[$"Rapport.{onglet}"]</button>
+        var choisi = _onglet == onglet;
+        <button type="button" role="tab" id="onglet-@onglet" aria-selected="@(choisi ? "true" : "false")" aria-controls="panneau-rapport"
+                tabindex="@(choisi ? 0 : -1)" class="@(choisi ? "choisi" : null)" @onclick="() => Choisir(onglet)">@L[$"Rapport.{onglet}"]</button>
     }
 </div>
 
-@if (_onglet is "Ventes" or "Caisse")
-{
-    <div class="barre">
-        <label>@L["Du"] <input type="date" @bind="_du" /></label>
-        <label>@L["Au"] <input type="date" @bind="_au" /></label>
-        <button @onclick="Charger">@L["Afficher"]</button>
-    </div>
-}
+<div id="panneau-rapport" role="tabpanel" aria-labelledby="onglet-@_onglet" tabindex="0">
+    @if (_onglet is "Ventes" or "Caisse")
+    {
+        <div class="barre periode" role="group" aria-label="@L["Periode"]">
+            <Champ Libelle="@L["Du"]"><input type="date" @bind="_du" /></Champ>
+            <Champ Libelle="@L["Au"]"><input type="date" @bind="_au" /></Champ>
+            <Bouton Variante="VarianteBouton.Principal" Occupe="_chargement" OnClick="Charger">@L["Afficher"]</Bouton>
+            <span class="raccourcis-periode">
+                <Bouton Variante="VarianteBouton.Discret" OnClick="() => Periode(0)">@L["Aujourdhui"]</Bouton>
+                <Bouton Variante="VarianteBouton.Discret" OnClick="() => Periode(6)">@L["Periode7Jours"]</Bouton>
+                <Bouton Variante="VarianteBouton.Discret" OnClick="() => Periode(29)">@L["Periode30Jours"]</Bouton>
+                <Bouton Variante="VarianteBouton.Discret" OnClick="CeMois">@L["CeMois"]</Bouton>
+            </span>
+        </div>
+    }
 
-<Message Texte="@_erreur" />
+    <Message Texte="@_erreur" />
 
-@if (_onglet == "Ventes" && _ventes is { Totaux: var t })
-{
-    <div class="tuiles">
-        <div class="tuile chiffre"><span>@L["ChiffreAffairesTtc"]</span><strong>@Format.Montant(t.ChiffreAffairesTtc)</strong></div>
-        <div class="tuile chiffre"><span>@L["ChiffreAffairesHt"]</span><strong>@Format.Montant(t.ChiffreAffairesHt)</strong></div>
-        <div class="tuile chiffre"><span>@L["CoutDesVentes"]</span><strong>@Format.Montant(t.CoutDesVentes)</strong></div>
-        <div class="tuile chiffre"><span>@L["Marge"]</span><strong>@Format.Montant(t.Marge) <small>@Taux(t.TauxMarge)</small></strong></div>
-        <div class="tuile chiffre"><span>@L["Tickets"]</span><strong>@t.NombreVentes <small>/ @t.NombreAvoirs @L["Avoirs"]</small></strong></div>
-        <div class="tuile chiffre"><span>@L["Remises"]</span><strong>@Format.Montant(t.Remises)</strong></div>
-    </div>
+    @if (_chargement && !Affiche)
+    {
+        <Chargement />
+    }
 
-    <h2>@L["ParJour"]</h2>
-    <table>
-        <thead><tr><th>@L["Date"]</th><th class="nombre">@L["Tickets"]</th><th class="nombre">@L["ChiffreAffairesTtc"]</th><th class="nombre">@L["ChiffreAffairesHt"]</th><th class="nombre">@L["CoutDesVentes"]</th><th class="nombre">@L["Marge"]</th></tr></thead>
-        <tbody>
-            @foreach (var jour in _ventes.ParJour)
-            {
-                <tr><td>@jour.Jour.ToString("d", CultureInfo.CurrentCulture)</td><td class="nombre">@jour.NombreTickets</td><td class="nombre">@Format.Montant(jour.ChiffreAffairesTtc)</td><td class="nombre">@Format.Montant(jour.ChiffreAffairesHt)</td><td class="nombre">@Format.Montant(jour.CoutDesVentes)</td><td class="nombre">@Format.Montant(jour.Marge)</td></tr>
-            }
-            @if (_ventes.ParJour.Count == 0)
-            {
-                <tr><td colspan="6" class="vide">@L["AucuneVente"]</td></tr>
-            }
-        </tbody>
-    </table>
+    @if (_onglet == "Ventes" && _ventes is { Totaux: var t })
+    {
+        <div class="indicateurs resume">
+            <Indicateur Libelle="@L["ChiffreAffairesTtc"]" Valeur="@Format.Montant(t.ChiffreAffairesTtc)" />
+            <Indicateur Libelle="@L["ChiffreAffairesHt"]" Valeur="@Format.Montant(t.ChiffreAffairesHt)" />
+            <Indicateur Libelle="@L["CoutDesVentes"]" Valeur="@Format.Montant(t.CoutDesVentes)" />
+            <Indicateur Libelle="@L["Marge"]" Valeur="@Format.Montant(t.Marge)" Detail="@Taux(t.TauxMarge)" Ton="@(t.Marge < 0 ? Ton.Danger : Ton.Succes)" />
+            <Indicateur Libelle="@L["Tickets"]" Valeur="@Nombre(t.NombreVentes)" Detail="@($"{Nombre(t.NombreAvoirs)} {L["Avoirs"]}")" />
+            <Indicateur Libelle="@L["Remises"]" Valeur="@Format.Montant(t.Remises)" />
+        </div>
 
-    <h2>@L["ParArticle"]</h2>
-    <table>
-        <thead><tr><th>@L["Article"]</th><th class="nombre">@L["Quantite"]</th><th class="nombre">@L["ChiffreAffairesHt"]</th><th class="nombre">@L["CoutDesVentes"]</th><th class="nombre">@L["Marge"]</th><th class="nombre">%</th></tr></thead>
-        <tbody>
-            @foreach (var article in _ventes.ParArticle)
-            {
-                <tr class="@(article.Marge < 0 ? "negatif" : "")"><td><code>@article.Code</code> @article.Libelle</td><td class="nombre">@Format.Quantite(article.Quantite) @Format.Unite(article.UniteStock)</td><td class="nombre">@Format.Montant(article.ChiffreAffairesHt)</td><td class="nombre">@Format.Montant(article.CoutDesVentes)</td><td class="nombre">@Format.Montant(article.Marge)</td><td class="nombre">@Taux(article.TauxMarge)</td></tr>
-            }
-        </tbody>
-    </table>
+        @if (_joursGraphique.Count >= 2)
+        {
+            <Graphique Titre="@L["VentesParJourGraphique"]" Points="_joursGraphique" LibelleSerie="@L["VentesTtc"]" LibelleSecondaire="@L["Marge"]"
+                       LibelleAbscisse="@L["Jour"]" MettreEnAvantDernier="false" />
+        }
 
-    <h2>@L["ParCaissier"]</h2>
-    <table>
-        <thead><tr><th>@L["Caissier"]</th><th class="nombre">@L["Tickets"]</th><th class="nombre">@L["ChiffreAffairesTtc"]</th></tr></thead>
-        <tbody>
-            @foreach (var caissier in _ventes.ParCaissier)
-            {
-                <tr><td>@caissier.Caissier</td><td class="nombre">@caissier.NombreTickets</td><td class="nombre">@Format.Montant(caissier.ChiffreAffairesTtc)</td></tr>
-            }
-        </tbody>
-    </table>
-}
+        <h2>@L["ParJour"]</h2>
+        <Tableau Colonnes="6" EstVide="_ventes.ParJour.Count == 0" TexteVide="@L["AucuneVente"]" Legende="@L["ParJour"]">
+            <Entete><th>@L["Date"]</th><th class="nombre">@L["Tickets"]</th><th class="nombre">@L["ChiffreAffairesTtc"]</th><th class="nombre">@L["ChiffreAffairesHt"]</th><th class="nombre">@L["CoutDesVentes"]</th><th class="nombre">@L["Marge"]</th></Entete>
+            <Corps>
+                @foreach (var jour in _ventes.ParJour)
+                {
+                    <tr class="@(jour.Marge < 0 ? "negatif" : "")">
+                        <td data-label="@L["Date"]">@jour.Jour.ToString("d", CultureInfo.CurrentCulture)</td>
+                        <td data-label="@L["Tickets"]" class="nombre">@jour.NombreTickets</td>
+                        <td data-label="@L["ChiffreAffairesTtc"]" class="nombre">@Format.Montant(jour.ChiffreAffairesTtc)</td>
+                        <td data-label="@L["ChiffreAffairesHt"]" class="nombre">@Format.Montant(jour.ChiffreAffairesHt)</td>
+                        <td data-label="@L["CoutDesVentes"]" class="nombre">@Format.Montant(jour.CoutDesVentes)</td>
+                        <td data-label="@L["Marge"]" class="nombre">@Format.Montant(jour.Marge)</td>
+                    </tr>
+                }
+            </Corps>
+        </Tableau>
 
-@if (_onglet == "Stock" && _stock is not null)
-{
-    <div class="tuiles">
-        <div class="tuile chiffre"><span>@L["ValeurStock"]</span><strong>@Format.Montant(_stock.ValeurTotale)</strong></div>
-        <div class="tuile chiffre"><span>@L["ArticlesEnStock"]</span><strong>@_stock.NombreArticles</strong></div>
-        <div class="tuile chiffre"><span>@L["StocksNegatifs"]</span><strong>@_stock.StocksNegatifs.Count</strong></div>
-    </div>
-    <TableStock Lignes="_stock.Articles" />
-}
+        <h2>@L["ParArticle"]</h2>
+        <Tableau Colonnes="6" EstVide="_ventes.ParArticle.Count == 0" TexteVide="@L["AucuneVente"]" Legende="@L["ParArticle"]">
+            <Entete><th>@L["Article"]</th><th class="nombre">@L["Quantite"]</th><th class="nombre">@L["ChiffreAffairesHt"]</th><th class="nombre">@L["CoutDesVentes"]</th><th class="nombre">@L["Marge"]</th><th class="nombre">%</th></Entete>
+            <Corps>
+                @foreach (var article in _ventes.ParArticle)
+                {
+                    <tr class="@(article.Marge < 0 ? "negatif" : "")">
+                        <td data-label="@L["Article"]"><code>@article.Code</code> @article.Libelle</td>
+                        <td data-label="@L["Quantite"]" class="nombre">@Format.Quantite(article.Quantite) @Format.Unite(article.UniteStock)</td>
+                        <td data-label="@L["ChiffreAffairesHt"]" class="nombre">@Format.Montant(article.ChiffreAffairesHt)</td>
+                        <td data-label="@L["CoutDesVentes"]" class="nombre">@Format.Montant(article.CoutDesVentes)</td>
+                        <td data-label="@L["Marge"]" class="nombre">@Format.Montant(article.Marge)</td>
+                        <td data-label="%" class="nombre">@Taux(article.TauxMarge)</td>
+                    </tr>
+                }
+            </Corps>
+        </Tableau>
 
-@if (_onglet == "CreancesDettes" && _creances is not null)
-{
-    <div class="tuiles">
-        <div class="tuile chiffre"><span>@L["Creances"]</span><strong>@Format.Montant(_creances.TotalCreances)</strong></div>
-        <div class="tuile chiffre"><span>@L["EnRetard"]</span><strong>@Format.Montant(_creances.TotalEnRetard)</strong></div>
-        <div class="tuile chiffre"><span>@L["DettesFournisseurs"]</span><strong>@Format.Montant(_creances.TotalDettes)</strong></div>
-    </div>
+        <h2>@L["ParCaissier"]</h2>
+        <Tableau Colonnes="3" EstVide="_ventes.ParCaissier.Count == 0" TexteVide="@L["AucuneVente"]" Legende="@L["ParCaissier"]">
+            <Entete><th>@L["Caissier"]</th><th class="nombre">@L["Tickets"]</th><th class="nombre">@L["ChiffreAffairesTtc"]</th></Entete>
+            <Corps>
+                @foreach (var caissier in _ventes.ParCaissier)
+                {
+                    <tr>
+                        <td data-label="@L["Caissier"]">@caissier.Caissier</td>
+                        <td data-label="@L["Tickets"]" class="nombre">@caissier.NombreTickets</td>
+                        <td data-label="@L["ChiffreAffairesTtc"]" class="nombre">@Format.Montant(caissier.ChiffreAffairesTtc)</td>
+                    </tr>
+                }
+            </Corps>
+        </Tableau>
+    }
 
-    <h2>@L["Clients"]</h2>
-    <table>
-        <thead><tr><th>@L["Client"]</th><th>@L["Telephone"]</th><th class="nombre">@L["Plafond"]</th><th class="nombre">@L["SoldeDu"]</th><th class="nombre">@L["EnRetard"]</th><th>@L["PlusAncienneEcheance"]</th></tr></thead>
-        <tbody>
-            @foreach (var client in _creances.Clients)
-            {
-                <tr class="@(client.MontantEnRetard > 0 ? "negatif" : "")">
-                    <td><a href="clients/@client.ClientId">@client.Nom</a></td><td>@client.Telephone</td>
-                    <td class="nombre">@Format.Montant(client.PlafondCredit)</td><td class="nombre">@Format.Montant(client.SoldeDu)</td>
-                    <td class="nombre">@Format.Montant(client.MontantEnRetard)</td>
-                    <td class="court">@(client.PlusAncienneEcheanceUtc is { } e ? Format.Date(e) : "")</td>
-                </tr>
-            }
-            @if (_creances.Clients.Count == 0)
-            {
-                <tr><td colspan="6" class="vide">@L["AucuneCreance"]</td></tr>
-            }
-        </tbody>
-    </table>
+    @if (_onglet == "Stock" && _stock is not null)
+    {
+        <div class="indicateurs resume">
+            <Indicateur Libelle="@L["ValeurStock"]" Valeur="@Format.Montant(_stock.ValeurTotale)" />
+            <Indicateur Libelle="@L["ArticlesEnStock"]" Valeur="@Nombre(_stock.NombreArticles)" />
+            <Indicateur Libelle="@L["StocksNegatifs"]" Valeur="@Nombre(_stock.StocksNegatifs.Count)" Ton="@(_stock.StocksNegatifs.Count > 0 ? Ton.Danger : Ton.Neutre)" />
+        </div>
+        <TableStock Lignes="_stock.Articles" Legende="@L["Rapport.Stock"]" />
+    }
 
-    <h2>@L["Fournisseurs"]</h2>
-    <table>
-        <thead><tr><th>@L["Fournisseur"]</th><th class="nombre">@L["Receptions"]</th><th class="nombre">@L["MontantDu"]</th><th class="nombre">@L["MontantPaye"]</th><th class="nombre">@L["ResteDu"]</th></tr></thead>
-        <tbody>
-            @foreach (var fournisseur in _creances.Fournisseurs)
-            {
-                <tr><td>@fournisseur.Fournisseur</td><td class="nombre">@fournisseur.NombreReceptions</td><td class="nombre">@Format.Montant(fournisseur.MontantDu)</td><td class="nombre">@Format.Montant(fournisseur.MontantPaye)</td><td class="nombre">@Format.Montant(fournisseur.ResteDu)</td></tr>
-            }
-            @if (_creances.Fournisseurs.Count == 0)
-            {
-                <tr><td colspan="5" class="vide">@L["AucuneDette"]</td></tr>
-            }
-        </tbody>
-    </table>
-}
+    @if (_onglet == "CreancesDettes" && _creances is not null)
+    {
+        <div class="indicateurs resume">
+            <Indicateur Libelle="@L["Creances"]" Valeur="@Format.Montant(_creances.TotalCreances)" />
+            <Indicateur Libelle="@L["EnRetard"]" Valeur="@Format.Montant(_creances.TotalEnRetard)" Ton="@(_creances.TotalEnRetard > 0 ? Ton.Danger : Ton.Neutre)" />
+            <Indicateur Libelle="@L["DettesFournisseurs"]" Valeur="@Format.Montant(_creances.TotalDettes)" Ton="@(_creances.TotalDettes > 0 ? Ton.Attention : Ton.Neutre)" />
+        </div>
 
-@if (_onglet == "Caisse" && _caisse is not null)
-{
-    <div class="tuiles">
-        <div class="tuile chiffre"><span>@L["Sessions"]</span><strong>@_caisse.Sessions.Count</strong></div>
-        <div class="tuile chiffre"><span>@L["TotalEcarts"]</span><strong>@Format.Montant(_caisse.TotalEcarts)</strong></div>
-        <div class="tuile chiffre"><span>@L["Avoirs"]</span><strong>@_caisse.Avoirs.Count</strong></div>
-        <div class="tuile chiffre"><span>@L["Remises"]</span><strong>@_caisse.Remises.Count</strong></div>
-    </div>
+        <h2>@L["Clients"]</h2>
+        <Tableau Colonnes="6" EstVide="_creances.Clients.Count == 0" TexteVide="@L["AucuneCreance"]" Legende="@L["Clients"]">
+            <Entete><th>@L["Client"]</th><th>@L["Telephone"]</th><th class="nombre">@L["Plafond"]</th><th class="nombre">@L["SoldeDu"]</th><th class="nombre">@L["EnRetard"]</th><th>@L["PlusAncienneEcheance"]</th></Entete>
+            <Corps>
+                @foreach (var client in _creances.Clients)
+                {
+                    <tr class="@(client.MontantEnRetard > 0 ? "negatif" : "")">
+                        <td data-label="@L["Client"]"><a href="clients/@client.ClientId">@client.Nom</a></td>
+                        <td data-label="@L["Telephone"]">@client.Telephone</td>
+                        <td data-label="@L["Plafond"]" class="nombre">@Format.Montant(client.PlafondCredit)</td>
+                        <td data-label="@L["SoldeDu"]" class="nombre">@Format.Montant(client.SoldeDu)</td>
+                        <td data-label="@L["EnRetard"]" class="nombre">@Format.Montant(client.MontantEnRetard)</td>
+                        <td data-label="@L["PlusAncienneEcheance"]" class="court">@(client.PlusAncienneEcheanceUtc is { } e ? Format.Date(e) : "")</td>
+                    </tr>
+                }
+            </Corps>
+        </Tableau>
 
-    <h2>@L["SessionsCaisse"]</h2>
-    <table>
-        <thead><tr><th>@L["Poste"]</th><th>@L["Caissier"]</th><th>@L["Ouverture"]</th><th>@L["Statut"]</th><th class="nombre">@L["Tickets"]</th><th class="nombre">@L["Ventes"]</th><th class="nombre">@L["Ecart"]</th><th>@L["ValideePar"]</th></tr></thead>
-        <tbody>
-            @foreach (var session in _caisse.Sessions)
-            {
-                <tr class="@(session.Ecart is < 0 ? "negatif" : "")">
-                    <td>@session.NumeroCaisse</td><td>@session.Caissier</td><td class="court">@Format.Date(session.OuvertureUtc)</td>
-                    <td>@L[$"StatutSession.{session.Statut}"]</td><td class="nombre">@session.NombreVentes / @session.NombreAvoirs</td>
-                    <td class="nombre">@Format.Montant(session.VentesNettes)</td><td class="nombre">@(session.Ecart is { } e ? Format.Montant(e) : "")</td><td>@session.ValideePar</td>
-                </tr>
-            }
-        </tbody>
-    </table>
+        <h2>@L["Fournisseurs"]</h2>
+        <Tableau Colonnes="5" EstVide="_creances.Fournisseurs.Count == 0" TexteVide="@L["AucuneDette"]" Legende="@L["Fournisseurs"]">
+            <Entete><th>@L["Fournisseur"]</th><th class="nombre">@L["Receptions"]</th><th class="nombre">@L["MontantDu"]</th><th class="nombre">@L["MontantPaye"]</th><th class="nombre">@L["ResteDu"]</th></Entete>
+            <Corps>
+                @foreach (var fournisseur in _creances.Fournisseurs)
+                {
+                    <tr>
+                        <td data-label="@L["Fournisseur"]">@fournisseur.Fournisseur</td>
+                        <td data-label="@L["Receptions"]" class="nombre">@fournisseur.NombreReceptions</td>
+                        <td data-label="@L["MontantDu"]" class="nombre">@Format.Montant(fournisseur.MontantDu)</td>
+                        <td data-label="@L["MontantPaye"]" class="nombre">@Format.Montant(fournisseur.MontantPaye)</td>
+                        <td data-label="@L["ResteDu"]" class="nombre">@Format.Montant(fournisseur.ResteDu)</td>
+                    </tr>
+                }
+            </Corps>
+        </Tableau>
+    }
 
-    <TableTickets Titre="@L["Remises"]" Tickets="_caisse.Remises" AvecRemise="true" />
-    <TableTickets Titre="@L["Avoirs"]" Tickets="_caisse.Avoirs" AvecOrigine="true" />
-    <TableTickets Titre="@L["CreditsValides"]" Tickets="_caisse.CreditsValides" />
+    @if (_onglet == "Caisse" && _caisse is not null)
+    {
+        var anomalies = _caisse.Anomalies ?? [];
+        <div class="indicateurs resume">
+            <Indicateur Libelle="@L["Sessions"]" Valeur="@Nombre(_caisse.Sessions.Count)" />
+            <Indicateur Libelle="@L["TotalEcarts"]" Valeur="@Format.Montant(_caisse.TotalEcarts)" Ton="@(_caisse.TotalEcarts < 0 ? Ton.Danger : Ton.Neutre)" />
+            <Indicateur Libelle="@L["Avoirs"]" Valeur="@Nombre(_caisse.Avoirs.Count)" />
+            <Indicateur Libelle="@L["Remises"]" Valeur="@Nombre(_caisse.Remises.Count)" />
+            <Indicateur Libelle="@L["Anomalies"]" Valeur="@Nombre(anomalies.Count(a => !a.Traitee))" Detail="@L["ATraiter"]"
+                        Ton="@(anomalies.Any(a => !a.Traitee) ? Ton.Attention : Ton.Neutre)" Lien="anomalies" />
+        </div>
 
-    <h2>@L["StocksNegatifs"]</h2>
-    <TableStock Lignes="_caisse.StocksNegatifs" />
+        <h2>@L["SessionsCaisse"]</h2>
+        <Tableau Colonnes="8" EstVide="_caisse.Sessions.Count == 0" TexteVide="@L["AucuneSession"]" Legende="@L["SessionsCaisse"]">
+            <Entete><th>@L["Poste"]</th><th>@L["Caissier"]</th><th>@L["Ouverture"]</th><th>@L["Statut"]</th><th class="nombre">@L["Tickets"]</th><th class="nombre">@L["Ventes"]</th><th class="nombre">@L["Ecart"]</th><th>@L["ValideePar"]</th></Entete>
+            <Corps>
+                @foreach (var session in _caisse.Sessions)
+                {
+                    <tr class="@(session.Ecart is < 0 ? "negatif" : "")">
+                        <td data-label="@L["Poste"]">@session.NumeroCaisse</td>
+                        <td data-label="@L["Caissier"]">@session.Caissier</td>
+                        <td data-label="@L["Ouverture"]" class="court">@Format.Date(session.OuvertureUtc)</td>
+                        <td data-label="@L["Statut"]"><Pastille Ton="@TonSession(session.Statut)">@L[$"StatutSession.{session.Statut}"]</Pastille></td>
+                        <td data-label="@L["Tickets"]" class="nombre">@session.NombreVentes / @session.NombreAvoirs</td>
+                        <td data-label="@L["Ventes"]" class="nombre">@Format.Montant(session.VentesNettes)</td>
+                        <td data-label="@L["Ecart"]" class="nombre">@(session.Ecart is { } e ? Format.Montant(e) : "")</td>
+                        <td data-label="@L["ValideePar"]">@session.ValideePar</td>
+                    </tr>
+                }
+            </Corps>
+        </Tableau>
 
-    <h2>@L["FraisNonIncorpores"]</h2>
-    <p class="discret">@L["FraisNonIncorporesAide"]</p>
-    <table>
-        <thead><tr><th>@L["Date"]</th><th>@L["Reception"]</th><th>@L["Type"]</th><th class="nombre">@L["Montant"]</th><th class="nombre">@L["NonIncorpore"]</th></tr></thead>
-        <tbody>
-            @foreach (var frais in _caisse.FraisNonIncorpores)
-            {
-                <tr><td class="court">@Format.Date(frais.SaisiLeUtc)</td><td><a href="receptions/@frais.ReceptionId">@frais.Reception</a></td><td>@L[$"TypeFrais.{frais.Type}"] @frais.Libelle</td><td class="nombre">@Format.Montant(frais.Montant)</td><td class="nombre">@Format.Montant(frais.MontantNonIncorpore)</td></tr>
-            }
-            @if (_caisse.FraisNonIncorpores.Count == 0)
-            {
-                <tr><td colspan="5" class="vide">@L["Aucun"]</td></tr>
-            }
-        </tbody>
-    </table>
+        <TableTickets Titre="@L["Remises"]" Tickets="_caisse.Remises" AvecRemise="true" />
+        <TableTickets Titre="@L["Avoirs"]" Tickets="_caisse.Avoirs" AvecOrigine="true" />
+        <TableTickets Titre="@L["CreditsValides"]" Tickets="_caisse.CreditsValides" />
 
-    @* Opérations faites hors ligne (7.8) : écarts relevés à la synchronisation, et leur traitement par le Gérant. *@
-    <h2>@L["Anomalies"]</h2>
-    <p class="discret">@L["AnomaliesAide"] <a href="anomalies">@L["VoirAnomalies"]</a></p>
-    <table>
-        <thead><tr><th>@L["Date"]</th><th>@L["Anomalie"]</th><th>@L["Poste"]</th><th>@L["Caissier"]</th><th>@L["Document"]</th><th>@L["Detail"]</th><th>@L["Traitement"]</th></tr></thead>
-        <tbody>
-            @foreach (var anomalie in _caisse.Anomalies ?? [])
-            {
-                <tr class="@(anomalie.Traitee ? "" : "negatif")">
-                    <td class="court">@Format.Date(anomalie.DateUtc)</td>
-                    <td>@L[$"Anomalie.{anomalie.Type}"]</td>
-                    <td>@anomalie.NumeroCaisse</td>
-                    <td>@anomalie.Caissier</td>
-                    <td>@anomalie.NumeroDocument</td>
-                    <td><code>@anomalie.Detail</code></td>
-                    <td>@(anomalie.Traitee ? $"{anomalie.Commentaire} ({anomalie.TraiteePar})" : L["ATraiter"].Value)</td>
-                </tr>
-            }
-            @if ((_caisse.Anomalies ?? []).Count == 0)
-            {
-                <tr><td colspan="7" class="vide">@L["Aucun"]</td></tr>
-            }
-        </tbody>
-    </table>
-}
+        <h2>@L["StocksNegatifs"]</h2>
+        <TableStock Lignes="_caisse.StocksNegatifs" Legende="@L["StocksNegatifs"]" />
+
+        <h2>@L["FraisNonIncorpores"]</h2>
+        <p class="discret">@L["FraisNonIncorporesAide"]</p>
+        <Tableau Colonnes="5" EstVide="_caisse.FraisNonIncorpores.Count == 0" TexteVide="@L["Aucun"]" Legende="@L["FraisNonIncorpores"]">
+            <Entete><th>@L["Date"]</th><th>@L["Reception"]</th><th>@L["Type"]</th><th class="nombre">@L["Montant"]</th><th class="nombre">@L["NonIncorpore"]</th></Entete>
+            <Corps>
+                @foreach (var frais in _caisse.FraisNonIncorpores)
+                {
+                    <tr>
+                        <td data-label="@L["Date"]" class="court">@Format.Date(frais.SaisiLeUtc)</td>
+                        <td data-label="@L["Reception"]"><a href="receptions/@frais.ReceptionId"><code>@frais.Reception</code></a></td>
+                        <td data-label="@L["Type"]">@L[$"TypeFrais.{frais.Type}"] @frais.Libelle</td>
+                        <td data-label="@L["Montant"]" class="nombre">@Format.Montant(frais.Montant)</td>
+                        <td data-label="@L["NonIncorpore"]" class="nombre">@Format.Montant(frais.MontantNonIncorpore)</td>
+                    </tr>
+                }
+            </Corps>
+        </Tableau>
+
+        @* Opérations faites hors ligne (7.8) : écarts relevés à la synchronisation, et leur traitement par le Gérant. *@
+        <h2>@L["Anomalies"]</h2>
+        <p class="discret">@L["AnomaliesAide"] <a href="anomalies">@L["VoirAnomalies"]</a></p>
+        <Tableau Colonnes="7" EstVide="anomalies.Count == 0" TexteVide="@L["Aucun"]" Legende="@L["Anomalies"]">
+            <Entete><th>@L["Date"]</th><th>@L["Anomalie"]</th><th>@L["Poste"]</th><th>@L["Caissier"]</th><th>@L["Document"]</th><th>@L["Detail"]</th><th>@L["Traitement"]</th></Entete>
+            <Corps>
+                @foreach (var anomalie in anomalies)
+                {
+                    <tr>
+                        <td data-label="@L["Date"]" class="court">@Format.Date(anomalie.DateUtc)</td>
+                        <td data-label="@L["Anomalie"]">@L[$"Anomalie.{anomalie.Type}"]</td>
+                        <td data-label="@L["Poste"]">@anomalie.NumeroCaisse</td>
+                        <td data-label="@L["Caissier"]">@anomalie.Caissier</td>
+                        <td data-label="@L["Document"]">@anomalie.NumeroDocument</td>
+                        <td data-label="@L["Detail"]"><code>@anomalie.Detail</code></td>
+                        <td data-label="@L["Traitement"]">
+                            @if (anomalie.Traitee)
+                            {
+                                <Pastille Ton="Ton.Succes">@L["Traitee"]</Pastille> @anomalie.Commentaire <small class="discret">(@anomalie.TraiteePar)</small>
+                            }
+                            else
+                            {
+                                <Pastille Ton="Ton.Attention">@L["ATraiter"]</Pastille>
+                            }
+                        </td>
+                    </tr>
+                }
+            </Corps>
+        </Tableau>
+    }
+</div>
 
 @code {
     private static readonly string[] Onglets = ["Ventes", "Stock", "CreancesDettes", "Caisse"];
 
     private string _onglet = "Ventes";
-    private DateOnly _du = DateOnly.FromDateTime(DateTime.UtcNow.AddHours(1));
-    private DateOnly _au = DateOnly.FromDateTime(DateTime.UtcNow.AddHours(1));
+    private DateOnly _du = Aujourdhui;
+    private DateOnly _au = Aujourdhui;
     private RapportVentes? _ventes;
+    private List<PointGraphique> _joursGraphique = [];
     private RapportStock? _stock;
     private RapportCreancesDettes? _creances;
     private RapportCaisse? _caisse;
     private string? _erreur;
+    private bool _chargement;
+
+    /// <summary>Jour de Douala (UTC+1, sans heure d'été).</summary>
+    private static DateOnly Aujourdhui => DateOnly.FromDateTime(DateTime.UtcNow.AddHours(1));
+
+    /// <summary>Le rapport de l'onglet choisi est déjà là (on le garde affiché pendant qu'il se recharge).</summary>
+    private bool Affiche => _onglet switch
+    {
+        "Ventes" => _ventes is not null,
+        "Stock" => _stock is not null,
+        "CreancesDettes" => _creances is not null,
+        _ => _caisse is not null,
+    };
 
     protected override Task OnInitializedAsync() => Charger();
 
@@ -219,29 +285,100 @@
         return Charger();
     }
 
+    /// <summary>Navigation au clavier entre onglets (motif ARIA « tabs ») : le focus suit l'onglet choisi.</summary>
+    private async Task ClavierOnglets(KeyboardEventArgs touche)
+    {
+        var indice = Array.IndexOf(Onglets, _onglet);
+        var suivant = touche.Key switch
+        {
+            "ArrowRight" => (indice + 1) % Onglets.Length,
+            "ArrowLeft" => (indice + Onglets.Length - 1) % Onglets.Length,
+            "Home" => 0,
+            "End" => Onglets.Length - 1,
+            _ => -1,
+        };
+        if (suivant < 0)
+        {
+            return;
+        }
+
+        var chargement = Choisir(Onglets[suivant]);
+        StateHasChanged();
+        await Js.InvokeVoidAsync("gestionStock.focaliser", $"onglet-{Onglets[suivant]}");
+        await chargement;
+    }
+
+    /// <summary>Période des derniers jours, aujourd'hui compris.</summary>
+    private Task Periode(int joursAvant)
+    {
+        (_du, _au) = (Aujourdhui.AddDays(-joursAvant), Aujourdhui);
+        return Charger();
+    }
+
+    private Task CeMois()
+    {
+        var aujourdhui = Aujourdhui;
+        (_du, _au) = (new DateOnly(aujourdhui.Year, aujourdhui.Month, 1), aujourdhui);
+        return Charger();
+    }
+
     private async Task Charger()
     {
-        var periode = $"du={_du:yyyy-MM-dd}&au={_au:yyyy-MM-dd}";
-        switch (_onglet)
+        _chargement = true;
+        try
         {
-            case "Ventes":
-                var ventes = await Api.GetAsync<RapportVentes>($"api/rapports/ventes?{periode}");
-                (_ventes, _erreur) = (ventes.Valeur, ventes.Erreur);
-                break;
-            case "Stock":
-                var stock = await Api.GetAsync<RapportStock>("api/rapports/stock");
-                (_stock, _erreur) = (stock.Valeur, stock.Erreur);
-                break;
-            case "CreancesDettes":
-                var creances = await Api.GetAsync<RapportCreancesDettes>("api/rapports/creances-dettes");
-                (_creances, _erreur) = (creances.Valeur, creances.Erreur);
-                break;
-            default:
-                var caisse = await Api.GetAsync<RapportCaisse>($"api/rapports/caisse?{periode}");
-                (_caisse, _erreur) = (caisse.Valeur, caisse.Erreur);
-                break;
+            var periode = $"du={_du:yyyy-MM-dd}&au={_au:yyyy-MM-dd}";
+            switch (_onglet)
+            {
+                case "Ventes":
+                    var ventes = await Api.GetAsync<RapportVentes>($"api/rapports/ventes?{periode}");
+                    (_ventes, _erreur) = (ventes.Valeur, ventes.Erreur);
+                    _joursGraphique = ventes.Valeur is { } rapport ? Jours(rapport) : [];
+                    break;
+                case "Stock":
+                    var stock = await Api.GetAsync<RapportStock>("api/rapports/stock");
+                    (_stock, _erreur) = (stock.Valeur, stock.Erreur);
+                    break;
+                case "CreancesDettes":
+                    var creances = await Api.GetAsync<RapportCreancesDettes>("api/rapports/creances-dettes");
+                    (_creances, _erreur) = (creances.Valeur, creances.Erreur);
+                    break;
+                default:
+                    var caisse = await Api.GetAsync<RapportCaisse>($"api/rapports/caisse?{periode}");
+                    (_caisse, _erreur) = (caisse.Valeur, caisse.Erreur);
+                    break;
+            }
+        }
+        finally
+        {
+            _chargement = false;
         }
     }
+
+    /// <summary>
+    /// Points du graphique : chaque jour de la période (à zéro les jours sans vente) jusqu'à 92 jours ; au-delà, les seuls
+    /// jours vendus, le graphique restant lisible.
+    /// </summary>
+    private static List<PointGraphique> Jours(RapportVentes rapport)
+    {
+        var parJour = rapport.ParJour.ToDictionary(j => j.Jour);
+        var nombre = rapport.Au.DayNumber - rapport.Du.DayNumber + 1;
+        var jours = nombre <= 92
+            ? Enumerable.Range(0, nombre).Select(i => rapport.Du.AddDays(i))
+            : parJour.Keys.Order();
+        return [.. jours.Select(jour => parJour.GetValueOrDefault(jour) is { } v
+            ? new PointGraphique(jour.ToString("d MMM", CultureInfo.CurrentCulture), v.ChiffreAffairesTtc, v.Marge)
+            : new PointGraphique(jour.ToString("d MMM", CultureInfo.CurrentCulture), 0m, 0m))];
+    }
+
+    private static string Nombre(int valeur) => valeur.ToString(CultureInfo.CurrentCulture);
+
+    private static Ton TonSession(string statut) => statut switch
+    {
+        "Ouverte" => Ton.Info,
+        "Comptee" => Ton.Attention,
+        _ => Ton.Succes,
+    };
 
     private static string Taux(decimal? taux) => taux is { } t ? $"{t.ToString("0.#", CultureInfo.CurrentCulture)} %" : "";
 }

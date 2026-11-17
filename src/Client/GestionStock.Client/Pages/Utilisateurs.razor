@@ -11,47 +11,47 @@
 <form class="fiche" @onsubmit="Creer">
     <h2>@L["NouveauCompte"]</h2>
     <div class="grille">
-        <label>@L["Prenom"] <input @bind="_prenom" required maxlength="100" autocomplete="off" /></label>
-        <label>@L["Nom"] <input @bind="_nom" required maxlength="100" autocomplete="off" /></label>
-        <label>@L["Telephone"] <input @bind="_telephone" maxlength="20" placeholder="+237 6XX XX XX XX" autocomplete="off" /></label>
-        <label>@L["Matricule"] <input @bind="_matricule" maxlength="20" placeholder="@L["MatriculeGenere"]" autocomplete="off" /></label>
-        <label>@L["Langue"]
+        <Champ Libelle="@L["Prenom"]" Requis="true"><input @bind="_prenom" required maxlength="100" autocomplete="off" /></Champ>
+        <Champ Libelle="@L["Nom"]" Requis="true"><input @bind="_nom" required maxlength="100" autocomplete="off" /></Champ>
+        <Champ Libelle="@L["Telephone"]"><input @bind="_telephone" maxlength="20" placeholder="+237 6XX XX XX XX" autocomplete="off" /></Champ>
+        <Champ Libelle="@L["Matricule"]"><input @bind="_matricule" maxlength="20" placeholder="@L["MatriculeGenere"]" autocomplete="off" /></Champ>
+        <Champ Libelle="@L["Langue"]">
             <select @bind="_langue">
                 <option value="fr">Français</option>
                 <option value="en">English</option>
             </select>
-        </label>
-        <label>@L["MotDePasseProvisoire"]
+        </Champ>
+        <Champ Libelle="@L["MotDePasseProvisoire"]" Requis="true">
             <ChampMotDePasse @bind-Valeur="_motDePasse" Requis="true" Autocomplete="new-password" />
-        </label>
+        </Champ>
     </div>
     <ChoixRoles Roles="_roles" />
-    <p class="discret">@L["MotDePasseProvisoireAide"] @L["MotDePasseRegle"]</p>
-    <div class="actions"><button type="submit" class="principal" disabled="@_enCours">@L["CreerCompte"]</button></div>
+    <div class="message info" role="status"><Icone Nom="info" /><span>@L["MotDePasseProvisoireAide"] @L["MotDePasseRegle"]</span></div>
+    <div class="actions"><Bouton Type="submit" Variante="VarianteBouton.Principal" NomIcone="ajouter" Occupe="_enCours">@L["CreerCompte"]</Bouton></div>
 </form>
 
 <div class="barre">
     <label class="case"><input type="checkbox" @bind="_avecDesactives" /> @L["AfficherDesactives"]</label>
 </div>
 
-<table>
-    <thead><tr><th>@L["Nom"]</th><th>@L["Matricule"]</th><th>@L["Roles"]</th><th>@L["Telephone"]</th><th>@L["Statut"]</th></tr></thead>
-    <tbody>
+<Tableau Colonnes="5" Charge="_charge" EstVide="!_comptes.Any(c => _avecDesactives || c.Actif)" TexteVide="@L["AucunCompte"]" Legende="@L["Utilisateurs"]">
+    <Entete><th>@L["Nom"]</th><th>@L["Matricule"]</th><th>@L["Roles"]</th><th>@L["Telephone"]</th><th>@L["Statut"]</th></Entete>
+    <Corps>
         @foreach (var compte in _comptes.Where(c => _avecDesactives || c.Actif))
         {
             <tr class="@(compte.Actif ? "" : "inactif")">
-                <td><a href="utilisateurs/@compte.Id">@compte.NomComplet</a></td>
-                <td><code>@compte.Matricule</code></td>
-                <td>@string.Join(", ", compte.Roles.Select(r => L[$"Role.{r}"].Value))</td>
-                <td>@compte.Telephone</td>
-                <td>
+                <td data-label="@L["Nom"]"><a href="utilisateurs/@compte.Id"><strong>@compte.NomComplet</strong></a></td>
+                <td data-label="@L["Matricule"]"><code>@compte.Matricule</code></td>
+                <td data-label="@L["Roles"]">@string.Join(", ", compte.Roles.Select(r => L[$"Role.{r}"].Value))</td>
+                <td data-label="@L["Telephone"]">@compte.Telephone</td>
+                <td data-label="@L["Statut"]">
                     <Pastille Ton="@(compte.Actif ? Ton.Succes : Ton.Neutre)">@(compte.Actif ? L["Actif"] : L["Desactive"])</Pastille>
-                    @if (compte.MotDePasseProvisoire) { <small class="discret"> @L["MotDePasseProvisoire"]</small> }
+                    @if (compte.MotDePasseProvisoire) { <Pastille Ton="Ton.Attention">@L["MotDePasseProvisoire"]</Pastille> }
                 </td>
             </tr>
         }
-    </tbody>
-</table>
+    </Corps>
+</Tableau>
 
 @code {
     private List<CompteUtilisateur> _comptes = [];
@@ -64,6 +64,7 @@
     private HashSet<string> _roles = [];
     private bool _avecDesactives;
     private bool _enCours;
+    private bool _charge;
     private string? _erreur;
 
     protected override Task OnInitializedAsync() => Charger();
@@ -73,10 +74,17 @@
         var resultat = await Api.GetAsync<List<CompteUtilisateur>>("api/identite/utilisateurs");
         _comptes = resultat.Valeur ?? [];
         _erreur = resultat.Erreur;
+        _charge = true;
     }
 
     private async Task Creer()
     {
+        // Un seul envoi à la fois : un double clic ne crée pas deux comptes.
+        if (_enCours)
+        {
+            return;
+        }
+
         _enCours = true;
         var resultat = await Api.PostAsync<FicheCompte>("api/identite/utilisateurs", new
         {

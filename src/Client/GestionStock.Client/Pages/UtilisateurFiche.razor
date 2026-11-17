@@ -5,45 +5,49 @@
 
 <PageTitle>@(_fiche?.Compte.NomComplet ?? L["Utilisateurs"]) · GestionStock</PageTitle>
 
-<p><a href="utilisateurs">← @L["Utilisateurs"]</a></p>
+<p><a href="utilisateurs"><Icone Nom="retour" />@L["Utilisateurs"]</a></p>
 <Message Texte="@_erreur" />
 <Message Texte="@_succes" Erreur="false" />
 
-@if (_fiche is { Compte: var compte })
+@if (_fiche is null && _erreur is null)
+{
+    <Chargement />
+}
+else if (_fiche is { Compte: var compte })
 {
     <h1>@compte.NomComplet <small class="discret"><code>@compte.Matricule</code></small>
         <Pastille Ton="@(compte.Actif ? Ton.Succes : Ton.Neutre)">@(compte.Actif ? L["Actif"] : L["Desactive"])</Pastille>
     </h1>
     @if (compte.MotDePasseProvisoire)
     {
-        <p class="discret">@L["MotDePasseProvisoireEnAttente"]</p>
+        <div class="message avertissement" role="status"><Icone Nom="attention" /><span>@L["MotDePasseProvisoireEnAttente"]</span></div>
     }
 
     <form class="fiche" @onsubmit="Enregistrer">
         <h2>@L["Fiche"]</h2>
         <div class="grille">
-            <label>@L["Prenom"] <input @bind="_prenom" required maxlength="100" /></label>
-            <label>@L["Nom"] <input @bind="_nom" required maxlength="100" /></label>
-            <label>@L["Telephone"] <input @bind="_telephone" maxlength="20" /></label>
-            <label>@L["Langue"]
+            <Champ Libelle="@L["Prenom"]" Requis="true"><input @bind="_prenom" required maxlength="100" /></Champ>
+            <Champ Libelle="@L["Nom"]" Requis="true"><input @bind="_nom" required maxlength="100" /></Champ>
+            <Champ Libelle="@L["Telephone"]"><input @bind="_telephone" maxlength="20" /></Champ>
+            <Champ Libelle="@L["Langue"]">
                 <select @bind="_langue">
                     <option value="fr">Français</option>
                     <option value="en">English</option>
                 </select>
-            </label>
+            </Champ>
         </div>
         <ChoixRoles Roles="_roles" />
         <p class="discret">@L["MatriculeFige"]</p>
-        <div class="actions"><button type="submit" class="principal" disabled="@_enCours">@L["Enregistrer"]</button></div>
+        <div class="actions"><Bouton Type="submit" Variante="VarianteBouton.Principal" Occupe="_enCours">@L["Enregistrer"]</Bouton></div>
     </form>
 
     <div class="fiche">
         <h2>@L["MotDePasseOublie"]</h2>
         <p class="discret">@L["ReinitialisationAide"]</p>
         <div class="grille">
-            <label>@L["MotDePasseProvisoire"] <ChampMotDePasse @bind-Valeur="_provisoire" Autocomplete="new-password" /></label>
+            <Champ Libelle="@L["MotDePasseProvisoire"]"><ChampMotDePasse @bind-Valeur="_provisoire" Autocomplete="new-password" /></Champ>
         </div>
-        <div class="actions"><button disabled="@(_enCours || string.IsNullOrEmpty(_provisoire))" @onclick="Reinitialiser">@L["Reinitialiser"]</button></div>
+        <div class="actions"><Bouton Desactive="@(_enCours || string.IsNullOrEmpty(_provisoire))" OnClick="Reinitialiser">@L["Reinitialiser"]</Bouton></div>
     </div>
 
     <div class="fiche">
@@ -52,25 +56,30 @@
         <div class="actions">
             @if (compte.Actif)
             {
-                <button disabled="@_enCours" @onclick="Desactiver">@L["Desactiver"]</button>
+                <Bouton Variante="VarianteBouton.Danger" Desactive="_enCours" OnClick="Desactiver">@L["Desactiver"]</Bouton>
             }
             else
             {
-                <button class="valider" disabled="@_enCours" @onclick="Reactiver">@L["Reactiver"]</button>
+                <Bouton Variante="VarianteBouton.Valider" NomIcone="valider" Desactive="_enCours" OnClick="Reactiver">@L["Reactiver"]</Bouton>
             }
         </div>
     </div>
 
     <h2>@L["JournalCompte"]</h2>
-    <table>
-        <thead><tr><th>@L["Date"]</th><th>@L["Operation"]</th><th>@L["Auteur"]</th><th>@L["Detail"]</th></tr></thead>
-        <tbody>
+    <Tableau Colonnes="4" EstVide="_fiche.Journal.Count == 0" TexteVide="@L["AucuneOperation"]" Legende="@L["JournalCompte"]">
+        <Entete><th>@L["Date"]</th><th>@L["Operation"]</th><th>@L["Auteur"]</th><th>@L["Detail"]</th></Entete>
+        <Corps>
             @foreach (var ligne in _fiche.Journal)
             {
-                <tr><td class="court">@Format.Date(ligne.DateUtc)</td><td>@L[$"ActionCompte.{ligne.Action}"]</td><td>@ligne.Auteur</td><td>@ligne.Detail</td></tr>
+                <tr>
+                    <td data-label="@L["Date"]" class="court">@Format.Date(ligne.DateUtc)</td>
+                    <td data-label="@L["Operation"]">@L[$"ActionCompte.{ligne.Action}"]</td>
+                    <td data-label="@L["Auteur"]">@ligne.Auteur</td>
+                    <td data-label="@L["Detail"]">@ligne.Detail</td>
+                </tr>
             }
-        </tbody>
-    </table>
+        </Corps>
+    </Tableau>
 }
 
 @code {

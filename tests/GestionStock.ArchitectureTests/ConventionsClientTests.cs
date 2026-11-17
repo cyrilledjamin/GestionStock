@@ -176,6 +176,79 @@ public sealed partial class ConventionsClientTests
     }
 
     [Fact]
+    public void Chaque_champ_a_un_nom_accessible()
+    {
+        // Un texte d'aide (placeholder) disparaît à la saisie et n'est pas toujours lu : chaque champ est dans un libellé
+        // (label, Champ) ou porte aria-label.
+        var sansNom = new List<string>();
+        foreach (var fichier in FichiersRazor())
+        {
+            var texte = File.ReadAllText(fichier);
+            foreach (Match champ in ChampSaisie().Matches(texte))
+            {
+                var balise = champ.Value;
+                if (balise.Contains("aria-label", StringComparison.Ordinal) || balise.Contains("type=\"hidden\"", StringComparison.Ordinal)
+                    || DansUnLibelle(texte, champ.Index))
+                {
+                    continue;
+                }
+
+                sansNom.Add($"{Path.GetFileName(fichier)} : {balise[..Math.Min(balise.Length, 80)]}");
+            }
+        }
+
+        Assert.Empty(sansNom);
+    }
+
+    [Fact]
+    public void Les_boutons_a_icone_seule_sont_nommes()
+    {
+        // Bouton sans texte : son icône ne dit rien aux lecteurs d'écran, Libelle devient son nom. Pas de symbole nu (✕, ←)
+        // comme seul contenu d'un bouton ou d'un lien.
+        var fautes = FichiersRazor()
+            .SelectMany(f => BoutonSansTexte().Matches(File.ReadAllText(f)).Where(m => !m.Value.Contains("Libelle=", StringComparison.Ordinal))
+                .Select(m => $"{Path.GetFileName(f)} : {m.Value}")
+                .Concat(SymboleSeul().Matches(File.ReadAllText(f)).Select(m => $"{Path.GetFileName(f)} : {m.Value}")))
+            .ToList();
+
+        Assert.Empty(fautes);
+    }
+
+    [Fact]
+    public void Les_onglets_et_le_tiroir_sont_utilisables_au_clavier()
+    {
+        var rapports = File.ReadAllText(Path.Combine(RepertoireClient, "Pages", "Rapports.razor"));
+        var cadre = File.ReadAllText(Path.Combine(RepertoireClient, "Layout", "MainLayout.razor"));
+        var feuille = File.ReadAllText(Path.Combine(RepertoireClient, "wwwroot", "css", "app.css"));
+
+        Assert.Contains("role=\"tablist\"", rapports, StringComparison.Ordinal);
+        Assert.Contains("role=\"tab\"", rapports, StringComparison.Ordinal);
+        Assert.Contains("aria-selected", rapports, StringComparison.Ordinal);
+        Assert.Contains("role=\"tabpanel\"", rapports, StringComparison.Ordinal);
+        Assert.Contains("\"ArrowRight\"", rapports, StringComparison.Ordinal);
+        Assert.Contains("\"Escape\"", cadre, StringComparison.Ordinal);
+        Assert.Contains("aria-expanded", cadre, StringComparison.Ordinal);
+        Assert.Contains(":focus-visible", feuille, StringComparison.Ordinal);
+        // Cibles de 44 px au doigt (2,75 rem).
+        Assert.Contains("@media (pointer: coarse)", feuille, StringComparison.Ordinal);
+        Assert.Contains("--cible: 2.75rem", feuille, StringComparison.Ordinal);
+    }
+
+    /// <summary>Le champ à cette position est-il à l'intérieur d'un label ou d'un composant Champ encore ouvert ?</summary>
+    private static bool DansUnLibelle(string texte, int position)
+    {
+        var avant = texte[..position];
+        var ouverture = Math.Max(avant.LastIndexOf("<label", StringComparison.Ordinal), avant.LastIndexOf("<Champ ", StringComparison.Ordinal));
+        var fermeture = Math.Max(avant.LastIndexOf("</label>", StringComparison.Ordinal), avant.LastIndexOf("</Champ>", StringComparison.Ordinal));
+        return ouverture > fermeture;
+    }
+
+    private static IEnumerable<string> FichiersRazor() =>
+        Directory.EnumerateFiles(RepertoireClient, "*.razor", SearchOption.AllDirectories)
+            .Where(f => !f.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.Ordinal)
+                && !f.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.Ordinal));
+
+    [Fact]
     public void La_police_est_embarquee_et_gardee_hors_ligne()
     {
         var feuille = File.ReadAllText(Path.Combine(RepertoireClient, "wwwroot", "css", "app.css"));
@@ -261,4 +334,16 @@ public sealed partial class ConventionsClientTests
 
     [GeneratedRegex("(?:<Icone Nom|NomIcone)=\"([a-z]+)\"")]
     private static partial Regex IconeUtilisee();
+
+    /// <summary>Champ de saisie HTML (input, select, textarea), balise ouvrante entière.</summary>
+    [GeneratedRegex(@"<(?:input|select|textarea)\b[^>]*>", RegexOptions.Singleline)]
+    private static partial Regex ChampSaisie();
+
+    /// <summary>Composant Bouton fermé sur lui-même (donc sans texte).</summary>
+    [GeneratedRegex(@"<Bouton\b[^>]*?/>", RegexOptions.Singleline)]
+    private static partial Regex BoutonSansTexte();
+
+    /// <summary>Symbole seul comme contenu d'un bouton ou d'un lien.</summary>
+    [GeneratedRegex(@">\s*[✕×←→↓]\s*</(?:button|a)>")]
+    private static partial Regex SymboleSeul();
 }

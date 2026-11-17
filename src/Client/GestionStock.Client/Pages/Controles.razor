@@ -16,32 +16,26 @@
     <div class="indicateurs">
         @if (_etat?.DernierControle is { } dernier)
         {
-            <div class="indicateur @(dernier.Statut == "Echoue" ? "alerte" : _etat.ControleEnRetard ? "attention" : "")">
-                <span>@Format.Date(dernier.DebutUtc) · @(dernier.Declencheur == "systeme" ? L["ControlePlanifie"].Value : dernier.Declencheur)</span>
-                <strong>@L[$"StatutControle.{dernier.Statut}"]</strong>
-                <small>@L["SoldesControles", dernier.SoldesControles, dernier.Ecarts]</small>
+            <Indicateur Libelle="@($"{Format.Date(dernier.DebutUtc)} · {(dernier.Declencheur == "systeme" ? L["ControlePlanifie"].Value : dernier.Declencheur)}")"
+                        Valeur="@L[$"StatutControle.{dernier.Statut}"]" Detail="@L["SoldesControles", dernier.SoldesControles, dernier.Ecarts]"
+                        Ton="@(dernier.Statut == "Echoue" ? Ton.Danger : _etat.ControleEnRetard ? Ton.Attention : Ton.Succes)">
                 @if (dernier.Message is { Length: > 0 } message)
                 {
                     <small><code>@message</code></small>
                 }
-            </div>
+            </Indicateur>
         }
         else if (_etat is not null)
         {
-            <div class="indicateur attention">
-                <span>@L["AucunControle"]</span>
-                <strong>—</strong>
-            </div>
+            <Indicateur Libelle="@L["AucunControle"]" Valeur="—" Ton="Ton.Attention" />
         }
-        <div class="indicateur @(_etat?.EcartsOuverts > 0 ? "alerte" : "")">
-            <span>@L["EcartsOuverts"]</span>
-            <strong>@(_etat?.EcartsOuverts ?? 0)</strong>
-            <small>@L["ControleNocturne"]</small>
-        </div>
+        <Indicateur Libelle="@L["EcartsOuverts"]" Valeur="@((_etat?.EcartsOuverts ?? 0).ToString(System.Globalization.CultureInfo.CurrentCulture))"
+                    Detail="@L["ControleNocturne"]" Ton="@(_etat?.EcartsOuverts > 0 ? Ton.Danger : Ton.Neutre)" />
     </div>
     @if (Session.A(Permissions.ControlesLancer))
     {
-        <p><button class="valider" disabled="@_enCours" @onclick="Lancer"><Icone Nom="controles" />@(_enCours ? L["ControleEnCours"] : L["LancerControle"])</button></p>
+        <p><Bouton Variante="VarianteBouton.Valider" NomIcone="controles" Occupe="_enCours" OnClick="Lancer">@L["LancerControle"]</Bouton>
+            @if (_enCours) { <span class="discret" role="status"> @L["ControleEnCours"]</span> }</p>
     }
 </section>
 
@@ -55,11 +49,9 @@
     </select>
 </div>
 
-<table class="cartes">
-    <thead>
-        <tr><th>@L["Solde"]</th><th>@L["Designation"]</th><th>@L["SelonJournal"]</th><th>@L["Enregistre"]</th><th>@L["Detecte"]</th><th>@L["Statut"]</th><th></th></tr>
-    </thead>
-    <tbody>
+<Tableau Colonnes="7" Charge="_charge" EstVide="_ecarts.Count == 0" TexteVide="@L["AucunEcart"]" Legende="@L["Ecarts"]">
+    <Entete><th>@L["Solde"]</th><th>@L["Designation"]</th><th>@L["SelonJournal"]</th><th>@L["Enregistre"]</th><th>@L["Detecte"]</th><th>@L["Statut"]</th><th></th></Entete>
+    <Corps>
         @foreach (var ecart in _ecarts)
         {
             <tr class="@(ecart.Statut == "Ouvert" ? "" : "inactif")">
@@ -78,21 +70,13 @@
                 <td>
                     @if (ecart.Statut == "Ouvert" && Session.A(Permissions.SoldesReconstruire))
                     {
-                        <button disabled="@_enCours" @onclick="() => Reconstruire(ecart)">@L["Reconstruire"]</button>
+                        <Bouton Variante="VarianteBouton.Discret" Desactive="_enCours" OnClick="() => Reconstruire(ecart)">@L["Reconstruire"]</Bouton>
                     }
                 </td>
             </tr>
         }
-        @if (!_charge)
-        {
-            <tr><td colspan="7"><Chargement /></td></tr>
-        }
-        else if (_ecarts.Count == 0)
-        {
-            <tr><td colspan="7" class="vide">@L["AucunEcart"]</td></tr>
-        }
-    </tbody>
-</table>
+    </Corps>
+</Tableau>
 
 @code {
     // Premier chargement terminé : jusque-là, la liste montre l'attente et non « Aucun… ».
