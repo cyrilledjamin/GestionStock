@@ -63,7 +63,7 @@
     protected override async Task OnParametersSetAsync()
     {
         var article = await Api.GetAsync<Article>($"api/referentiel/articles/{ArticleId}");
-        var soldes = await Api.GetAsync<List<SoldeStock>>("api/stock/soldes");
+        var soldes = await Api.GetAsync<List<SoldeStock>>($"api/stock/soldes?articles={ArticleId}");
         var mouvements = await Api.GetAsync<List<MouvementStock>>($"api/stock/articles/{ArticleId}/mouvements");
         _erreur = article.Erreur ?? soldes.Erreur ?? mouvements.Erreur;
         _article = article.Valeur;

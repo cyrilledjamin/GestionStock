@@ -127,3 +127,45 @@ est traitée à l'étape 58.
   transaction n'y serait pas enrôlé, et EF tenterait d'en ouvrir une seconde sur la même connexion. Le risque dépasse
   le gain sur une validation de 38 ms.
 - *La pagination des listes* est reportée à l'étape 58 : l'API et les écrans changent ensemble.
+
+## Étape 58 : la caisse et les écrans sur connexion lente
+
+Le serveur répondait déjà vite ; l'étape réduit ce qui traverse le réseau et ce que les écrans attendent.
+
+**Échanges des écrans** (échelle 0,25, tailles compressées brotli, comme sur le réseau) :
+
+| Échange | Avant | Après | Changement |
+| --- | --- | --- | --- |
+| Catalogue de la caisse, à chaque ouverture | 271 Ko | **0 Ko** si inchangé (304) | Réponse versionnée (ETag sur le contenu, hors heure de génération) ; le poste renvoie sa version |
+| Grille de prix, à chaque ouverture | 117 Ko | **0 Ko** si inchangée (304) | Idem |
+| Clients à crédit de la caisse | 7 Ko | **0 Ko** si inchangés (304) | Idem |
+| Écran des articles | 189 Ko (tout le catalogue) | **7,7 Ko** (200 premiers) | `?taille=`, recherche par le serveur ; message « précisez la recherche » au-delà |
+| Écran du stock | 378 Ko (tous les articles et tous les soldes) | **7,5 Ko** (100 articles et leurs soldes) | Recherche par le serveur, `?articles=` sur les soldes, valeur totale par `GET /api/stock/valeur` |
+| Accueil : réceptions en brouillon | 154 Ko (toutes les réceptions) | **6 octets** | `?statut=Brouillon` |
+| Journal d'un article | tous les soldes | le solde de l'article | `?articles=` |
+| Réception : choix d'un article | une liste de tout le catalogue par ligne | recherche (10 résultats) | Composant `ChoixArticle` |
+| Données de culture (ICU) | fichier complet | fichier européen (EFIGS) | Culture de démarrage passée à `Blazor.start` |
+
+**Caisse :**
+- l'ouverture lit d'abord le poste, puis envoie ses demandes ensemble (session, articles rapides, postes) ; les
+  données gardées sur le poste se rafraîchissent en arrière-plan, puis toutes les 5 minutes (304 le plus souvent) ;
+- tant que ces données ont été vérifiées depuis moins de 10 minutes, le scan et le prix sont lus sur le poste, sans
+  aller-retour (le serveur relit le prix à l'encaissement, RG37) ;
+- après une vente ou un remboursement, seule la session est relue, plus tous ses tickets.
+
+**Connexion lente émulée** par Chromium (400 ms de latence, ≈ 400 kbit/s), application déjà sur le poste, parcours
+`ParcoursConnexionLente` :
+
+| Mesure | Résultat | Budget |
+| --- | --- | --- |
+| Ouverture de la caisse (menu → champ de scan prêt) | **1 352 ms** | < 3 s |
+| Scan d'un article jusqu'au panier | **80 ms** | < 1 s |
+
+**Écrans :** recherches différées de 250 ms et réponses anciennes ignorées (articles, clients, démarque, choix du
+client, choix de l'article) ; champ de scan de l'inventaire isolé (la table n'est plus redessinée à chaque caractère).
+Délai par appel : 15 s par défaut, puis passage hors ligne au lieu de 100 s d'attente ; 5 minutes pour les appels
+longs par nature (données de la caisse, contrôle des soldes, exports, reprise).
+
+**Non fait :**
+- `Virtualize` : les listes sont maintenant bornées à 100 ou 200 lignes, le gain serait faible.
+- Téléchargements par flux : les exports restent en base64 ; ils sont rares et bornés à 366 jours.

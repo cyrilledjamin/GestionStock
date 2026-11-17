@@ -30,6 +30,7 @@ internal static class EndpointsPrix
         // Grille de la caisse, gardée sur le poste pour vendre hors ligne (7.8).
         groupe.MapGet("/grille", async (ServicePrix service, IHorloge horloge, CancellationToken annulation) =>
             TypedResults.Ok(await service.GrilleAsync(horloge.AujourdhuiDouala, annulation)))
+            .AvecVersion()
             .RequireAuthorization(Permissions.PrixConsulter);
 
         groupe.MapGet("/articles/{articleId:guid}", (Guid articleId, ServicePrix service, CancellationToken annulation) =>

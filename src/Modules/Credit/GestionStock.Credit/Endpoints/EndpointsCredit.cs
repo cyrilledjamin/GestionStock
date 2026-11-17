@@ -25,8 +25,10 @@ internal static class EndpointsCredit
         ArgumentNullException.ThrowIfNull(routes);
         var groupe = routes.MapGroup(Prefixe).WithTags("Credit");
 
-        groupe.MapGet("/clients", async (string? recherche, ServiceCredit service, CancellationToken annulation) =>
-            TypedResults.Ok(await service.ListerAsync(recherche, seulementEnRetard: false, annulation)))
+        // taille : nombre maximal de clients (écran de liste) ; sans taille, tous (caisse hors ligne).
+        groupe.MapGet("/clients", async (string? recherche, int? taille, ServiceCredit service, CancellationToken annulation) =>
+            TypedResults.Ok(await service.ListerAsync(recherche, seulementEnRetard: false, annulation, taille)))
+            .AvecVersion()
             .RequireAuthorization(Permissions.CreditConsulter);
 
         // RG43 : clients dont une dette dépasse le délai de paiement.

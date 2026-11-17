@@ -40,16 +40,10 @@
                 <tbody>
                     @foreach (var ligne in _lignes)
                     {
-                        var article = _articles.FirstOrDefault(a => a.Id == ligne.ArticleId);
+                        var article = ligne.Article;
                         <tr>
                             <td>
-                                <select @bind="ligne.ArticleId" required>
-                                    <option value="@Guid.Empty">@L["Choisir"]</option>
-                                    @foreach (var a in _articles)
-                                    {
-                                        <option value="@a.Id">@a.Code — @Format.Libelle(a)</option>
-                                    }
-                                </select>
+                                <ChoixArticle Article="ligne.Article" ArticleChanged="a => Choisir(ligne, a)" />
                             </td>
                             <td class="nombre">
                                 <input type="number" min="0" step="@Pas(article)" @bind="ligne.Quantite" required />
@@ -252,7 +246,6 @@
 
     private DetailReception? _reception;
     private List<Fournisseur> _fournisseurs = [];
-    private List<Article> _articles = [];
     private Guid? _fournisseurId;
     private string? _bonLivraison;
     private List<Ligne> _lignes = [new()];
@@ -298,10 +291,17 @@
         if (Modifiable)
         {
             var fournisseurs = await Api.GetAsync<List<Fournisseur>>("api/achats/fournisseurs");
-            var articles = await Api.GetAsync<List<Article>>("api/referentiel/articles");
-            _erreur ??= fournisseurs.Erreur ?? articles.Erreur;
+            _erreur ??= fournisseurs.Erreur;
             _fournisseurs = fournisseurs.Valeur ?? [];
-            _articles = articles.Valeur ?? [];
+
+            // Articles des lignes déjà saisies : lus un par un (quelques lignes), pas tout le catalogue.
+            var articles = await Task.WhenAll(_lignes.Select(l => l.ArticleId).Where(id => id != Guid.Empty).Distinct()
+                .Select(id => Api.GetAsync<Article>($"api/referentiel/articles/{id}")));
+            var parId = articles.Select(a => a.Valeur).OfType<Article>().ToDictionary(a => a.Id);
+            foreach (var ligne in _lignes)
+            {
+                ligne.Article = parId.GetValueOrDefault(ligne.ArticleId);
+            }
         }
 
         _chargee = true;
@@ -453,9 +453,18 @@
         var p => (1m / (decimal)Math.Pow(10, p.Value)).ToString(CultureInfo.InvariantCulture),
     };
 
+    private static void Choisir(Ligne ligne, Article? article)
+    {
+        ligne.Article = article;
+        ligne.ArticleId = article?.Id ?? Guid.Empty;
+    }
+
     private sealed class Ligne
     {
         public Guid ArticleId { get; set; }
+
+        public Article? Article { get; set; }
+
         public decimal Quantite { get; set; } = 1m;
         public decimal CoutUnitaire { get; set; }
     }

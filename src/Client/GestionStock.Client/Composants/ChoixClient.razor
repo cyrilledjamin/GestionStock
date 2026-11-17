@@ -1,6 +1,7 @@
 @* Recherche et choix d'un client à crédit (nom ou téléphone). *@
 @inject Api Api
 @inject CacheCaisse Cache
+@implements IDisposable
 
 <div class="choix-client">
     <Message Texte="@_erreur" />
@@ -28,6 +29,10 @@
 </div>
 
 @code {
+    private readonly RechercheDifferee _differee = new();
+
+    public void Dispose() => _differee.Dispose();
+
     [Parameter] public ClientCredit? Client { get; set; }
 
     [Parameter] public EventCallback<ClientCredit?> ClientChanged { get; set; }
@@ -47,7 +52,17 @@
             return;
         }
 
-        var trouves = await Api.GetAsync<List<ClientCredit>>($"api/credit/clients?recherche={Uri.EscapeDataString(texte)}");
+        if (await _differee.AttendreAsync() is not { } numero)
+        {
+            return;
+        }
+
+        var trouves = await Api.GetAsync<List<ClientCredit>>($"api/credit/clients?recherche={Uri.EscapeDataString(texte)}&taille=10");
+        if (!_differee.EstLaDerniere(numero))
+        {
+            return;
+        }
+
         if (trouves.Code == Api.CodeHorsLigne)
         {
             // Hors ligne (7.8) : clients gardés sur le poste, avec leur dernier solde connu.

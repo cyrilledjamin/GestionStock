@@ -41,8 +41,9 @@ internal static class EndpointsAchats
             .RequireAuthorization(Permissions.FournisseursGerer);
 
         // Réceptions
-        groupe.MapGet("/receptions", async (ServiceReceptions service, CancellationToken annulation) =>
-            TypedResults.Ok(await service.ListerAsync(annulation)))
+        // statut : Brouillon ou Validee (l'accueil compte les brouillons sans télécharger toutes les réceptions).
+        groupe.MapGet("/receptions", async (StatutReception? statut, ServiceReceptions service, CancellationToken annulation) =>
+            TypedResults.Ok(await service.ListerAsync(annulation, statut)))
             .RequireAuthorization(Permissions.AchatsConsulter);
 
         groupe.MapGet("/receptions/{id:guid}", (Guid id, ServiceReceptions service, CancellationToken annulation) =>

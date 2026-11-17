@@ -595,4 +595,5 @@
   <data name="ConfirmerDesactivationCode" xml:space="preserve"><value>Désactiver ce code-barres ? Il ne sera plus reconnu au scan.</value></data>
   <data name="ConfirmerValidationDemarque" xml:space="preserve"><value>Valider cette démarque ? La marchandise sort du stock au coût moyen.</value></data>
   <data name="ConfirmerRefusDemarque" xml:space="preserve"><value>Refuser cette démarque ? Le stock ne change pas.</value></data>
+  <data name="ListeTronquee" xml:space="preserve"><value>Seuls les {0} premiers résultats sont affichés : précisez la recherche.</value></data>
 </root>

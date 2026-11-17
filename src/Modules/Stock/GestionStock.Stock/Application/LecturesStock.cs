@@ -20,6 +20,9 @@ internal sealed record MouvementAffiche(
     Guid? EmplacementSourceId,
     Guid? EmplacementDestinationId);
 
+/// <summary>Valeur du stock d'un site au CUMP et nombre d'articles qui y ont un solde.</summary>
+internal sealed record ValeurStock(decimal Valeur, int NombreArticles);
+
 /// <summary>Consultation des disponibilités et des mouvements (UC14), sur le site de la boutique par défaut.</summary>
 internal sealed class LecturesStock(StockDbContext contexte, IConsultationReferentiel referentiel)
 {
@@ -28,13 +31,23 @@ internal sealed class LecturesStock(StockDbContext contexte, IConsultationRefere
 
     public const int LimiteMax = 1000;
 
-    public async Task<IReadOnlyList<SoldeStockSite>> ListerSoldesAsync(Guid? siteId, CancellationToken annulation)
+    public async Task<IReadOnlyList<SoldeStockSite>> ListerSoldesAsync(Guid? siteId, CancellationToken annulation, IReadOnlyCollection<Guid>? articles = null)
     {
         var site = siteId ?? (await referentiel.ObtenirSiteBoutiqueAsync(annulation)).SiteId;
         var soldes = await contexte.StocksSites.AsNoTracking()
-            .Where(s => s.SiteId == site)
+            .Where(s => s.SiteId == site && (articles == null || articles.Contains(s.ArticleId)))
             .ToListAsync(annulation);
         return [.. soldes.Select(s => s.VersContrat())];
+    }
+
+    /// <summary>Valeur du stock du site au CUMP, et nombre d'articles qui y ont un solde.</summary>
+    public async Task<ValeurStock> ValeurAsync(Guid? siteId, CancellationToken annulation)
+    {
+        var site = siteId ?? (await referentiel.ObtenirSiteBoutiqueAsync(annulation)).SiteId;
+        var soldes = contexte.StocksSites.AsNoTracking().Where(s => s.SiteId == site);
+        return new ValeurStock(
+            await soldes.SumAsync(s => s.QuantitePhysique * s.Cump, annulation),
+            await soldes.CountAsync(annulation));
     }
 
     /// <summary>Mouvements d'un article sur un site, du plus récent au plus ancien.</summary>

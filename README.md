@@ -190,7 +190,7 @@ Si le port 5432 est déjà pris (PostgreSQL installé sur le poste), choisir un 
 | `PUT /api/identite/utilisateurs/{id}` | `Identite.Utilisateurs.Gerer` | `{ prenom, nom, telephone?, roles, langue? }` (le matricule ne change pas) |
 | `POST /api/identite/utilisateurs/{id}/desactivation`, `/reactivation` | `Identite.Utilisateurs.Gerer` | Départ ou retour d'un employé ; rien n'est supprimé |
 | `POST /api/identite/utilisateurs/{id}/mot-de-passe` | `Identite.Utilisateurs.Gerer` | `{ motDePasse }` : mot de passe provisoire (oubli) |
-| `GET /api/referentiel/articles` | `Referentiel.Consulter` | Articles actifs ; `?recherche=` (code ou libellé, sans casse), `?inclureInactifs=true` |
+| `GET /api/referentiel/articles` | `Referentiel.Consulter` | Articles actifs ; `?recherche=` (code ou libellé, sans casse), `?inclureInactifs=true`, `?taille=` (nombre maximal, par code ; 1 000 au plus) |
 | `GET /api/referentiel/articles/{id}` | `Referentiel.Consulter` | Un article (404 s'il n'existe pas) |
 | `POST /api/referentiel/articles` | `Referentiel.Articles.Gerer` | `{ code, libelle, libelleTraduit?, uniteStock, precisionQuantite }` → crée un article (409 si le code existe) |
 | `PUT /api/referentiel/articles/{id}` | `Referentiel.Articles.Gerer` | `{ libelle, libelleTraduit?, actif }` : le code, l'unité et la précision sont fixés à la création |
@@ -203,18 +203,18 @@ Si le port 5432 est déjà pris (PostgreSQL installé sur le poste), choisir un 
 | `POST /api/referentiel/codes/{id}/desactivation` | `Referentiel.Articles.Gerer` | Désactive un code (il reste dans l'historique) |
 | `GET /api/referentiel/scan/{valeur}` | `Referentiel.Consulter` | Article + conditionnement d'un code scanné ou du code article (404 si inconnu) |
 | `PUT /api/referentiel/conditionnements/{id}/vente-rapide` | `Referentiel.Articles.Gerer` | `{ venteRapide }` : tuile à la caisse (articles sans code-barres) ; refusé sur un conditionnement désactivé, et retiré à sa désactivation |
-| `GET /api/referentiel/catalogue-caisse` | `Referentiel.Consulter` | Catalogue de la caisse gardé sur le poste pour vendre hors ligne : conditionnements actifs d'articles actifs, leurs codes actifs, unité, articles rapides |
+| `GET /api/referentiel/catalogue-caisse` | `Referentiel.Consulter` | Versionné (ETag, 304 si inchangé). Catalogue de la caisse gardé sur le poste pour vendre hors ligne : conditionnements actifs d'articles actifs, leurs codes actifs, unité, articles rapides |
 | `GET /api/referentiel/vendables/rapides` | `Referentiel.Consulter` | Articles rapides de la caisse : conditionnements actifs marqués, d'articles actifs |
 | `GET /api/referentiel/vendables?recherche=` | `Referentiel.Consulter` | Articles actifs (code ou libellé) avec chacun de leurs conditionnements actifs |
 | `GET /api/prix/regime` | `Prix.Consulter` | Régime de TVA : `{ assujetti, tauxPourcent, tauxApplique }` |
 | `GET /api/prix/articles/{id}` | `Prix.Consulter` | Conditionnements de l'article avec prix en vigueur et prochain prix programmé |
-| `GET /api/prix/grille` | `Prix.Consulter` | Grille de la caisse : prix en vigueur aujourd'hui (Douala) et prochain prix programmé de chaque conditionnement, régime de TVA |
+| `GET /api/prix/grille` | `Prix.Consulter` | Versionnée (ETag, 304 si inchangée). Grille de la caisse : prix en vigueur aujourd'hui (Douala) et prochain prix programmé de chaque conditionnement, régime de TVA |
 | `GET /api/prix/conditionnements/{id}` | `Prix.Consulter` | Prix applicable aujourd'hui (204 s'il n'y en a pas) |
 | `GET /api/prix/conditionnements/{id}/historique` | `Prix.Consulter` | Tous les prix du conditionnement, du plus récent au plus ancien |
 | `POST /api/prix/conditionnements/{id}` | `Prix.Gerer` | `{ prixTtc, debutValidite? }` : nouveau prix, dès aujourd'hui ou à une date future |
 | `GET /api/achats/fournisseurs` | `Achats.Consulter` | Fournisseurs actifs ; `?inclureInactifs=true` |
 | `POST /api/achats/fournisseurs`, `PUT /api/achats/fournisseurs/{id}` | `Achats.Fournisseurs.Gerer` | `{ nom, telephone?, actif }` |
-| `GET /api/achats/receptions`, `GET /api/achats/receptions/{id}` | `Achats.Consulter` | Réceptions (la plus récente d'abord) ; détail avec lignes et articles |
+| `GET /api/achats/receptions`, `GET /api/achats/receptions/{id}` | `Achats.Consulter` | Réceptions (la plus récente d'abord), `?statut=Brouillon\|Validee` ; détail avec lignes et articles |
 | `POST /api/achats/receptions`, `PUT /api/achats/receptions/{id}` | `Achats.Receptions.Saisir` | `{ fournisseurId, numeroBonLivraison?, lignes: [{ articleId, quantite, coutUnitaire }] }` : brouillon |
 | `POST /api/achats/receptions/{id}/validation` | `Achats.Receptions.Valider` | Valide et fait entrer la marchandise en stock, frais d'approche compris (409 si déjà validée) |
 | `POST /api/achats/receptions/{id}/frais` | `Achats.Frais.Saisir` | `{ type: Transport \| Transit \| Douane \| Autre, montant, cle?: Valeur \| Quantite, libelle? }` : avant ou après la validation |
@@ -223,7 +223,7 @@ Si le port 5432 est déjà pris (PostgreSQL installé sur le poste), choisir un 
 | `GET /api/achats/receptions/{id}/dette` | `Achats.Consulter` | Dette d'une réception et historique de ses paiements |
 | `POST /api/achats/receptions/{id}/paiements` | `Achats.Paiements.Saisir` | `{ montant, mode: Especes \| MobileMoney \| Virement \| Cheque, reference? }` |
 | `POST /api/achats/paiements/{id}/annulation` | `Achats.Paiements.Saisir` | `{ motif }` : paiement opposé journalisé (409 si déjà annulé) |
-| `GET /api/credit/clients?recherche=` | `Credit.Consulter` | Clients (nom ou téléphone) avec solde dû et montant en retard |
+| `GET /api/credit/clients?recherche=` | `Credit.Consulter` | Versionné (ETag). Clients (nom ou téléphone) avec solde dû et montant en retard ; `?taille=` (nombre maximal, par nom) |
 | `GET /api/credit/clients/{id}` | `Credit.Consulter` | Fiche : client, ventes non soldées (reste dû, échéance), journal des opérations |
 | `GET /api/credit/impayes` | `Credit.Consulter` | Clients ayant une dette échue (RG43) |
 | `POST /api/credit/clients`, `PUT /api/credit/clients/{id}` | `Credit.Clients.Gerer` | `{ nom, telephone, delaiPaiementJours?, actif }` |
@@ -269,7 +269,8 @@ Si le port 5432 est déjà pris (PostgreSQL installé sur le poste), choisir un 
 | `GET /api/rapports/caisse?du=&au=` | `Rapports.Consulter` | Sessions et écarts, remises, avoirs, crédits validés par un responsable, stocks négatifs, frais non incorporés, anomalies hors ligne et leur traitement |
 | `GET /api/rapports/journaux` | `Rapports.Consulter` | Journaux comptables exportables |
 | `GET /api/exports/{journal}?du=&au=&format=xlsx\|csv` | `Rapports.Exports.Produire` | `ventes`, `achats`, `encaissements`, `creances`, `valeur-stock` (du jour) ; Excel par défaut |
-| `GET /api/stock/soldes` | `Stock.Consulter` | Soldes article × site de la boutique : physique, réservé, bloqué, disponible, CUMP |
+| `GET /api/stock/soldes` | `Stock.Consulter` | Soldes article × site de la boutique : physique, réservé, bloqué, disponible, CUMP ; `?articles=id1,id2,…` pour ceux d'une page d'articles |
+| `GET /api/stock/valeur` | `Stock.Consulter` | Valeur du stock de la boutique au CUMP et nombre d'articles en stock |
 | `GET /api/stock/articles/{id}/mouvements` | `Stock.Consulter` | Journal d'un article, du plus récent au plus ancien (`?limite=`, 100 par défaut, 1000 au plus) |
 
 Tout autre endpoint est refusé par défaut (401 sans jeton) : chaque endpoint métier déclare sa permission
@@ -742,6 +743,7 @@ caisse). Sans `E2E_URL`, `dotnet test` les compile et les ignore.
 | Comptable | Frais d'approche, paiement partiel et dette, plafond de crédit, validation d'un inventaire et d'une démarque, export téléchargé |
 | Anglais | Caissier dont le compte est en anglais : vente et clôture, textes lus dans `Textes.en.resx` |
 | Téléphone | 390 × 844 : menu en tiroir, vente par la barre du total en bas de l'écran |
+| Connexion lente | « 3G lente » émulée (400 ms, ≈ 400 kbit/s) : la caisse s'ouvre en moins de 3 s et un scan s'ajoute en moins d'1 s (ENF10) |
 
 **Ne jamais les lancer sur la base d'une boutique** : ils créent des comptes, des articles et des ventes. Contre
 l'application de docker-compose (valeurs de `deploy/.env.example`) :
@@ -885,7 +887,7 @@ sur une machine Linux de GitHub qui dispose de Docker :
 | 55 | Corrections du check (double clic, confirmations, erreurs, noms, langue de la page) | Fait |
 | 56 | Jeu de données volumineux et mesures de référence | Fait |
 | 57 | Performances serveur (index de dates, requêtes groupées, rapports sans JIT) | Fait |
-| 58 | Performances de la caisse et du client, pagination des listes | À faire |
+| 58 | Performances de la caisse et du client : versions (304), listes limitées, connexion lente | Fait |
 | 59 | Direction visuelle (maquettes, choix) | À faire |
 | 60 | Système de design (jetons, composants) | À faire |
 | 61 | Refonte : caisse et pilotage | À faire |

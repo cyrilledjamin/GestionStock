@@ -1,0 +1,71 @@
+@* Choix d'un article par recherche (code ou libellé), au lieu d'une liste de tout le catalogue (ENF10). *@
+@inject Api Api
+@implements IDisposable
+
+<div class="choix-client">
+    <Message Texte="@_erreur" />
+    @if (Article is null)
+    {
+        <input type="search" placeholder="@L["RechercherArticle"]" aria-label="@L["Article"]" @bind="_recherche" @bind:event="oninput" @bind:after="Rechercher" autocomplete="off" />
+        @if (_resultats.Count > 0)
+        {
+            <ul class="resultats">
+                @foreach (var article in _resultats)
+                {
+                    <li><button type="button" class="lien" @onclick="() => Choisir(article)">@article.Code — @Format.Libelle(article)</button></li>
+                }
+            </ul>
+        }
+    }
+    else
+    {
+        <div class="client-choisi">
+            <span><code>@Article.Code</code> @Format.Libelle(Article)</span>
+            <button type="button" class="lien" title="@L["Retirer"]" aria-label="@L["Retirer"]" @onclick="() => Choisir(null)">✕</button>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public Article? Article { get; set; }
+
+    [Parameter] public EventCallback<Article?> ArticleChanged { get; set; }
+
+    private readonly RechercheDifferee _differee = new();
+    private string _recherche = "";
+    private List<Article> _resultats = [];
+    private string? _erreur;
+
+    private async Task Rechercher()
+    {
+        var texte = _recherche.Trim();
+        if (texte.Length < 2)
+        {
+            _resultats = [];
+            return;
+        }
+
+        if (await _differee.AttendreAsync() is not { } numero)
+        {
+            return;
+        }
+
+        var trouves = await Api.GetAsync<List<Article>>($"api/referentiel/articles?recherche={Uri.EscapeDataString(texte)}&taille=10");
+        if (!_differee.EstLaDerniere(numero))
+        {
+            return;
+        }
+
+        _erreur = trouves.Erreur;
+        _resultats = trouves.Valeur ?? [];
+    }
+
+    private async Task Choisir(Article? article)
+    {
+        _recherche = "";
+        _resultats = [];
+        await ArticleChanged.InvokeAsync(article);
+    }
+
+    public void Dispose() => _differee.Dispose();
+}

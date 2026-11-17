@@ -595,4 +595,5 @@
   <data name="ConfirmerDesactivationCode" xml:space="preserve"><value>Deactivate this barcode? It will no longer be recognised when scanned.</value></data>
   <data name="ConfirmerValidationDemarque" xml:space="preserve"><value>Validate this write-off? The goods leave stock at average cost.</value></data>
   <data name="ConfirmerRefusDemarque" xml:space="preserve"><value>Refuse this write-off? Stock does not change.</value></data>
+  <data name="ListeTronquee" xml:space="preserve"><value>Only the first {0} results are shown: refine your search.</value></data>
 </root>

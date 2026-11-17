@@ -1,5 +1,6 @@
 @page "/demarques"
 @inject Api Api
+@implements IDisposable
 @inject Confirmation Confirmation
 @inject Session Session
 
@@ -96,6 +97,10 @@
 </table>
 
 @code {
+    private readonly RechercheDifferee _differee = new();
+
+    public void Dispose() => _differee.Dispose();
+
     // Premier chargement terminé : jusque-là, la liste montre l'attente et non « Aucun… ».
     private bool _charge;
 
@@ -134,7 +139,17 @@
             return;
         }
 
+        if (await _differee.AttendreAsync() is not { } numero)
+        {
+            return;
+        }
+
         var trouves = await Api.GetAsync<List<ArticleVendable>>($"api/referentiel/vendables?recherche={Uri.EscapeDataString(_recherche.Trim())}");
+        if (!_differee.EstLaDerniere(numero))
+        {
+            return;
+        }
+
         _erreur = trouves.Erreur;
         _resultats = trouves.Valeur ?? [];
     }

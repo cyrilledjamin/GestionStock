@@ -21,7 +21,11 @@
     </div>
     <script src="js/outils.js"></script>
     <script src="js/stockage-local.js"></script>
-    <script src="_framework/blazor.webassembly.js"></script>
+    <script src="_framework/blazor.webassembly.js" autostart="false"></script>
+    <script>
+        // Culture de démarrage = langue gardée sur le poste : Blazor ne charge que les données de culture utiles.
+        Blazor.start({ applicationCulture: localStorage.getItem('gestionstock.langue') === 'en' ? 'en-GB' : 'fr-CM' });
+    </script>
     <script>navigator.serviceWorker && navigator.serviceWorker.register('service-worker.js', { updateViaCache: 'none' });</script>
 </body>
 </html>

@@ -239,7 +239,7 @@
 
         if (Session.A(Permissions.AchatsConsulter))
         {
-            lectures.Add(Lire(async () => _receptionsBrouillon = (await Api.GetAsync<List<ResumeReception>>("api/achats/receptions")).Valeur?.Count(r => r.Statut == "Brouillon")));
+            lectures.Add(Lire(async () => _receptionsBrouillon = (await Api.GetAsync<List<ResumeReception>>("api/achats/receptions?statut=Brouillon")).Valeur?.Count));
         }
 
         if (Session.A(Permissions.InventaireConsulter))

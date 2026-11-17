@@ -28,7 +28,10 @@ internal sealed class ServiceArticles(ReferentielDbContext contexte) : IConsulta
     /// <summary>Code d'erreur PostgreSQL d'une violation d'unicité.</summary>
     private const string ViolationUnicite = "23505";
 
-    public async Task<IReadOnlyList<ArticleDto>> ListerAsync(string? recherche, bool inclureInactifs, CancellationToken annulation)
+    /// <summary>Taille maximale d'une liste d'articles demandée par un écran.</summary>
+    public const int TailleMax = 1000;
+
+    public async Task<IReadOnlyList<ArticleDto>> ListerAsync(string? recherche, bool inclureInactifs, CancellationToken annulation, int? taille = null)
     {
         var requete = contexte.Articles.AsNoTracking();
         if (!inclureInactifs)
@@ -45,7 +48,9 @@ internal sealed class ServiceArticles(ReferentielDbContext contexte) : IConsulta
                 || (a.LibelleTraduit != null && EF.Functions.ILike(a.LibelleTraduit, motif)));
         }
 
-        return await requete.OrderBy(a => a.Code).Select(a => VersDto(a)).ToListAsync(annulation);
+        var triee = requete.OrderBy(a => a.Code);
+        return await (taille is { } maximum ? triee.Take(Math.Clamp(maximum, 1, TailleMax)) : triee)
+            .Select(a => VersDto(a)).ToListAsync(annulation);
     }
 
     public async Task<ArticleDto> ObtenirAsync(Guid id, CancellationToken annulation) =>
