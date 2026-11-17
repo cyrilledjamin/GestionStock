@@ -1,0 +1,173 @@
+@page "/guide-style"
+@using System.Globalization
+@inject Session Session
+@inject Confirmation Confirmation
+
+@* Guide de style (étape 60) : tous les jetons et composants du système de design sur une page, pour vérifier
+   l'apparence (contrastes, tailles, téléphone) sans parcourir l'application. Aucune donnée réelle, aucun appel. *@
+<PageTitle>@L["GuideStyle"] · GestionStock</PageTitle>
+
+<h1>@L["GuideStyle"]</h1>
+
+@if (!Session.A(Permissions.UtilisateursGerer))
+{
+    <Message Texte="@L["GuideReserve"]" />
+}
+else
+{
+    <p class="discret">@L["GuideStyleIntro"]</p>
+
+    <section class="fiche">
+        <h2>@L["GuideCouleurs"]</h2>
+        <div class="nuancier">
+            @foreach (var jeton in Jetons)
+            {
+                <div class="nuance"><i class="n-@jeton"></i><code>--@jeton</code></div>
+            }
+        </div>
+    </section>
+
+    <section class="fiche">
+        <h2>@L["GuideTypographie"]</h2>
+        <h1>@L["GuideExempleTitre"]</h1>
+        <h2>@L["GuideExempleSection"]</h2>
+        <h3>@L["GuideExempleSection"]</h3>
+        <p>@L["GuideExempleTexte"]</p>
+        <p class="discret">@L["GuideExempleDiscret"]</p>
+        <p class="nombre">@Format.Montant(1_234_567m)</p>
+    </section>
+
+    <section class="fiche">
+        <h2>@L["GuideBoutons"]</h2>
+        <div class="echantillons">
+            <Bouton Variante="VarianteBouton.Principal" NomIcone="ajouter">@L["GuidePrincipal"]</Bouton>
+            <Bouton>@L["GuideSecondaire"]</Bouton>
+            <Bouton Variante="VarianteBouton.Valider" NomIcone="valider">@L["Valider"]</Bouton>
+            <Bouton Variante="VarianteBouton.Danger" NomIcone="supprimer">@L["GuideDanger"]</Bouton>
+            <Bouton Variante="VarianteBouton.Discret" NomIcone="modifier">@L["GuideDiscret"]</Bouton>
+            <Bouton Variante="VarianteBouton.Principal" Occupe="true">@L["GuideOccupe"]</Bouton>
+            <Bouton Desactive="true">@L["GuideSecondaire"]</Bouton>
+            <Bouton NomIcone="imprimer" Libelle="@L["GuideSecondaire"]" />
+            <a class="bouton" href="guide-style"><Icone Nom="aller" />@L["GuideSecondaire"]</a>
+        </div>
+    </section>
+
+    <section class="fiche">
+        <h2>@L["GuidePastilles"]</h2>
+        <div class="echantillons">
+            <Pastille>@L["GuideNeutre"]</Pastille>
+            <Pastille Ton="Ton.Succes">@L["GuideSucces"]</Pastille>
+            <Pastille Ton="Ton.Attention">@L["GuideAttention"]</Pastille>
+            <Pastille Ton="Ton.Danger">@L["GuideDanger"]</Pastille>
+            <Pastille Ton="Ton.Info">@L["GuideInfo"]</Pastille>
+        </div>
+    </section>
+
+    <section class="bloc-accueil">
+        <h2>@L["GuideIndicateurs"]</h2>
+        <div class="indicateurs">
+            <Indicateur Libelle="@L["Ventes"]" Valeur="@Format.Montant(245_800m)" Detail="@L["GuideDetail"]" />
+            <Indicateur Libelle="@L["Marge"]" Valeur="@Format.Montant(48_200m)" Detail="@L["GuideDetail"]" Ton="Ton.Succes" />
+            <Indicateur Libelle="@L["GuideAttention"]" Valeur="8" Detail="@L["GuideDetail"]" Ton="Ton.Attention" Lien="guide-style" />
+            <Indicateur Libelle="@L["GuideDanger"]" Valeur="1" Detail="@L["GuideDetail"]" Ton="Ton.Danger" Lien="guide-style" />
+        </div>
+    </section>
+
+    <section class="fiche">
+        <h2>@L["GuideChamps"]</h2>
+        <div class="grille">
+            <Champ Libelle="@L["Libelle"]" Requis="true" Aide="@L["GuideAide"]"><input required maxlength="100" /></Champ>
+            <Champ Libelle="@L["Quantite"]" Erreur="@L["GuideErreur"]"><input type="number" aria-invalid="true" value="-1" /></Champ>
+            <Champ Libelle="@L["Code"]">
+                <select>
+                    <option>@L["GuideNeutre"]</option>
+                    <option>@L["GuideInfo"]</option>
+                </select>
+            </Champ>
+            <label class="case"><input type="checkbox" checked /> @L["Actif"]</label>
+        </div>
+    </section>
+
+    <section class="fiche">
+        <h2>@L["GuideMessages"]</h2>
+        <Message Texte="@L["GuideErreur"]" />
+        <Message Texte="@L["GuideConfirme"]" Erreur="false" />
+        <div class="message avertissement" role="status"><Icone Nom="attention" /><span>@L["GuideAttention"]</span></div>
+        <div class="message info" role="status"><Icone Nom="info" /><span>@L["GuideInfo"]</span></div>
+    </section>
+
+    <section class="fiche">
+        <h2>@L["GuideEtats"]</h2>
+        <Chargement />
+        <Vide Texte="@L["GuideVide"]" NomIcone="stock"><Bouton Variante="VarianteBouton.Principal" NomIcone="ajouter">@L["GuidePrincipal"]</Bouton></Vide>
+    </section>
+
+    <section>
+        <h2>@L["GuideTableaux"]</h2>
+        <Tableau Colonnes="4" Legende="@L["GuideTableaux"]">
+            <Entete><th>@L["Article"]</th><th class="nombre">@L["Quantite"]</th><th class="nombre">@L["Cump"]</th><th class="nombre">@L["Valeur"]</th></Entete>
+            <Corps>
+                @foreach (var (article, quantite, cump) in Lignes)
+                {
+                    <tr class="@(quantite < 0 ? "negatif" : null)">
+                        <td data-label="@L["Article"]"><code>@article</code></td>
+                        <td data-label="@L["Quantite"]" class="nombre">@Format.Quantite(quantite)</td>
+                        <td data-label="@L["Cump"]" class="nombre">@Format.Montant(cump)</td>
+                        <td data-label="@L["Valeur"]" class="nombre">@Format.Montant(quantite * cump)</td>
+                    </tr>
+                }
+            </Corps>
+            <Pied><tr><th colspan="3">@L["Valeur"]</th><td class="nombre">@Format.Montant(Lignes.Sum(l => l.Quantite * l.Cump))</td></tr></Pied>
+        </Tableau>
+        <Tableau Colonnes="4" Charge="false"><Entete><th>@L["Article"]</th><th>@L["Quantite"]</th><th>@L["Cump"]</th><th>@L["Valeur"]</th></Entete><Corps></Corps></Tableau>
+        <Tableau Colonnes="4" EstVide="true" TexteVide="@L["GuideVide"]"><Entete><th>@L["Article"]</th><th>@L["Quantite"]</th><th>@L["Cump"]</th><th>@L["Valeur"]</th></Entete><Corps></Corps></Tableau>
+    </section>
+
+    <section>
+        <h2>@L["GuideGraphiques"]</h2>
+        <Graphique Titre="@L["GuideVentes30"]" Points="_jours" LibelleSerie="@L["Ventes"]" LibelleSecondaire="@L["Marge"]" LibelleAbscisse="@L["GuideJour"]" />
+        <Graphique Titre="@L["GuideVentesMois"]" Points="_mois" Type="TypeGraphique.Courbe" LibelleSerie="@L["Ventes"]" LibelleAbscisse="@L["GuideMois"]" Hauteur="220" />
+    </section>
+
+    <section class="fiche">
+        <h2>@L["GuideIcones"]</h2>
+        <div class="icones-guide">
+            @foreach (var nom in Icone.Noms.Order(StringComparer.Ordinal))
+            {
+                <span><Icone Nom="@nom" />@nom</span>
+            }
+        </div>
+    </section>
+
+    <section class="fiche">
+        <h2>@L["GuideDialogue"]</h2>
+        <div class="echantillons">
+            <Bouton OnClick="() => Demander(false)">@L["GuideDialogueOuvrir"]</Bouton>
+            <Bouton Variante="VarianteBouton.Danger" OnClick="() => Demander(true)">@L["GuideDialogueOuvrir"]</Bouton>
+        </div>
+        <Message Texte="@_reponse" Erreur="false" />
+    </section>
+}
+
+@code {
+    private static readonly string[] Jetons =
+        ["fond", "surface", "bordure", "texte", "discret", "accent", "accent-fonce", "accent-clair", "succes", "attention", "danger", "info"];
+
+    private static readonly (string Code, decimal Quantite, decimal Cump)[] Lignes =
+        [("ALLUMETTES", 20m, 60m), ("BOUGIE", -126m, 95m), ("RIZ-PARF", 75.5m, 620m)];
+
+    // Données d'exemple fixes (aucun appel au serveur) : une vague régulière, aujourd'hui plus haut.
+    private readonly List<PointGraphique> _jours = [.. Enumerable.Range(1, 30).Select(j =>
+        new PointGraphique(j.ToString(CultureInfo.CurrentCulture), 40_000m + 25_000m * (decimal)Math.Sin(j / 3.0) + 1_500m * j, 9_000m + 300m * j))];
+
+    private readonly List<PointGraphique> _mois = [.. Enumerable.Range(1, 12).Select(m =>
+        new PointGraphique(CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedMonthName(m), 900_000m + 350_000m * (decimal)Math.Cos(m / 2.0) + 40_000m * m))];
+
+    private string? _reponse;
+
+    private async Task Demander(bool danger)
+    {
+        var confirme = await Confirmation.DemanderAsync(L["GuideDialogueExemple"].Value, danger ? L["GuideDanger"].Value : null, danger);
+        _reponse = confirme ? L["GuideConfirme"] : L["GuideAnnule"];
+    }
+}

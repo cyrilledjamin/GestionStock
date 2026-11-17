@@ -12,6 +12,18 @@ public static class Format
         $"{decimal.Round(montant, 0, MidpointRounding.AwayFromZero).ToString("N0", CultureInfo.CurrentCulture)} XAF";
 
     /// <summary>
+    /// Nombre abrégé pour les graduations d'un graphique : « 950 », « 12,5 k », « 1,2 M » (séparateur décimal de la
+    /// langue de l'interface). Le montant exact reste dans l'infobulle et le tableau qui accompagnent le graphique.
+    /// </summary>
+    public static string Compact(decimal valeur)
+    {
+        var absolue = Math.Abs(valeur);
+        var (diviseur, suffixe) = absolue >= 1_000_000m ? (1_000_000m, " M") : absolue >= 1_000m ? (1_000m, " k") : (1m, "");
+        var arrondi = decimal.Round(valeur / diviseur, diviseur == 1m ? 0 : 1, MidpointRounding.AwayFromZero);
+        return arrondi.ToString("#,##0.#", CultureInfo.CurrentCulture) + suffixe;
+    }
+
+    /// <summary>
     /// Quantité sans zéros inutiles (« 20 kg », « 2,5 kg »), au plus <paramref name="precision"/> décimales (RG46) :
     /// « 20,000 kg » se lisait « vingt mille » pour un anglophone et « 20.000 » pour un francophone.
     /// </summary>

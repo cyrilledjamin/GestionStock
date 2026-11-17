@@ -71,7 +71,7 @@
                 <td>@L[$"MotifDemarque.{demarque.Motif}"]</td>
                 <td>@demarque.DeclareePar</td>
                 <td>
-                    <span class="pastille @(demarque.Statut == "Declaree" ? "brouillon" : "validee")">@L[$"StatutDemarque.{demarque.Statut}"]</span>
+                    <Pastille Ton="@(demarque.Statut switch { "Declaree" => Ton.Attention, "Refusee" => Ton.Danger, _ => Ton.Succes })">@L[$"StatutDemarque.{demarque.Statut}"]</Pastille>
                     @if (demarque.TraiteePar is not null) { <small class="discret"> (@demarque.TraiteePar)</small> }
                     @if (demarque.MotifRefus is not null) { <br /><small class="discret">@demarque.MotifRefus</small> }
                 </td>
@@ -186,7 +186,7 @@
 
     private async Task Valider(Guid id)
     {
-        if (!await Confirmation.DemanderAsync(L["ConfirmerValidationDemarque"].Value))
+        if (!await Confirmation.DemanderAsync(L["ConfirmerValidationDemarque"].Value, L["Valider"].Value))
         {
             return;
         }
@@ -212,7 +212,7 @@
 
     private async Task Refuser(Guid id)
     {
-        if (!await Confirmation.DemanderAsync(L["ConfirmerRefusDemarque"].Value))
+        if (!await Confirmation.DemanderAsync(L["ConfirmerRefusDemarque"].Value, L["Refuser"].Value, danger: true))
         {
             return;
         }

@@ -45,7 +45,7 @@
                 <td>@string.Join(", ", compte.Roles.Select(r => L[$"Role.{r}"].Value))</td>
                 <td>@compte.Telephone</td>
                 <td>
-                    <span class="pastille @(compte.Actif ? "validee" : "brouillon")">@(compte.Actif ? L["Actif"] : L["Desactive"])</span>
+                    <Pastille Ton="@(compte.Actif ? Ton.Succes : Ton.Neutre)">@(compte.Actif ? L["Actif"] : L["Desactive"])</Pastille>
                     @if (compte.MotDePasseProvisoire) { <small class="discret"> @L["MotDePasseProvisoire"]</small> }
                 </td>
             </tr>

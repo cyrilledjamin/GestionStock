@@ -1,0 +1,56 @@
+@* Dialogue de confirmation de l'application (remplace la fenêtre « confirm » du navigateur, non traduite) : fenêtre
+   modale native (focus gardé dedans, rendu au bouton d'origine à la fermeture), Échap ou Annuler répondent « non ».
+   Le focus arrive sur Annuler : une validation par mégarde au clavier ne passe pas. *@
+@implements IAsyncDisposable
+@inject Confirmation Confirmation
+@inject IJSRuntime Js
+
+<dialog @ref="_dialogue" class="dialogue @(Confirmation.Danger ? "danger-dialogue" : "")" aria-labelledby="dialogue-titre" aria-describedby="dialogue-message">
+    @if (Confirmation.Message is { } message)
+    {
+        <h2 id="dialogue-titre"><Icone Nom="attention" />@L["ConfirmationTitre"]</h2>
+        <p id="dialogue-message" class="dialogue-message">@message</p>
+        <div class="actions">
+            <button type="button" class="annuler-dialogue" @onclick="() => Confirmation.Repondre(false)" autofocus>@L["Annuler"]</button>
+            <button type="button" class="@(Confirmation.Danger ? "danger" : "principal")" @onclick="() => Confirmation.Repondre(true)">@(Confirmation.Action ?? L["Confirmer"])</button>
+        </div>
+    }
+</dialog>
+
+@code {
+    private ElementReference _dialogue;
+    private DotNetObjectReference<DialogueConfirmation>? _reference;
+    private bool _ouvert;
+
+    protected override void OnInitialized() => Confirmation.Changement += Rafraichir;
+
+    private void Rafraichir() => InvokeAsync(StateHasChanged);
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        var demande = Confirmation.Message is not null;
+        if (demande && !_ouvert)
+        {
+            _ouvert = true;
+            _reference ??= DotNetObjectReference.Create(this);
+            await Js.InvokeVoidAsync("gestionStock.ouvrirDialogue", _dialogue, _reference);
+        }
+        else if (!demande && _ouvert)
+        {
+            _ouvert = false;
+            await Js.InvokeVoidAsync("gestionStock.fermerDialogue", _dialogue);
+        }
+    }
+
+    /// <summary>Échap : le navigateur ferme la fenêtre, la question reçoit « non ».</summary>
+    [JSInvokable]
+    public void Annuler() => Confirmation.Repondre(false);
+
+    public async ValueTask DisposeAsync()
+    {
+        Confirmation.Changement -= Rafraichir;
+        Confirmation.Repondre(false);
+        _reference?.Dispose();
+        await ValueTask.CompletedTask;
+    }
+}

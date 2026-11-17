@@ -34,7 +34,7 @@
                 <td class="court">@Format.Date(inventaire.CreeLeUtc)</td>
                 <td>@inventaire.CreePar</td>
                 <td class="nombre">@inventaire.NombreComptees / @inventaire.NombreLignes</td>
-                <td><span class="pastille @(inventaire.Statut == "EnCours" ? "brouillon" : "validee")">@L[$"StatutInventaire.{inventaire.Statut}"]</span></td>
+                <td><Pastille Ton="@(inventaire.Statut switch { "EnCours" => Ton.Attention, "Annule" => Ton.Neutre, _ => Ton.Succes })">@L[$"StatutInventaire.{inventaire.Statut}"]</Pastille></td>
             </tr>
         }
         @if (!_charge)

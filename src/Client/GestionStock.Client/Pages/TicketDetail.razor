@@ -155,7 +155,7 @@ else if (_ticket is not null)
 
     private async Task FaireAvoir()
     {
-        if (!await Confirmation.DemanderAsync(L["ConfirmerAvoir", _ticket?.Numero ?? ""].Value))
+        if (!await Confirmation.DemanderAsync(L["ConfirmerAvoir", _ticket?.Numero ?? ""].Value, L["FaireAvoir"].Value))
         {
             return;
         }

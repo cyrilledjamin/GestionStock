@@ -161,7 +161,7 @@
 
     private async Task Valider()
     {
-        if (!await Confirmation.DemanderAsync(L["ConfirmerValidationInventaire", _detail?.Inventaire.Numero ?? ""].Value))
+        if (!await Confirmation.DemanderAsync(L["ConfirmerValidationInventaire", _detail?.Inventaire.Numero ?? ""].Value, L["ValiderInventaire"].Value))
         {
             return;
         }
@@ -176,7 +176,7 @@
 
     private async Task Annuler()
     {
-        if (!await Confirmation.DemanderAsync(L["ConfirmerAnnulationInventaire", _detail?.Inventaire.Numero ?? ""].Value))
+        if (!await Confirmation.DemanderAsync(L["ConfirmerAnnulationInventaire", _detail?.Inventaire.Numero ?? ""].Value, L["AnnulerInventaire"].Value, danger: true))
         {
             return;
         }

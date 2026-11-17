@@ -177,7 +177,7 @@
 
     private async Task DesactiverCode(Guid code)
     {
-        if (!await Confirmation.DemanderAsync(L["ConfirmerDesactivationCode"].Value))
+        if (!await Confirmation.DemanderAsync(L["ConfirmerDesactivationCode"].Value, L["DesactiverCode"].Value, danger: true))
         {
             return;
         }

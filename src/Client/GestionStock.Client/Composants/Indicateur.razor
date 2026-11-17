@@ -1,0 +1,40 @@
+@* Chiffre clé (tableau de bord, fiche) : libellé, valeur, détail ; un lien en fait une carte cliquable.
+   Un seul style de chiffre dans toute l'application. *@
+@if (Lien is { Length: > 0 })
+{
+    <a class="@Classes.Indicateur(Ton)" href="@Lien">
+        <span>@Libelle</span>
+        <strong>@Valeur</strong>
+        @if (!string.IsNullOrEmpty(Detail))
+        {
+            <small>@Detail</small>
+        }
+        @ChildContent
+    </a>
+}
+else
+{
+    <div class="@Classes.Indicateur(Ton)">
+        <span>@Libelle</span>
+        <strong>@Valeur</strong>
+        @if (!string.IsNullOrEmpty(Detail))
+        {
+            <small>@Detail</small>
+        }
+        @ChildContent
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired] public string Libelle { get; set; } = "";
+
+    [Parameter, EditorRequired] public string Valeur { get; set; } = "";
+
+    [Parameter] public string? Detail { get; set; }
+
+    [Parameter] public string? Lien { get; set; }
+
+    [Parameter] public Ton Ton { get; set; }
+
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}
