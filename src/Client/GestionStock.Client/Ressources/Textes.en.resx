@@ -643,4 +643,6 @@
   <data name="Jour" xml:space="preserve"><value>Day</value></data>
   <data name="TendanceResume" xml:space="preserve"><value>Over 30 days: {0} in sales, {1} in margin.</value></data>
   <data name="Traitee" xml:space="preserve"><value>Handled</value></data>
+  <data name="AucunConditionnement" xml:space="preserve"><value>No packaging.</value></data>
+  <data name="DebutValidite" xml:space="preserve"><value>Price effective date</value></data>
 </root>

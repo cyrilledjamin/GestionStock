@@ -8,7 +8,7 @@
 <h1>@L["Inventaires"]</h1>
 
 <div class="barre">
-    <select @bind="_statut" @bind:after="Charger">
+    <select @bind="_statut" @bind:after="Charger" aria-label="@L["Statut"]">
         <option value="">@L["TousStatuts"]</option>
         <option value="EnCours">@L["StatutInventaire.EnCours"]</option>
         <option value="Valide">@L["StatutInventaire.Valide"]</option>
@@ -16,37 +16,29 @@
     </select>
     @if (Session.A(Permissions.InventaireCompter))
     {
-        <button class="principal" disabled="@_enCours" @onclick='() => Creer("Complet")'>@L["NouvelInventaireComplet"]</button>
-        <button disabled="@_enCours" @onclick='() => Creer("Partiel")'>@L["NouvelInventairePartiel"]</button>
+        <Bouton Variante="VarianteBouton.Principal" NomIcone="ajouter" Occupe="@(_enCours == "Complet")" Desactive="_enCours is not null" OnClick='() => Creer("Complet")'>@L["NouvelInventaireComplet"]</Bouton>
+        <Bouton NomIcone="ajouter" Occupe="@(_enCours == "Partiel")" Desactive="_enCours is not null" OnClick='() => Creer("Partiel")'>@L["NouvelInventairePartiel"]</Bouton>
     }
 </div>
 
 <Message Texte="@_erreur" />
 
-<table>
-    <thead><tr><th>@L["Numero"]</th><th>@L["Type"]</th><th>@L["Date"]</th><th>@L["CreePar"]</th><th class="nombre">@L["Comptes"]</th><th>@L["Statut"]</th></tr></thead>
-    <tbody>
+<Tableau Colonnes="6" Charge="_charge" EstVide="_inventaires.Count == 0" TexteVide="@L["AucunInventaire"]" Legende="@L["Inventaires"]">
+    <Entete><th>@L["Numero"]</th><th>@L["Type"]</th><th>@L["Date"]</th><th>@L["CreePar"]</th><th class="nombre">@L["Comptes"]</th><th>@L["Statut"]</th></Entete>
+    <Corps>
         @foreach (var inventaire in _inventaires)
         {
             <tr>
-                <td class="court"><a href="inventaires/@inventaire.Id">@inventaire.Numero</a></td>
-                <td>@L[$"TypeInventaire.{inventaire.Type}"]</td>
-                <td class="court">@Format.Date(inventaire.CreeLeUtc)</td>
-                <td>@inventaire.CreePar</td>
-                <td class="nombre">@inventaire.NombreComptees / @inventaire.NombreLignes</td>
-                <td><Pastille Ton="@(inventaire.Statut switch { "EnCours" => Ton.Attention, "Annule" => Ton.Neutre, _ => Ton.Succes })">@L[$"StatutInventaire.{inventaire.Statut}"]</Pastille></td>
+                <td data-label="@L["Numero"]" class="court"><a href="inventaires/@inventaire.Id"><code>@inventaire.Numero</code></a></td>
+                <td data-label="@L["Type"]">@L[$"TypeInventaire.{inventaire.Type}"]</td>
+                <td data-label="@L["Date"]" class="court">@Format.Date(inventaire.CreeLeUtc)</td>
+                <td data-label="@L["CreePar"]">@inventaire.CreePar</td>
+                <td data-label="@L["Comptes"]" class="nombre">@inventaire.NombreComptees / @inventaire.NombreLignes</td>
+                <td data-label="@L["Statut"]"><Pastille Ton="@(inventaire.Statut switch { "EnCours" => Ton.Attention, "Annule" => Ton.Neutre, _ => Ton.Succes })">@L[$"StatutInventaire.{inventaire.Statut}"]</Pastille></td>
             </tr>
         }
-        @if (!_charge)
-        {
-            <tr><td colspan="6"><Chargement /></td></tr>
-        }
-        else if (_inventaires.Count == 0)
-        {
-            <tr><td colspan="6" class="vide">@L["AucunInventaire"]</td></tr>
-        }
-    </tbody>
-</table>
+    </Corps>
+</Tableau>
 
 @code {
     // Premier chargement terminé : jusque-là, la liste montre l'attente et non « Aucun… ».
@@ -55,7 +47,8 @@
     private List<ResumeInventaire> _inventaires = [];
     private string _statut = "";
     private string? _erreur;
-    private bool _enCours;
+    // Type d'inventaire en cours de création (bouton occupé), null sinon.
+    private string? _enCours;
 
     protected override Task OnInitializedAsync() => Charger();
 
@@ -70,12 +63,12 @@
     private async Task Creer(string type)
     {
         // Un seul envoi à la fois : un double clic ou une connexion lente ne crée pas deux fois la même chose.
-        if (_enCours)
+        if (_enCours is not null)
         {
             return;
         }
 
-        _enCours = true;
+        _enCours = type;
         try
         {
             var resultat = await Api.PostAsync<DetailInventaire>("api/inventaires", new { Type = type, Articles = Array.Empty<Guid>() });
@@ -87,7 +80,7 @@
         }
         finally
         {
-            _enCours = false;
+            _enCours = null;
         }
     }
 }

@@ -7,21 +7,22 @@
 <h1>@L["Stock"]</h1>
 <p class="discret">@L["StockIntro"]</p>
 
-<div class="barre">
-    <input type="search" placeholder="@L["Rechercher"]" @bind="_recherche" @bind:event="oninput" @bind:after="RechercherDiffere" />
+<div class="barre" role="search">
+    <div class="champ-recherche">
+        <Icone Nom="rechercher" />
+        <input type="search" placeholder="@L["Rechercher"]" aria-label="@L["Rechercher"]" @bind="_recherche" @bind:event="oninput" @bind:after="RechercherDiffere" />
+    </div>
 </div>
 
 <Message Texte="@_erreur" />
 
-<table class="cartes">
-    <thead>
-        <tr>
-            <th>@L["Code"]</th><th>@L["Libelle"]</th>
-            <th class="nombre">@L["Physique"]</th><th class="nombre">@L["Disponible"]</th>
-            <th class="nombre">@L["Cump"]</th><th class="nombre">@L["ValeurStock"]</th>
-        </tr>
-    </thead>
-    <tbody>
+<Tableau Colonnes="6" Charge="_charge" EstVide="!Lignes.Any()" TexteVide="@L["AucunStock"]" Legende="@L["Stock"]">
+    <Entete>
+        <th>@L["Code"]</th><th>@L["Libelle"]</th>
+        <th class="nombre">@L["Physique"]</th><th class="nombre">@L["Disponible"]</th>
+        <th class="nombre">@L["Cump"]</th><th class="nombre">@L["ValeurStock"]</th>
+    </Entete>
+    <Corps>
         @foreach (var ligne in Lignes)
         {
             <tr class="@(ligne.Solde.QuantitePhysique < 0 ? "negatif" : "")">
@@ -33,20 +34,12 @@
                 <td data-label="@L["ValeurStock"]" class="nombre">@Format.Montant(ligne.Solde.QuantitePhysique * ligne.Solde.Cump)</td>
             </tr>
         }
-        @if (!_charge)
-        {
-            <tr><td colspan="6"><Chargement /></td></tr>
-        }
-        else if (!Lignes.Any())
-        {
-            <tr><td colspan="6" class="vide">@L["AucunStock"]</td></tr>
-        }
-    </tbody>
-    <tfoot>
+    </Corps>
+    <Pied>
         @* Sans recherche : valeur de tout le stock (calculée par le serveur) ; avec recherche : celle des lignes affichées. *@
-        <tr><td colspan="5" class="nombre">@L["Total"]</td><th class="nombre">@Format.Montant(string.IsNullOrWhiteSpace(_recherche) && _valeur is { } valeur ? valeur.Valeur : Lignes.Sum(l => l.Solde.QuantitePhysique * l.Solde.Cump))</th></tr>
-    </tfoot>
-</table>
+        <tr><th colspan="5" class="nombre">@L["Total"]</th><td class="nombre">@Format.Montant(string.IsNullOrWhiteSpace(_recherche) && _valeur is { } valeur ? valeur.Valeur : Lignes.Sum(l => l.Solde.QuantitePhysique * l.Solde.Cump))</td></tr>
+    </Pied>
+</Tableau>
 @if (_tronquee)
 {
     <p class="discret">@L["ListeTronquee", TailleListe]</p>

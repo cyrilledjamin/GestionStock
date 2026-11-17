@@ -18,7 +18,10 @@
         <h2>@L["DeclarerDemarque"]</h2>
         @if (_article is null)
         {
-            <input type="search" placeholder="@L["RechercherArticle"]" @bind="_recherche" @bind:event="oninput" @bind:after="Rechercher" />
+            <div class="champ-recherche">
+                <Icone Nom="rechercher" />
+                <input type="search" placeholder="@L["RechercherArticle"]" aria-label="@L["RechercherArticle"]" @bind="_recherche" @bind:event="oninput" @bind:after="Rechercher" />
+            </div>
             @if (_resultats.Count > 0)
             {
                 <ul class="resultats">
@@ -31,26 +34,26 @@
         }
         else
         {
-            <div class="client-choisi"><span><code>@_article.CodeArticle</code> @_article.Libelle</span><button type="button" class="lien" @onclick="() => _article = null">✕</button></div>
+            <div class="client-choisi"><span><code>@_article.CodeArticle</code> @_article.Libelle</span><Bouton Variante="VarianteBouton.Discret" NomIcone="fermer" Libelle="@L["Retirer"]" OnClick="() => _article = null" /></div>
             <div class="grille">
-                <label>@L["Quantite"] (@Format.Unite(_article.UniteStock)) <input type="number" min="0" step="any" @bind="_quantite" required /></label>
-                <label>@L["Motif"]
+                <Champ Libelle="@($"{L["Quantite"]} ({Format.Unite(_article.UniteStock)})")" Requis="true"><input type="number" min="0" step="any" @bind="_quantite" required /></Champ>
+                <Champ Libelle="@L["Motif"]">
                     <select @bind="_motif">
                         @foreach (var motif in MotifsDemarque.Tous)
                         {
                             <option value="@motif">@L[$"MotifDemarque.{motif}"]</option>
                         }
                     </select>
-                </label>
-                <label>@L["Commentaire"] <input @bind="_commentaire" maxlength="500" /></label>
+                </Champ>
+                <Champ Libelle="@L["Commentaire"]"><input @bind="_commentaire" maxlength="500" /></Champ>
             </div>
-            <div class="actions"><button type="submit" class="principal" disabled="@_enCours">@L["Declarer"]</button></div>
+            <div class="actions"><Bouton Type="submit" Variante="VarianteBouton.Principal" Occupe="_enCours">@L["Declarer"]</Bouton></div>
         }
     </form>
 }
 
 <div class="barre">
-    <select @bind="_statut" @bind:after="Charger">
+    <select @bind="_statut" @bind:after="Charger" aria-label="@L["Statut"]">
         <option value="">@L["TousStatuts"]</option>
         <option value="Declaree">@L["StatutDemarque.Declaree"]</option>
         <option value="Validee">@L["StatutDemarque.Validee"]</option>
@@ -58,19 +61,19 @@
     </select>
 </div>
 
-<table>
-    <thead><tr><th>@L["Numero"]</th><th>@L["Date"]</th><th>@L["Article"]</th><th class="nombre">@L["Quantite"]</th><th>@L["Motif"]</th><th>@L["DeclareePar"]</th><th>@L["Statut"]</th><th></th></tr></thead>
-    <tbody>
+<Tableau Colonnes="8" Charge="_charge" EstVide="_demarques.Count == 0" TexteVide="@L["AucuneDemarque"]" Legende="@L["Demarque"]">
+    <Entete><th>@L["Numero"]</th><th>@L["Date"]</th><th>@L["Article"]</th><th class="nombre">@L["Quantite"]</th><th>@L["Motif"]</th><th>@L["DeclareePar"]</th><th>@L["Statut"]</th><th></th></Entete>
+    <Corps>
         @foreach (var demarque in _demarques)
         {
             <tr>
-                <td class="court">@demarque.Numero</td>
-                <td class="court">@Format.Date(demarque.DeclareeLeUtc)</td>
-                <td><code>@demarque.CodeArticle</code> @demarque.Libelle @if (demarque.Commentaire is not null) { <br /><small class="discret">@demarque.Commentaire</small> }</td>
-                <td class="nombre">@Format.Quantite(demarque.Quantite) @Format.Unite(demarque.UniteStock)</td>
-                <td>@L[$"MotifDemarque.{demarque.Motif}"]</td>
-                <td>@demarque.DeclareePar</td>
-                <td>
+                <td data-label="@L["Numero"]" class="court"><code>@demarque.Numero</code></td>
+                <td data-label="@L["Date"]" class="court">@Format.Date(demarque.DeclareeLeUtc)</td>
+                <td data-label="@L["Article"]"><code>@demarque.CodeArticle</code> @demarque.Libelle @if (demarque.Commentaire is not null) { <br /><small class="discret">@demarque.Commentaire</small> }</td>
+                <td data-label="@L["Quantite"]" class="nombre">@Format.Quantite(demarque.Quantite) @Format.Unite(demarque.UniteStock)</td>
+                <td data-label="@L["Motif"]">@L[$"MotifDemarque.{demarque.Motif}"]</td>
+                <td data-label="@L["DeclareePar"]">@demarque.DeclareePar</td>
+                <td data-label="@L["Statut"]">
                     <Pastille Ton="@(demarque.Statut switch { "Declaree" => Ton.Attention, "Refusee" => Ton.Danger, _ => Ton.Succes })">@L[$"StatutDemarque.{demarque.Statut}"]</Pastille>
                     @if (demarque.TraiteePar is not null) { <small class="discret"> (@demarque.TraiteePar)</small> }
                     @if (demarque.MotifRefus is not null) { <br /><small class="discret">@demarque.MotifRefus</small> }
@@ -78,23 +81,15 @@
                 <td class="actions-ligne">
                     @if (demarque.Statut == "Declaree" && Session.A(Permissions.DemarqueValider))
                     {
-                        <button class="lien" disabled="@_enCours" @onclick="() => Valider(demarque.Id)">@L["Valider"]</button>
-                        <input class="motif-refus" placeholder="@L["MotifRefus"]" @bind="_motifsRefus[demarque.Id]" />
-                        <button class="lien" disabled="@_enCours" @onclick="() => Refuser(demarque.Id)">@L["Refuser"]</button>
+                        <Bouton Variante="VarianteBouton.Valider" NomIcone="valider" Desactive="_enCours" OnClick="() => Valider(demarque.Id)">@L["Valider"]</Bouton>
+                        <input class="motif-refus" placeholder="@L["MotifRefus"]" aria-label="@L["MotifRefus"]" @bind="_motifsRefus[demarque.Id]" />
+                        <Bouton Variante="VarianteBouton.Discret" Desactive="_enCours" OnClick="() => Refuser(demarque.Id)">@L["Refuser"]</Bouton>
                     }
                 </td>
             </tr>
         }
-        @if (!_charge)
-        {
-            <tr><td colspan="8"><Chargement /></td></tr>
-        }
-        else if (_demarques.Count == 0)
-        {
-            <tr><td colspan="8" class="vide">@L["AucuneDemarque"]</td></tr>
-        }
-    </tbody>
-</table>
+    </Corps>
+</Tableau>
 
 @code {
     private readonly RechercheDifferee _differee = new();

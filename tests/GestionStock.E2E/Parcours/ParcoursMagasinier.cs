@@ -42,6 +42,7 @@ public sealed class ParcoursMagasinier(Navigateur navigateur) : ParcoursBase(nav
         await AllerAsync("Stock");
         await Page.GetByRole(AriaRole.Searchbox).FillAsync(article.Code);
         await Expect(Ligne(article.Code)).ToContainTextAsync("40");
+        await CapturerAsync("stock");
 
         // Inventaire partiel (UC11) : l'article est ajouté et compté au scan, l'inventaire reste à valider.
         await AllerAsync("Inventaires");
@@ -66,5 +67,6 @@ public sealed class ParcoursMagasinier(Navigateur navigateur) : ParcoursBase(nav
         await Bouton("Declarer").ClickAsync();
         await VoirModeleAsync("DemarqueDeclaree");
         await Expect(Ligne(article.Code)).ToContainTextAsync(T["StatutDemarque.Declaree"]);
+        await CapturerAsync("demarques");
     }
 }

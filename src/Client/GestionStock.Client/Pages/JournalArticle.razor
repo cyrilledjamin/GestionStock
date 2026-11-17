@@ -3,35 +3,41 @@
 
 <PageTitle>@L["Journal"] · GestionStock</PageTitle>
 
-<p><a href="stock">← @L["Stock"]</a></p>
+<p><a href="stock"><Icone Nom="retour" />@L["Stock"]</a></p>
 
 <Message Texte="@_erreur" />
 
-@if (_article is not null)
+@if (!_charge)
 {
+    <Chargement />
+}
+else if (_article is not null)
+{
+    var physique = _solde?.QuantitePhysique ?? 0;
     <h1><code>@_article.Code</code> @Format.Libelle(_article)</h1>
 
-    <div class="tuiles">
-        <div class="tuile chiffre"><span>@L["Physique"]</span><strong>@Format.Quantite(_solde?.QuantitePhysique ?? 0, _article.PrecisionQuantite) @Format.Unite(_article.UniteStock)</strong></div>
-        <div class="tuile chiffre"><span>@L["Disponible"]</span><strong>@Format.Quantite(_solde?.QuantiteDisponible ?? 0, _article.PrecisionQuantite)</strong></div>
-        <div class="tuile chiffre"><span>@L["Cump"]</span><strong>@Format.Montant(_solde?.Cump ?? 0)</strong></div>
-        <div class="tuile chiffre"><span>@L["ValeurStock"]</span><strong>@Format.Montant((_solde?.QuantitePhysique ?? 0) * (_solde?.Cump ?? 0))</strong></div>
+    <div class="indicateurs resume">
+        <Indicateur Libelle="@L["Physique"]" Valeur="@($"{Format.Quantite(physique, _article.PrecisionQuantite)} {Format.Unite(_article.UniteStock)}")"
+                    Ton="@(physique < 0 ? Ton.Danger : Ton.Neutre)" />
+        <Indicateur Libelle="@L["Disponible"]" Valeur="@Format.Quantite(_solde?.QuantiteDisponible ?? 0, _article.PrecisionQuantite)" />
+        <Indicateur Libelle="@L["Cump"]" Valeur="@Format.Montant(_solde?.Cump ?? 0)" />
+        <Indicateur Libelle="@L["ValeurStock"]" Valeur="@Format.Montant(physique * (_solde?.Cump ?? 0))" />
     </div>
 
     <h2>@L["Journal"]</h2>
-    <table>
-        <thead>
-            <tr><th>@L["Date"]</th><th>@L["Mouvement"]</th><th class="nombre">@L["Variation"]</th><th class="nombre">@L["CoutUnitaire"]</th><th>@L["Document"]</th><th>@L["Utilisateur"]</th></tr>
-        </thead>
-        <tbody>
+    <Tableau Colonnes="6" EstVide="_mouvements.Count == 0" TexteVide="@L["AucunMouvement"]" Legende="@L["Journal"]">
+        <Entete>
+            <th>@L["Date"]</th><th>@L["Mouvement"]</th><th class="nombre">@L["Variation"]</th><th class="nombre">@L["CoutUnitaire"]</th><th>@L["Document"]</th><th>@L["Utilisateur"]</th>
+        </Entete>
+        <Corps>
             @foreach (var mouvement in _mouvements)
             {
                 <tr>
-                    <td class="court">@Format.Date(mouvement.DateUtc)</td>
-                    <td>@L[$"Mouvement.{mouvement.Type}"]</td>
-                    <td class="nombre @(mouvement.Variation < 0 ? "sortie" : "entree")">@(mouvement.Variation > 0 ? "+" : "")@Format.Quantite(mouvement.Variation, _article.PrecisionQuantite)</td>
-                    <td class="nombre">@Format.Montant(mouvement.CoutUnitaire)</td>
-                    <td>
+                    <td data-label="@L["Date"]" class="court">@Format.Date(mouvement.DateUtc)</td>
+                    <td data-label="@L["Mouvement"]">@L[$"Mouvement.{mouvement.Type}"]</td>
+                    <td data-label="@L["Variation"]" class="nombre @(mouvement.Variation < 0 ? "sortie" : "entree")">@(mouvement.Variation > 0 ? "+" : "")@Format.Quantite(mouvement.Variation, _article.PrecisionQuantite)</td>
+                    <td data-label="@L["CoutUnitaire"]" class="nombre">@Format.Montant(mouvement.CoutUnitaire)</td>
+                    <td data-label="@L["Document"]">
                         @if (mouvement.TypeDocument == "Reception")
                         {
                             <a href="receptions/@mouvement.DocumentId">@L["Reception"]</a>
@@ -41,20 +47,17 @@
                             @mouvement.TypeDocument
                         }
                     </td>
-                    <td>@mouvement.Utilisateur</td>
+                    <td data-label="@L["Utilisateur"]">@mouvement.Utilisateur</td>
                 </tr>
             }
-            @if (_mouvements.Count == 0)
-            {
-                <tr><td colspan="6" class="vide">@L["AucunMouvement"]</td></tr>
-            }
-        </tbody>
-    </table>
+        </Corps>
+    </Tableau>
 }
 
 @code {
     [Parameter] public Guid ArticleId { get; set; }
 
+    private bool _charge;
     private Article? _article;
     private SoldeStock? _solde;
     private List<MouvementStock> _mouvements = [];
@@ -62,12 +65,15 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        var article = await Api.GetAsync<Article>($"api/referentiel/articles/{ArticleId}");
-        var soldes = await Api.GetAsync<List<SoldeStock>>($"api/stock/soldes?articles={ArticleId}");
-        var mouvements = await Api.GetAsync<List<MouvementStock>>($"api/stock/articles/{ArticleId}/mouvements");
-        _erreur = article.Erreur ?? soldes.Erreur ?? mouvements.Erreur;
-        _article = article.Valeur;
-        _solde = soldes.Valeur?.FirstOrDefault(s => s.ArticleId == ArticleId);
-        _mouvements = mouvements.Valeur ?? [];
+        // Les trois lectures sont indépendantes : en parallèle.
+        var article = Api.GetAsync<Article>($"api/referentiel/articles/{ArticleId}");
+        var soldes = Api.GetAsync<List<SoldeStock>>($"api/stock/soldes?articles={ArticleId}");
+        var mouvements = Api.GetAsync<List<MouvementStock>>($"api/stock/articles/{ArticleId}/mouvements");
+        await Task.WhenAll(article, soldes, mouvements);
+        _erreur = article.Result.Erreur ?? soldes.Result.Erreur ?? mouvements.Result.Erreur;
+        _article = article.Result.Valeur;
+        _solde = soldes.Result.Valeur?.FirstOrDefault(s => s.ArticleId == ArticleId);
+        _mouvements = mouvements.Result.Valeur ?? [];
+        _charge = true;
     }
 }

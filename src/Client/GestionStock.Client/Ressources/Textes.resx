@@ -643,4 +643,6 @@
   <data name="Jour" xml:space="preserve"><value>Jour</value></data>
   <data name="TendanceResume" xml:space="preserve"><value>Sur 30 jours : {0} de ventes, {1} de marge.</value></data>
   <data name="Traitee" xml:space="preserve"><value>Traitée</value></data>
+  <data name="AucunConditionnement" xml:space="preserve"><value>Aucun conditionnement.</value></data>
+  <data name="DebutValidite" xml:space="preserve"><value>Date d'effet du prix</value></data>
 </root>
