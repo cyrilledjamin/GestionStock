@@ -70,6 +70,11 @@ else
             {
                 <NavLink href="reprise"><Icone Nom="reprise" />@L["Reprise"]</NavLink>
             }
+            @if (Session.A(Permissions.ExploitationConsulter))
+            {
+                <NavLink href="controles"><Icone Nom="controles" />@L["Controles"]</NavLink>
+                <NavLink href="sauvegardes"><Icone Nom="sauvegardes" />@L["Sauvegardes"]</NavLink>
+            }
             @if (Session.A(Permissions.UtilisateursGerer))
             {
                 <NavLink href="utilisateurs"><Icone Nom="utilisateurs" />@L["Utilisateurs"]</NavLink>

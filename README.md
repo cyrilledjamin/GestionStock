@@ -282,7 +282,9 @@ Ouvrir http://localhost:8080 (docker-compose) puis se connecter. Le menu dépend
 | Écran | Contenu |
 | --- | --- |
 | Connexion | Matricule et mot de passe (bouton « Afficher » pour vérifier la saisie en clair) ; choix de la langue (français / anglais) ; à la connexion, la langue mémorisée sur le compte s'applique ; un mot de passe provisoire mène directement à « Mon compte » |
-| Accueil | Tableau de bord selon les permissions : **Ma caisse** (Caissier : session ouverte, ventes, chemin vers la caisse) ; **Aujourd'hui** et **À surveiller** (Gérant, Comptable : ventes et marge du jour, caisses ouvertes, clôtures à valider et écarts, stocks négatifs, créances et retards, dettes fournisseurs) ; **À faire** (réceptions en brouillon, inventaires en cours, démarques à valider) ; chaque chiffre mène à son écran, en orange ou en rouge s'il demande une action ; puis raccourcis |
+| Accueil | Tableau de bord selon les permissions : **Ma caisse** (Caissier : session ouverte, ventes, chemin vers la caisse) ; **Aujourd'hui** et **À surveiller** (Gérant, Comptable : ventes et marge du jour, caisses ouvertes, clôtures à valider et écarts, stocks négatifs, créances et retards, dettes fournisseurs) ; **Exploitation** (Administrateur, Gérant, Comptable : écarts du contrôle des soldes, dernière sauvegarde, en rouge si en retard) ; **À faire** (réceptions en brouillon, inventaires en cours, démarques à valider) ; chaque chiffre mène à son écran, en orange ou en rouge s'il demande une action ; puis raccourcis |
+| Contrôle des soldes | Dernier passage (planifié ou manuel, statut, soldes contrôlés), écarts ouverts ; liste des écarts par statut (solde, désignation, valeur du journal et valeur enregistrée, résolution) ; Administrateur : « Lancer le contrôle maintenant » et « Reconstruire » (confirmation) |
+| Sauvegardes | Dernière sauvegarde locale et dernière copie hors site (en rouge au-delà de 2 h / 26 h) ; derniers passages (résultat, fichier, taille, message d'erreur) ; rappel de la restauration |
 | Stock | Soldes de la boutique : physique, disponible, CUMP, valeur ; total valorisé |
 | Journal d'un article | Soldes et mouvements (date à l'heure de Douala, variation, coût, document d'origine, utilisateur) |
 | Réceptions | Liste ; saisie en brouillon (lignes, valeur calculée), enregistrement, validation |
@@ -782,7 +784,7 @@ sur une machine Linux de GitHub qui dispose de Docker :
 | 49 | Exploitation : contrôle des soldes de stock et de crédit par contrat | Fait |
 | 50 | Exploitation : contrôle nocturne, écarts, reconstruction | Fait |
 | 51 | Exploitation : conteneur de sauvegarde (locale horaire, hors site chiffrée) | Fait |
-| 52 | Exploitation : écrans Contrôles et Sauvegardes, accueil | À faire |
+| 52 | Exploitation : écrans Contrôles et Sauvegardes, accueil | Fait |
 | 53 | Vérification, CI, README, démonstration de la tranche 8 | À faire |
 
 ## Démonstration

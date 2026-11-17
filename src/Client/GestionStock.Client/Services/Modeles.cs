@@ -211,6 +211,39 @@ public sealed record AnomalieCaisse(
     DateTime? TraitementUtc,
     string? Commentaire);
 
+/// <summary>Passage du contrôle de cohérence des soldes (ENF04).</summary>
+public sealed record ControleSoldes(Guid Id, DateTime DebutUtc, DateTime? FinUtc, string Declencheur, string Statut, int SoldesControles, int Ecarts, string? Message);
+
+/// <summary>Solde trouvé différent de son journal ; <c>Attendu</c> est la valeur du journal, qui fait foi.</summary>
+public sealed record EcartSolde(
+    Guid Id,
+    string Domaine,
+    string Grandeur,
+    Guid ReferenceId,
+    Guid? SiteId,
+    Guid? EmplacementId,
+    Guid? LotId,
+    string Libelle,
+    decimal Attendu,
+    decimal Constate,
+    string Statut,
+    DateTime DetecteUtc,
+    DateTime? ResolutionUtc,
+    string? ResoluPar);
+
+/// <summary>Compte rendu d'un passage de sauvegarde (décision 32).</summary>
+public sealed record PassageSauvegarde(long Id, string Type, DateTime DebutUtc, DateTime FinUtc, bool Reussie, string? Fichier, long? Taille, string? Message);
+
+/// <summary>État de l'exploitation : dernier contrôle, écarts ouverts, dernières sauvegardes réussies et retards.</summary>
+public sealed record EtatExploitation(
+    ControleSoldes? DernierControle,
+    int EcartsOuverts,
+    PassageSauvegarde? DerniereSauvegardeLocale,
+    PassageSauvegarde? DerniereSauvegardeHorsSite,
+    bool ControleEnRetard,
+    bool SauvegardeLocaleEnRetard,
+    bool SauvegardeHorsSiteEnRetard);
+
 /// <summary>Journaux exportables (mêmes noms que l'API, <c>JournauxComptables</c>).</summary>
 public static class JournauxComptables
 {

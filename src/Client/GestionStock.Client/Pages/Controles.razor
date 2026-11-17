@@ -1,0 +1,164 @@
+@page "/controles"
+@inject Api Api
+@inject Session Session
+@inject IJSRuntime Js
+
+<PageTitle>@L["Controles"] · GestionStock</PageTitle>
+
+<h1>@L["Controles"]</h1>
+<p class="discret">@L["ControlesAide"]</p>
+
+<Message Texte="@_erreur" />
+<Message Texte="@_succes" Erreur="false" />
+
+<section class="bloc-accueil">
+    <h2>@L["DernierControle"]</h2>
+    <div class="indicateurs">
+        @if (_etat?.DernierControle is { } dernier)
+        {
+            <div class="indicateur @(dernier.Statut == "Echoue" ? "alerte" : _etat.ControleEnRetard ? "attention" : "")">
+                <span>@Format.Date(dernier.DebutUtc) · @(dernier.Declencheur == "systeme" ? L["ControlePlanifie"].Value : dernier.Declencheur)</span>
+                <strong>@L[$"StatutControle.{dernier.Statut}"]</strong>
+                <small>@L["SoldesControles", dernier.SoldesControles, dernier.Ecarts]</small>
+                @if (dernier.Message is { Length: > 0 } message)
+                {
+                    <small><code>@message</code></small>
+                }
+            </div>
+        }
+        else if (_etat is not null)
+        {
+            <div class="indicateur attention">
+                <span>@L["AucunControle"]</span>
+                <strong>—</strong>
+            </div>
+        }
+        <div class="indicateur @(_etat?.EcartsOuverts > 0 ? "alerte" : "")">
+            <span>@L["EcartsOuverts"]</span>
+            <strong>@(_etat?.EcartsOuverts ?? 0)</strong>
+            <small>@L["ControleNocturne"]</small>
+        </div>
+    </div>
+    @if (Session.A(Permissions.ControlesLancer))
+    {
+        <p><button class="valider" disabled="@_enCours" @onclick="Lancer"><Icone Nom="controles" />@(_enCours ? L["ControleEnCours"] : L["LancerControle"])</button></p>
+    }
+</section>
+
+<h2>@L["Ecarts"]</h2>
+<div class="barre">
+    <select @bind="_filtre" @bind:after="ChargerEcarts" aria-label="@L["Statut"]">
+        <option value="Ouvert">@L["StatutEcart.Ouvert"]</option>
+        <option value="Reconstruit">@L["StatutEcart.Reconstruit"]</option>
+        <option value="Disparu">@L["StatutEcart.Disparu"]</option>
+        <option value="">@L["Toutes"]</option>
+    </select>
+</div>
+
+<table class="cartes">
+    <thead>
+        <tr><th>@L["Solde"]</th><th>@L["Designation"]</th><th>@L["SelonJournal"]</th><th>@L["Enregistre"]</th><th>@L["Detecte"]</th><th>@L["Statut"]</th><th></th></tr>
+    </thead>
+    <tbody>
+        @foreach (var ecart in _ecarts)
+        {
+            <tr class="@(ecart.Statut == "Ouvert" ? "" : "inactif")">
+                <td data-label="@L["Solde"]"><strong>@L[$"DomaineSolde.{ecart.Domaine}"]</strong><br /><small class="discret">@L[$"GrandeurSolde.{ecart.Grandeur}"]</small></td>
+                <td data-label="@L["Designation"]">@ecart.Libelle</td>
+                <td data-label="@L["SelonJournal"]" class="nombre">@Valeur(ecart, ecart.Attendu)</td>
+                <td data-label="@L["Enregistre"]" class="nombre">@Valeur(ecart, ecart.Constate)</td>
+                <td data-label="@L["Detecte"]" class="court">@Format.Date(ecart.DetecteUtc)</td>
+                <td data-label="@L["Statut"]">
+                    <span class="pastille @(ecart.Statut == "Ouvert" ? "brouillon" : ecart.Statut == "Reconstruit" ? "validee" : "")">@L[$"StatutEcart.{ecart.Statut}"]</span>
+                    @if (ecart.ResolutionUtc is { } le)
+                    {
+                        <br /><small class="discret">@(ecart.ResoluPar is { } par ? $"{par} · " : "")@Format.Date(le)</small>
+                    }
+                </td>
+                <td>
+                    @if (ecart.Statut == "Ouvert" && Session.A(Permissions.SoldesReconstruire))
+                    {
+                        <button disabled="@_enCours" @onclick="() => Reconstruire(ecart)">@L["Reconstruire"]</button>
+                    }
+                </td>
+            </tr>
+        }
+        @if (_ecarts.Count == 0)
+        {
+            <tr><td colspan="7" class="vide">@L["AucunEcart"]</td></tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    private EtatExploitation? _etat;
+    private List<EcartSolde> _ecarts = [];
+    private string _filtre = "Ouvert";
+    private bool _enCours;
+    private string? _erreur;
+    private string? _succes;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ChargerEtat();
+        await ChargerEcarts();
+    }
+
+    private async Task ChargerEtat()
+    {
+        var resultat = await Api.GetAsync<EtatExploitation>("api/exploitation/etat");
+        _etat = resultat.Valeur;
+        _erreur = resultat.Erreur;
+    }
+
+    private async Task ChargerEcarts()
+    {
+        var url = _filtre.Length == 0 ? "api/exploitation/ecarts" : $"api/exploitation/ecarts?statut={_filtre}";
+        var resultat = await Api.GetAsync<List<EcartSolde>>(url);
+        _ecarts = resultat.Valeur ?? [];
+        _erreur ??= resultat.Erreur;
+    }
+
+    /// <summary>Contrôle hors de son passage nocturne (Administrateur) ; il peut prendre quelques secondes.</summary>
+    private async Task Lancer()
+    {
+        _enCours = true;
+        _succes = null;
+        var resultat = await Api.PostAsync<ControleSoldes>("api/exploitation/controles");
+        _enCours = false;
+        _erreur = resultat.Erreur;
+        if (resultat.Valeur is { } controle)
+        {
+            _succes = L["ControleTermine", controle.SoldesControles, controle.Ecarts].Value;
+            await ChargerEtat();
+            await ChargerEcarts();
+        }
+    }
+
+    /// <summary>
+    /// Reconstruction depuis le journal (Administrateur) : tous les soldes de l'article, ou la dette du client. Le
+    /// journal fait foi ; aucun mouvement n'est écrit.
+    /// </summary>
+    private async Task Reconstruire(EcartSolde ecart)
+    {
+        if (!await Js.InvokeAsync<bool>("confirm", L["ConfirmerReconstruction", ecart.Libelle].Value))
+        {
+            return;
+        }
+
+        _enCours = true;
+        _succes = null;
+        var resultat = await Api.PostAsync<List<EcartSolde>>($"api/exploitation/ecarts/{ecart.Id}/reconstruction");
+        _enCours = false;
+        _erreur = resultat.Erreur;
+        if (resultat.Reussi)
+        {
+            _succes = L["SoldeReconstruit"].Value;
+            await ChargerEtat();
+            await ChargerEcarts();
+        }
+    }
+
+    private static string Valeur(EcartSolde ecart, decimal valeur) =>
+        ecart.Grandeur is "Cump" or "SoldeDu" ? Format.Montant(valeur) : Format.Quantite(valeur);
+}

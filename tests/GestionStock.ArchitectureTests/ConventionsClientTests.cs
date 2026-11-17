@@ -79,6 +79,13 @@ public sealed partial class ConventionsClientTests
         utilisees.UnionWith(["FicheEnregistree", "CompteDesactive", "CompteReactive", "MotDePasseReinitialise"]);
         utilisees.UnionWith(Enum.GetNames<GestionStock.Caisse.Domain.TypeAnomalie>().SelectMany(t => new[] { $"Anomalie.{t}", $"AnomalieAide.{t}" }));
 
+        // Exploitation : statuts, soldes et grandeurs du contrôle (ENF04), types de sauvegarde (décision 32).
+        utilisees.UnionWith(Enum.GetNames<GestionStock.Exploitation.Domain.StatutControle>().Select(t => $"StatutControle.{t}"));
+        utilisees.UnionWith(Enum.GetNames<GestionStock.Exploitation.Domain.StatutEcart>().Select(t => $"StatutEcart.{t}"));
+        utilisees.UnionWith(Enum.GetNames<GestionStock.Exploitation.Domain.DomaineSolde>().Select(t => $"DomaineSolde.{t}"));
+        utilisees.UnionWith(Enum.GetNames<GestionStock.Exploitation.Domain.GrandeurSolde>().Select(t => $"GrandeurSolde.{t}"));
+        utilisees.UnionWith(Enum.GetNames<GestionStock.Exploitation.Contracts.TypeSauvegarde>().Select(t => $"TypeSauvegarde.{t}"));
+
         Assert.Empty(utilisees.Except(francais));
         Assert.Empty(utilisees.Except(anglais));
         Assert.Equal(francais.Order(), anglais.Order());

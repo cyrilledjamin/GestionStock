@@ -1,0 +1,93 @@
+@page "/sauvegardes"
+@inject Api Api
+
+<PageTitle>@L["Sauvegardes"] · GestionStock</PageTitle>
+
+<h1>@L["Sauvegardes"]</h1>
+<p class="discret">@L["SauvegardesAide"]</p>
+
+<Message Texte="@_erreur" />
+
+@if (_etat is { } etat)
+{
+    <div class="indicateurs">
+        <div class="indicateur @(etat.SauvegardeLocaleEnRetard ? "alerte" : "")">
+            <span>@L["SauvegardeLocale"]</span>
+            <strong>@(etat.DerniereSauvegardeLocale is { } locale ? Format.Date(locale.FinUtc) : L["Jamais"].Value)</strong>
+            <small>@(etat.SauvegardeLocaleEnRetard ? L["SauvegardeLocaleEnRetard"] : L["SauvegardeLocaleAJour"])</small>
+        </div>
+        <div class="indicateur @(etat.SauvegardeHorsSiteEnRetard ? "alerte" : "")">
+            <span>@L["SauvegardeHorsSite"]</span>
+            <strong>@(etat.DerniereSauvegardeHorsSite is { } horsSite ? Format.Date(horsSite.FinUtc) : L["Jamais"].Value)</strong>
+            <small>@(etat.SauvegardeHorsSiteEnRetard ? L["SauvegardeHorsSiteEnRetard"] : L["SauvegardeHorsSiteAJour"])</small>
+        </div>
+    </div>
+}
+
+<h2>@L["DerniersPassages"]</h2>
+<div class="barre">
+    <select @bind="_filtre" @bind:after="Charger" aria-label="@L["Type"]">
+        <option value="">@L["Toutes"]</option>
+        <option value="Locale">@L["TypeSauvegarde.Locale"]</option>
+        <option value="HorsSite">@L["TypeSauvegarde.HorsSite"]</option>
+    </select>
+</div>
+
+<table class="cartes">
+    <thead>
+        <tr><th>@L["Date"]</th><th>@L["Type"]</th><th>@L["Resultat"]</th><th>@L["Fichier"]</th><th class="nombre">@L["Taille"]</th></tr>
+    </thead>
+    <tbody>
+        @foreach (var passage in _passages)
+        {
+            <tr>
+                <td data-label="@L["Date"]" class="court">@Format.Date(passage.FinUtc)</td>
+                <td data-label="@L["Type"]">@L[$"TypeSauvegarde.{passage.Type}"]</td>
+                <td data-label="@L["Resultat"]">
+                    <span class="pastille @(passage.Reussie ? "validee" : "brouillon")">@(passage.Reussie ? L["Reussie"] : L["Echouee"])</span>
+                    @if (passage.Message is { Length: > 0 } message)
+                    {
+                        <br /><small><code>@message</code></small>
+                    }
+                </td>
+                <td data-label="@L["Fichier"]"><code>@passage.Fichier</code></td>
+                <td data-label="@L["Taille"]" class="nombre">@(passage.Taille is { } taille ? Taille(taille) : "")</td>
+            </tr>
+        }
+        @if (_passages.Count == 0)
+        {
+            <tr><td colspan="5" class="vide">@L["AucuneSauvegarde"]</td></tr>
+        }
+    </tbody>
+</table>
+
+<h2>@L["Restauration"]</h2>
+<p>@L["RestaurationAide"]</p>
+
+@code {
+    private EtatExploitation? _etat;
+    private List<PassageSauvegarde> _passages = [];
+    private string _filtre = "";
+    private string? _erreur;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var etat = await Api.GetAsync<EtatExploitation>("api/exploitation/etat");
+        _etat = etat.Valeur;
+        _erreur = etat.Erreur;
+        await Charger();
+    }
+
+    private async Task Charger()
+    {
+        var url = _filtre.Length == 0 ? "api/exploitation/sauvegardes" : $"api/exploitation/sauvegardes?type={_filtre}";
+        var resultat = await Api.GetAsync<List<PassageSauvegarde>>(url);
+        _passages = resultat.Valeur ?? [];
+        _erreur ??= resultat.Erreur;
+    }
+
+    /// <summary>Taille lisible, en Ko ou Mo (1 Mo = 1 048 576 octets).</summary>
+    private string Taille(long octets) => octets >= 1_048_576
+        ? L["TailleMo", (octets / 1_048_576m).ToString("0.#", CultureInfo.CurrentCulture)].Value
+        : L["TailleKo", Math.Max(1, octets / 1024).ToString(CultureInfo.CurrentCulture)].Value;
+}
