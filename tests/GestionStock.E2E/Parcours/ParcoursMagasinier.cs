@@ -28,7 +28,9 @@ public sealed class ParcoursMagasinier(Navigateur navigateur) : ParcoursBase(nav
         await Lien("NouvelleReception").ClickAsync();
         await Champ("Fournisseur").SelectOptionAsync(new SelectOptionValue { Label = fournisseur });
         var ligne = Page.Locator("table tbody tr").First;
-        await ligne.GetByRole(AriaRole.Combobox).SelectOptionAsync(new SelectOptionValue { Label = $"{article.Code} — {article.Libelle}" });
+        // Article choisi par recherche (pas de liste de tout le catalogue).
+        await ligne.GetByRole(AriaRole.Searchbox, new() { Name = T["Article"] }).FillAsync(article.Code);
+        await ligne.GetByRole(AriaRole.Button, new() { NameRegex = new($"^{article.Code} — ") }).ClickAsync();
         await ligne.GetByRole(AriaRole.Spinbutton).Nth(0).FillAsync("10");
         await ligne.GetByRole(AriaRole.Spinbutton).Nth(1).FillAsync("750");
         await Bouton("EnregistrerBrouillon").ClickAsync();

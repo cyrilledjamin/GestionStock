@@ -24,7 +24,7 @@
         <div class="barre">
             @if (Session.A(Permissions.InventaireCompter))
             {
-                <input id="scan" placeholder="@L["ScanInventaireAide"]" @bind="_code" @bind:event="oninput" @onkeydown="SurTouche" autocomplete="off" />
+                <ChampScan Aide="@L["ScanInventaireAide"]" Scanne="Scanner" />
             }
             <label class="case"><input type="checkbox" @bind="_seulementNonComptes" /> @L["SeulementNonComptes"]</label>
             @if (Session.A(Permissions.InventaireValider))
@@ -97,7 +97,6 @@
     private DetailInventaire? _detail;
     private Dictionary<Guid, decimal?> _saisies = [];
     private Dictionary<Guid, bool> _freintes = [];
-    private string _code = "";
     private bool _seulementNonComptes;
     private string? _erreur;
     private string? _succes;
@@ -128,15 +127,8 @@
     }
 
     /// <summary>Scan : le conditionnement scanné ajoute son contenu à la quantité déjà comptée de l'article.</summary>
-    private async Task SurTouche(KeyboardEventArgs e)
+    private async Task Scanner(string code)
     {
-        if (e.Key != "Enter" || string.IsNullOrWhiteSpace(_code))
-        {
-            return;
-        }
-
-        var code = _code.Trim();
-        _code = "";
         var scan = await Api.GetAsync<ArticleVendable>($"api/referentiel/scan/{Uri.EscapeDataString(code)}");
         _erreur = scan.Erreur;
         if (scan.Valeur is { } vendable)

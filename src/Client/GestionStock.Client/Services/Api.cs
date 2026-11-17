@@ -17,6 +17,12 @@ public sealed record Resultat<T>(T? Valeur, string? Erreur, string? Code = null)
 }
 
 /// <summary>
+/// Lecture versionnée : la valeur et sa version (ETag), ou <see cref="NonModifie"/> si la version connue est toujours la
+/// bonne (304, rien n'est retéléchargé).
+/// </summary>
+public sealed record LectureVersionnee<T>(T? Valeur, string? Version, bool NonModifie);
+
+/// <summary>
 /// Appels à l'API : ajoute le jeton et la langue, renouvelle le jeton une fois s'il a expiré,
 /// renvoie vers la page de connexion si la session est terminée. Un serveur injoignable ne lève pas d'erreur : le
 /// résultat porte le code <see cref="CodeHorsLigne"/> et <see cref="EtatConnexion"/> passe hors ligne (7.8).
@@ -26,13 +32,54 @@ public sealed class Api(HttpClient http, Session session, NavigationManager navi
     /// <summary>Code d'un appel qui n'a pas pu joindre le serveur (réseau coupé, serveur arrêté).</summary>
     public const string CodeHorsLigne = "HorsLigne";
 
-    public Task<Resultat<T>> GetAsync<T>(string url) => EnvoyerAsync<T>(HttpMethod.Get, url, null);
+    /// <summary>Délai d'un appel ordinaire : au-delà, le serveur est considéré comme injoignable (hors ligne).</summary>
+    public static readonly TimeSpan DelaiParDefaut = TimeSpan.FromSeconds(15);
 
-    public Task<Resultat<T>> PostAsync<T>(string url, object? corps = null) => EnvoyerAsync<T>(HttpMethod.Post, url, corps);
+    /// <summary>
+    /// Délai des appels longs par nature : données de la caisse sur une connexion lente, contrôle des soldes, exports,
+    /// reprise.
+    /// </summary>
+    public static readonly TimeSpan DelaiLong = TimeSpan.FromMinutes(5);
 
-    public Task<Resultat<T>> PutAsync<T>(string url, object corps) => EnvoyerAsync<T>(HttpMethod.Put, url, corps);
+    public Task<Resultat<T>> GetAsync<T>(string url, TimeSpan? delai = null) => EnvoyerAsync<T>(HttpMethod.Get, url, null, delai);
 
-    public Task<Resultat<T>> DeleteAsync<T>(string url) => EnvoyerAsync<T>(HttpMethod.Delete, url, null);
+    public Task<Resultat<T>> PostAsync<T>(string url, object? corps = null, TimeSpan? delai = null) => EnvoyerAsync<T>(HttpMethod.Post, url, corps, delai);
+
+    public Task<Resultat<T>> PutAsync<T>(string url, object corps) => EnvoyerAsync<T>(HttpMethod.Put, url, corps, null);
+
+    public Task<Resultat<T>> DeleteAsync<T>(string url) => EnvoyerAsync<T>(HttpMethod.Delete, url, null, null);
+
+    /// <summary>
+    /// Lecture d'une donnée gardée sur le poste (ENF10) : la version connue est envoyée (If-None-Match) ; le serveur
+    /// répond 304 sans contenu si elle n'a pas changé.
+    /// </summary>
+    public Task<Resultat<LectureVersionnee<T>>> GetVersionneAsync<T>(string url, string? versionConnue) =>
+        SansReseauAsync(async () =>
+        {
+            var reponse = await EnvoyerAvecJetonAsync(HttpMethod.Get, url, null, versionConnue, DelaiLong);
+            try
+            {
+                if (reponse.StatusCode == HttpStatusCode.Unauthorized && await session.RafraichirAsync())
+                {
+                    reponse.Dispose();
+                    reponse = await EnvoyerAvecJetonAsync(HttpMethod.Get, url, null, versionConnue, DelaiLong);
+                }
+
+                if (reponse.StatusCode == HttpStatusCode.NotModified)
+                {
+                    return new Resultat<LectureVersionnee<T>>(new LectureVersionnee<T>(default, versionConnue, true), null);
+                }
+
+                var lue = await LireAsync<T>(reponse);
+                return lue.Reussi
+                    ? new Resultat<LectureVersionnee<T>>(new LectureVersionnee<T>(lue.Valeur, reponse.Headers.ETag?.Tag, false), null)
+                    : new Resultat<LectureVersionnee<T>>(default, lue.Erreur, lue.Code);
+            }
+            finally
+            {
+                reponse.Dispose();
+            }
+        });
 
     /// <summary>Envoie un fichier tel quel dans le corps de la requête (ex. classeur de reprise).</summary>
     public Task<Resultat<T>> EnvoyerFichierAsync<T>(string url, byte[] fichier) =>
@@ -58,7 +105,8 @@ public sealed class Api(HttpClient http, Session session, NavigationManager navi
         }
 
         Session.AjouterLangue(requete);
-        return await http.SendAsync(requete);
+        using var limite = new CancellationTokenSource(DelaiLong);
+        return await http.SendAsync(requete, limite.Token);
     }
 
     /// <summary>Contenu binaire (ex. reçu PDF) ; null en cas d'erreur.</summary>
@@ -67,10 +115,10 @@ public sealed class Api(HttpClient http, Session session, NavigationManager navi
 
     private async Task<byte[]?> LireOctetsAsync(string url)
     {
-        using var reponse = await EnvoyerAvecJetonAsync(HttpMethod.Get, url, null);
+        using var reponse = await EnvoyerAvecJetonAsync(HttpMethod.Get, url, null, delai: DelaiLong);
         if (reponse.StatusCode == HttpStatusCode.Unauthorized && await session.RafraichirAsync())
         {
-            using var nouvelle = await EnvoyerAvecJetonAsync(HttpMethod.Get, url, null);
+            using var nouvelle = await EnvoyerAvecJetonAsync(HttpMethod.Get, url, null, delai: DelaiLong);
             return nouvelle.IsSuccessStatusCode ? await nouvelle.Content.ReadAsByteArrayAsync() : null;
         }
 
@@ -103,10 +151,10 @@ public sealed class Api(HttpClient http, Session session, NavigationManager navi
         return ($"{(int)reponse.StatusCode} {reponse.ReasonPhrase}", null);
     }
 
-    private Task<Resultat<T>> EnvoyerAsync<T>(HttpMethod methode, string url, object? corps) =>
+    private Task<Resultat<T>> EnvoyerAsync<T>(HttpMethod methode, string url, object? corps, TimeSpan? delai) =>
         SansReseauAsync(async () =>
         {
-            var reponse = await EnvoyerAvecJetonAsync(methode, url, corps);
+            var reponse = await EnvoyerAvecJetonAsync(methode, url, corps, delai: delai);
             try
             {
                 // Base interrompue (503, pool vidé par le serveur) : une lecture est redemandée une fois après le délai
@@ -115,12 +163,12 @@ public sealed class Api(HttpClient http, Session session, NavigationManager navi
                 {
                     reponse.Dispose();
                     await Task.Delay(DelaiAvantNouvelEssai);
-                    reponse = await EnvoyerAvecJetonAsync(methode, url, corps);
+                    reponse = await EnvoyerAvecJetonAsync(methode, url, corps, delai: delai);
                 }
 
                 if (reponse.StatusCode == HttpStatusCode.Unauthorized && await session.RafraichirAsync())
                 {
-                    using var nouvelle = await EnvoyerAvecJetonAsync(methode, url, corps);
+                    using var nouvelle = await EnvoyerAvecJetonAsync(methode, url, corps, delai: delai);
                     return await LireAsync<T>(nouvelle);
                 }
 
@@ -147,16 +195,22 @@ public sealed class Api(HttpClient http, Session session, NavigationManager navi
             etat.SignalerReussite();
             return resultat;
         }
-        catch (HttpRequestException)
+        catch (Exception erreur) when (erreur is HttpRequestException or TaskCanceledException)
         {
+            // Réseau coupé, serveur arrêté, ou pas de réponse dans le délai du client (15 s) : hors ligne.
             etat.SignalerEchec();
             return new(default, textes["ServeurInjoignable"], CodeHorsLigne);
         }
     }
 
-    private async Task<HttpResponseMessage> EnvoyerAvecJetonAsync(HttpMethod methode, string url, object? corps)
+    private async Task<HttpResponseMessage> EnvoyerAvecJetonAsync(HttpMethod methode, string url, object? corps, string? versionConnue = null, TimeSpan? delai = null)
     {
         using var requete = new HttpRequestMessage(methode, url);
+        if (versionConnue is not null)
+        {
+            requete.Headers.TryAddWithoutValidation("If-None-Match", versionConnue);
+        }
+
         if (corps is not null)
         {
             requete.Content = JsonContent.Create(corps);
@@ -168,7 +222,9 @@ public sealed class Api(HttpClient http, Session session, NavigationManager navi
         }
 
         Session.AjouterLangue(requete);
-        return await http.SendAsync(requete);
+        // Délai par appel (le HttpClient n'en a pas) : 15 s par défaut, plus pour les appels longs par nature.
+        using var limite = new CancellationTokenSource(delai ?? DelaiParDefaut);
+        return await http.SendAsync(requete, limite.Token);
     }
 
     private async Task<Resultat<T>> LireAsync<T>(HttpResponseMessage reponse)

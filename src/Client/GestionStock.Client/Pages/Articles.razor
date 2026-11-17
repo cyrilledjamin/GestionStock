@@ -1,13 +1,14 @@
 @page "/articles"
 @inject Api Api
 @inject Session Session
+@implements IDisposable
 
 <PageTitle>@L["Articles"] · GestionStock</PageTitle>
 
 <h1>@L["Articles"]</h1>
 
 <div class="barre">
-    <input type="search" placeholder="@L["Rechercher"]" @bind="_recherche" @bind:event="oninput" @bind:after="Charger" />
+    <input type="search" placeholder="@L["Rechercher"]" @bind="_recherche" @bind:event="oninput" @bind:after="RechercherDiffere" />
     <label class="case"><input type="checkbox" @bind="_inclureInactifs" @bind:after="Charger" /> @L["InclureInactifs"]</label>
     @if (Session.A(Permissions.ArticlesGerer) && _edition is null)
     {
@@ -93,6 +94,10 @@
         }
     </tbody>
 </table>
+@if (_tronquee)
+{
+    <p class="discret">@L["ListeTronquee", TailleListe]</p>
+}
 
 @code {
     // Premier chargement terminé : jusque-là, la liste montre l'attente et non « Aucun… ».
@@ -107,14 +112,42 @@
 
     protected override Task OnInitializedAsync() => Charger();
 
-    private async Task Charger()
+    private readonly RechercheDifferee _differee = new();
+
+    private async Task RechercherDiffere()
     {
-        var url = $"api/referentiel/articles?recherche={Uri.EscapeDataString(_recherche)}&inclureInactifs={_inclureInactifs}";
+        if (await _differee.AttendreAsync() is { } numero)
+        {
+            await Charger(numero);
+        }
+    }
+
+    private Task Charger() => Charger(null);
+
+    /// <summary>
+    /// Les <see cref="TailleListe"/> premiers articles (par code) qui répondent à la recherche ; un de plus est demandé
+    /// pour savoir s'il en reste (ENF10 : jamais tout le catalogue).
+    /// </summary>
+    private async Task Charger(int? numero)
+    {
+        var url = $"api/referentiel/articles?recherche={Uri.EscapeDataString(_recherche)}&inclureInactifs={_inclureInactifs}&taille={TailleListe + 1}";
         var resultat = await Api.GetAsync<List<Article>>(url);
+        if (numero is { } n && !_differee.EstLaDerniere(n))
+        {
+            return;
+        }
+
         _articles = resultat.Valeur ?? [];
+        _tronquee = _articles.Count > TailleListe;
+        _articles = [.. _articles.Take(TailleListe)];
         _erreur = resultat.Erreur;
         _charge = true;
     }
+
+    private const int TailleListe = 200;
+    private bool _tronquee;
+
+    public void Dispose() => _differee.Dispose();
 
     private void Nouveau() => _edition = new Edition();
 

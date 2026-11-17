@@ -523,3 +523,6 @@ public static class MotifsDemarque
 {
     public static IReadOnlyList<string> Tous { get; } = ["Casse", "Vol", "Perime", "Freinte"];
 }
+
+/// <summary>Valeur du stock au CUMP et nombre d'articles qui y ont un solde.</summary>
+public sealed record ValeurStock(decimal Valeur, int NombreArticles);

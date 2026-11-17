@@ -1,5 +1,6 @@
 @page "/clients"
 @inject Api Api
+@implements IDisposable
 @inject Session Session
 
 <PageTitle>@L["Clients"] · GestionStock</PageTitle>
@@ -7,7 +8,7 @@
 <h1>@L["Clients"]</h1>
 
 <div class="barre">
-    <input type="search" placeholder="@L["ChercherClient"]" @bind="_recherche" @bind:event="oninput" @bind:after="Charger" />
+    <input type="search" placeholder="@L["ChercherClient"]" @bind="_recherche" @bind:event="oninput" @bind:after="RechercherDiffere" />
     <label class="case"><input type="checkbox" @bind="_impayes" @bind:after="Charger" /> @L["SeulementImpayes"]</label>
     @if (Session.A(Permissions.ClientsGerer) && !_creation)
     {
@@ -57,6 +58,10 @@
         }
     </tbody>
 </table>
+@if (_tronquee)
+{
+    <p class="discret">@L["ListeTronquee", TailleListe]</p>
+}
 
 @code {
     // Premier chargement terminé : jusque-là, la liste montre l'attente et non « Aucun… ».
@@ -74,14 +79,39 @@
 
     protected override Task OnInitializedAsync() => Charger();
 
-    private async Task Charger()
+    private readonly RechercheDifferee _differee = new();
+
+    private async Task RechercherDiffere()
     {
-        var url = _impayes ? "api/credit/impayes" : $"api/credit/clients?recherche={Uri.EscapeDataString(_recherche)}";
+        if (await _differee.AttendreAsync() is { } numero)
+        {
+            await Charger(numero);
+        }
+    }
+
+    private Task Charger() => Charger(null);
+
+    /// <summary>Les <see cref="TailleListe"/> premiers clients (par nom) ; un de plus est demandé pour savoir s'il en reste.</summary>
+    private async Task Charger(int? numero)
+    {
+        var url = _impayes ? "api/credit/impayes" : $"api/credit/clients?recherche={Uri.EscapeDataString(_recherche)}&taille={TailleListe + 1}";
         var resultat = await Api.GetAsync<List<ClientCredit>>(url);
+        if (numero is { } n && !_differee.EstLaDerniere(n))
+        {
+            return;
+        }
+
         _clients = resultat.Valeur ?? [];
+        _tronquee = !_impayes && _clients.Count > TailleListe;
+        _clients = [.. _clients.Take(TailleListe)];
         _erreur = resultat.Erreur;
         _charge = true;
     }
+
+    private const int TailleListe = 200;
+    private bool _tronquee;
+
+    public void Dispose() => _differee.Dispose();
 
     private async Task Creer()
     {

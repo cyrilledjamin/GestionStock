@@ -124,7 +124,7 @@ internal sealed class ServiceCredit(CreditDbContext contexte, IUniteDeTravail un
 
     // --- Gestion des clients (back-office) -----------------------------------------------------------------------
 
-    public async Task<IReadOnlyList<ClientDto>> ListerAsync(string? recherche, bool seulementEnRetard, CancellationToken annulation)
+    public async Task<IReadOnlyList<ClientDto>> ListerAsync(string? recherche, bool seulementEnRetard, CancellationToken annulation, int? taille = null)
     {
         var requete = contexte.Clients.AsNoTracking();
         if (!string.IsNullOrWhiteSpace(recherche))
@@ -133,7 +133,8 @@ internal sealed class ServiceCredit(CreditDbContext contexte, IUniteDeTravail un
             requete = requete.Where(c => EF.Functions.ILike(c.Nom, motif) || EF.Functions.ILike(c.Telephone, motif));
         }
 
-        var clients = await requete.OrderBy(c => c.Nom).ToListAsync(annulation);
+        var triee = requete.OrderBy(c => c.Nom);
+        var clients = await (taille is { } maximum ? triee.Take(Math.Clamp(maximum, 1, 1000)) : triee).ToListAsync(annulation);
         var retards = await MontantsEnRetard(annulation);
         return [.. clients
             .Select(c => VersDto(c, retards.GetValueOrDefault(c.Id)))

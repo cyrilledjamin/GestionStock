@@ -1,0 +1,27 @@
+@* Champ de scan à la douchette : la saisie ne redessine que ce champ (pas la page entière à chaque caractère reçu) ; à
+   Entrée, le code est remis au parent et le champ se vide. *@
+
+<input id="@Id" placeholder="@Aide" aria-label="@Aide" @bind="_code" @bind:event="oninput" @onkeydown="SurTouche" autocomplete="off" />
+
+@code {
+    [Parameter] public string Id { get; set; } = "scan";
+
+    [Parameter, EditorRequired] public string Aide { get; set; } = "";
+
+    /// <summary>Code scanné (ou saisi), déjà débarrassé de ses espaces.</summary>
+    [Parameter] public EventCallback<string> Scanne { get; set; }
+
+    private string _code = "";
+
+    private async Task SurTouche(KeyboardEventArgs e)
+    {
+        if (e.Key != "Enter" || string.IsNullOrWhiteSpace(_code))
+        {
+            return;
+        }
+
+        var code = _code.Trim();
+        _code = "";
+        await Scanne.InvokeAsync(code);
+    }
+}

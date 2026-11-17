@@ -89,11 +89,12 @@ internal sealed class ServiceReceptions(
     IHorloge horloge,
     IAnnuairePersonnel annuaire)
 {
-    public async Task<IReadOnlyList<ResumeReception>> ListerAsync(CancellationToken annulation)
+    public async Task<IReadOnlyList<ResumeReception>> ListerAsync(CancellationToken annulation, StatutReception? statut = null)
     {
         // Résumé calculé par la base (nombre de lignes, valeur, frais) : les lignes, frais et répartitions ne sont pas
         // chargés pour une liste.
         return await contexte.Receptions.IgnoreAutoIncludes().AsNoTracking()
+            .Where(r => statut == null || r.Statut == statut)
             .OrderByDescending(r => r.DateCreationUtc)
             .Select(r => new ResumeReception(
                 r.Id,

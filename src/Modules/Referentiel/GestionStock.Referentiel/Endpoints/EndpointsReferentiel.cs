@@ -24,8 +24,9 @@ internal static class EndpointsReferentiel
         ArgumentNullException.ThrowIfNull(routes);
         var groupe = routes.MapGroup(Prefixe).WithTags("Referentiel");
 
-        groupe.MapGet("/articles", async (string? recherche, bool? inclureInactifs, ServiceArticles service, CancellationToken annulation) =>
-            TypedResults.Ok(await service.ListerAsync(recherche, inclureInactifs ?? false, annulation)))
+        // taille : nombre maximal d'articles (écrans de liste, ENF10) ; sans taille, tous (exports, reprise).
+        groupe.MapGet("/articles", async (string? recherche, bool? inclureInactifs, int? taille, ServiceArticles service, CancellationToken annulation) =>
+            TypedResults.Ok(await service.ListerAsync(recherche, inclureInactifs ?? false, annulation, taille)))
             .RequireAuthorization(Permissions.ReferentielConsulter);
 
         groupe.MapGet("/articles/{id:guid}", (Guid id, ServiceArticles service, CancellationToken annulation) =>
@@ -88,6 +89,8 @@ internal static class EndpointsReferentiel
         // Catalogue complet de la caisse, gardé sur le poste pour vendre hors ligne (7.8).
         groupe.MapGet("/catalogue-caisse", async (ServiceConditionnements service, IHorloge horloge, CancellationToken annulation) =>
             TypedResults.Ok(await service.CatalogueCaisseAsync(horloge.MaintenantUtc, annulation)))
+            // Version sur les vendables seuls : l'heure de génération change à chaque appel.
+            .AvecVersion<CatalogueCaisse>(catalogue => catalogue.Vendables)
             .RequireAuthorization(Permissions.ReferentielConsulter);
 
         groupe.MapGet("/vendables/rapides", async (ServiceConditionnements service, CancellationToken annulation) =>

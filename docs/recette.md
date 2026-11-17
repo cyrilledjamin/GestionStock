@@ -107,14 +107,13 @@ Lancement : voir le README, section « Tests ».
 | ENF07 | Précision des nombres, dates UTC et Douala | V1 | Dom `MouvementStockTests.Une_quantite_a_plus_de_quatre_decimales_est_refusee` ; Dom `MouvementStockTests.Une_date_non_UTC_est_refusee` ; Infra `HorlogeSystemeTests.La_date_du_jour_est_celle_de_Douala` |
 | ENF08 | Hors ligne sans doublon | V1, caisse seule | E2E `ParcoursCaissier.Vend_hors_ligne_puis_synchronise_au_retour_du_reseau` ; Api `HorsLigneTests.Une_vente_rejouee_deux_fois_n_est_enregistree_qu_une_fois_avec_son_numero_et_son_heure` ; Client `TicketLocalTests.Le_plafond_hors_ligne_compte_le_credit_deja_en_file_et_les_remboursements` |
 | ENF09 | Bilinguisme | V1 | E2E `ParcoursAnglais.Un_caissier_anglophone_vend_et_cloture` ; Api `CaisseTests.Le_recu_PDF_est_genere_dans_la_langue_de_l_utilisateur` ; Arch `ConventionsClientTests.Chaque_texte_utilise_par_l_interface_existe_en_francais_et_en_anglais` |
-| ENF10 | Faible bande passante | V1 | **Aucun** : étapes 57 et 58 |
+| ENF10 | Faible bande passante | V1 | E2E `ParcoursConnexionLente.La_caisse_s_ouvre_et_scanne_vite_sur_une_connexion_lente` ; Api `VersionsTests.Une_liste_inchangee_repond_304_et_une_modification_change_sa_version` |
 | ENF11 | Localisation des données (loi 2024/017) | V1 | Aucun test (règle de déploiement, décision 43) |
 
 ## Lacunes
 
 **À couvrir pendant la tranche 9 :**
 - **RG41** (vente à crédit et sortie de stock) ;
-- **ENF10** (compression et pagination).
 
 **À trancher avec le client avant d'ajouter des tests :**
 - RG12 sans commande fournisseur ;

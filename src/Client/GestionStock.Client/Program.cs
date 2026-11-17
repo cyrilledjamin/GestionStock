@@ -10,7 +10,9 @@ builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
 // L'API est servie par le même hôte que le client (même origine, pas de CORS).
-builder.Services.AddScoped(_ => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
+// Pas de délai global : chaque appel a le sien (Api.DelaiParDefaut, 15 s ; Api.DelaiLong pour les appels longs). Un
+// serveur qui ne répond plus fait passer le poste hors ligne au lieu de le bloquer (100 s par défaut).
+builder.Services.AddScoped(_ => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress), Timeout = Timeout.InfiniteTimeSpan });
 builder.Services.AddScoped<Session>();
 builder.Services.AddScoped<Api>();
 builder.Services.AddScoped<Confirmation>();

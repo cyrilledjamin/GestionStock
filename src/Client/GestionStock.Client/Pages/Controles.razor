@@ -132,7 +132,7 @@
     {
         _enCours = true;
         _succes = null;
-        var resultat = await Api.PostAsync<ControleSoldes>("api/exploitation/controles");
+        var resultat = await Api.PostAsync<ControleSoldes>("api/exploitation/controles", delai: Api.DelaiLong);
         _enCours = false;
         _erreur = resultat.Erreur;
         if (resultat.Valeur is { } controle)

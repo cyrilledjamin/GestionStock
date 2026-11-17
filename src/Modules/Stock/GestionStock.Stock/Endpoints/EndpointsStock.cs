@@ -20,8 +20,14 @@ internal static class EndpointsStock
         var groupe = routes.MapGroup(Prefixe).WithTags("Stock");
 
         // Soldes de tous les articles du site (par défaut : la boutique).
-        groupe.MapGet("/soldes", async (Guid? siteId, LecturesStock lectures, CancellationToken annulation) =>
-            TypedResults.Ok(await lectures.ListerSoldesAsync(siteId, annulation)))
+        // articles : identifiants séparés par des virgules (écran du stock, une page d'articles) ; sans, tous les soldes.
+        groupe.MapGet("/soldes", async (Guid? siteId, string? articles, LecturesStock lectures, CancellationToken annulation) =>
+            TypedResults.Ok(await lectures.ListerSoldesAsync(siteId, annulation, LireIdentifiants(articles))))
+            .RequireAuthorization(Permissions.StockConsulter);
+
+        // Valeur totale du stock (au CUMP) et nombre d'articles en stock, sans télécharger tous les soldes.
+        groupe.MapGet("/valeur", async (Guid? siteId, LecturesStock lectures, CancellationToken annulation) =>
+            TypedResults.Ok(await lectures.ValeurAsync(siteId, annulation)))
             .RequireAuthorization(Permissions.StockConsulter);
 
         // Journal d'un article, du plus récent au plus ancien.
@@ -29,4 +35,12 @@ internal static class EndpointsStock
             TypedResults.Ok(await lectures.ListerMouvementsAsync(articleId, siteId, limite, annulation)))
             .RequireAuthorization(Permissions.StockConsulter);
     }
+
+    /// <summary>Identifiants d'une liste « id1,id2,… » ; null si la liste est absente (tous les articles).</summary>
+    private static IReadOnlyCollection<Guid>? LireIdentifiants(string? liste) =>
+        string.IsNullOrWhiteSpace(liste)
+            ? null
+            : [.. liste.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Select(valeur => Guid.TryParse(valeur, out var id) ? id : Guid.Empty)
+                .Where(id => id != Guid.Empty)];
 }

@@ -319,6 +319,7 @@ else
 
     private List<OccupationPoste> _occupations = [];
     private bool _focaliserNouvelleVente;
+    private readonly CancellationTokenSource _arret = new();
 
     private bool PeutEncaisser => !_enCours && !_vente.EstVide && _vente.Reste <= 0;
 
@@ -336,16 +337,56 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        _postes = (await Api.GetAsync<List<string>>("api/caisse/postes")).Valeur ?? [];
+        // Ouverture rapide sur une connexion lente (ENF10) : ce que le poste garde est relu d'abord, puis les demandes
+        // au serveur partent ensemble au lieu de l'une après l'autre.
+        await Cache.ChargerAsync();
+        var postes = Api.GetAsync<List<string>>("api/caisse/postes");
+        await Task.WhenAll(postes, ChargerSessionEtOccupations(), ChargerRapides());
+        _postes = postes.Result.Valeur ?? [];
         _poste = _postes.FirstOrDefault() ?? "";
-        await ChargerSession();
-        await ChargerRapides();
-        await ChargerOccupations();
-        // Données gardées sur le poste pour vendre hors ligne (7.8) : rafraîchies à chaque ouverture de la caisse,
-        // relues du poste si le serveur ne répond pas. Le navigateur est prié de ne jamais vider ce stockage.
-        await Cache.RafraichirAsync();
-        await Stockage.PersisterAsync();
         _charge = true;
+
+        // Données gardées sur le poste pour vendre hors ligne (7.8) : rafraîchies en arrière-plan à l'ouverture puis
+        // toutes les 5 minutes tant que le serveur répond (seul ce qui a changé est téléchargé). Le navigateur est prié
+        // de ne jamais vider ce stockage.
+        _ = RafraichirCacheEnBoucleAsync();
+    }
+
+    private async Task ChargerSessionEtOccupations()
+    {
+        await ChargerSession();
+        await ChargerOccupations();
+    }
+
+    private async Task RafraichirCacheEnBoucleAsync()
+    {
+        try
+        {
+            await Cache.RafraichirAsync();
+            await Stockage.PersisterAsync();
+            using var minuterie = new PeriodicTimer(TimeSpan.FromMinutes(5));
+            while (await minuterie.WaitForNextTickAsync(_arret.Token))
+            {
+                if (Connexion.EnLigne)
+                {
+                    await Cache.RafraichirAsync();
+                }
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Page quittée.
+        }
+    }
+
+    /// <summary>Totaux de la session après une vente ou un remboursement : la session seule, pas tous ses tickets.</summary>
+    private async Task ActualiserSession()
+    {
+        if ((await Api.GetAsync<SessionCaisse>("api/caisse/sessions/courante")).Valeur is { } session)
+        {
+            _session = session;
+            await HorsLigne.GarderSessionAsync(session);
+        }
     }
 
     /// <summary>Postes tenus par une session ouverte : le poste proposé d'abord est un poste libre.</summary>
@@ -479,6 +520,14 @@ else
         }
 
         _rapides = rapides.Valeur ?? [];
+        if (Cache.EstFrais)
+        {
+            _prixRapides = _rapides
+                .Select(v => (v.ConditionnementId, Prix: Cache.Catalogue!.Prix(v.ConditionnementId, Format.JourDouala(DateTime.UtcNow))))
+                .Where(p => p.Prix is not null).ToDictionary(p => p.ConditionnementId, p => p.Prix!.Value);
+            return;
+        }
+
         var prix = await Task.WhenAll(_rapides.Select(async v =>
             (v.ConditionnementId, Prix: (await Api.GetAsync<PrixApplicable>($"api/prix/conditionnements/{v.ConditionnementId}")).Valeur)));
         _prixRapides = prix.Where(p => p.Prix is not null).ToDictionary(p => p.ConditionnementId, p => p.Prix!.PrixTtc);
@@ -542,6 +591,13 @@ else
 
         _rechercheDifferee?.Cancel();
         var texte = _saisie.Trim();
+        // Catalogue du poste vérifié depuis peu : le code est reconnu sans aller-retour au serveur.
+        if (Cache.EstFrais && Cache.Catalogue!.Resoudre(texte) is { } connu)
+        {
+            await Ajouter(connu);
+            return;
+        }
+
         var scan = Connexion.EnLigne
             ? await Api.GetAsync<ArticleVendable>($"api/referentiel/scan/{Uri.EscapeDataString(texte)}")
             : new Resultat<ArticleVendable>(default, null, Api.CodeHorsLigne);
@@ -598,7 +654,15 @@ else
             return;
         }
 
-        // Le prix affiché vient de l'application ; le serveur le relit à l'encaissement (RG37).
+        // Le prix affiché vient de la grille du poste si elle a été vérifiée depuis peu, sinon du serveur ; le serveur le
+        // relit de toute façon à l'encaissement (RG37).
+        if (Cache.EstFrais && Cache.Catalogue!.Prix(vendable.ConditionnementId, Format.JourDouala(DateTime.UtcNow)) is { } prixLocal)
+        {
+            _erreur = null;
+            _ligneChoisie = _vente.Ajouter(vendable, prixLocal);
+            return;
+        }
+
         var prix = Connexion.EnLigne
             ? await Api.GetAsync<PrixApplicable>($"api/prix/conditionnements/{vendable.ConditionnementId}")
             : new Resultat<PrixApplicable>(default, null, Api.CodeHorsLigne);
@@ -713,7 +777,7 @@ else
             _focaliserNouvelleVente = true;
             await HorsLigne.NoterNumeroAsync(_session!.NumeroCaisse, TicketLocal.Rang(ticket.Numero));
             await HorsLigne.GarderTicketAsync(_session.Id, ticket);
-            await ChargerSession();
+            await ActualiserSession();
         }
     }
 
@@ -883,7 +947,7 @@ else
                 _clientRemboursement = null;
                 _montantRemboursement = 0;
                 _referenceRemboursement = null;
-                await ChargerSession();
+                await ActualiserSession();
             }
         }
         finally
@@ -898,6 +962,8 @@ else
     public async ValueTask DisposeAsync()
     {
         _rechercheDifferee?.Cancel();
+        await _arret.CancelAsync();
+        _arret.Dispose();
         if (_raccourcis is not null)
         {
             try

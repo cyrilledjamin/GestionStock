@@ -1,5 +1,6 @@
 @page "/stock"
 @inject Api Api
+@implements IDisposable
 
 <PageTitle>@L["Stock"] · GestionStock</PageTitle>
 
@@ -7,7 +8,7 @@
 <p class="discret">@L["StockIntro"]</p>
 
 <div class="barre">
-    <input type="search" placeholder="@L["Rechercher"]" @bind="_recherche" @bind:event="oninput" />
+    <input type="search" placeholder="@L["Rechercher"]" @bind="_recherche" @bind:event="oninput" @bind:after="RechercherDiffere" />
 </div>
 
 <Message Texte="@_erreur" />
@@ -42,9 +43,14 @@
         }
     </tbody>
     <tfoot>
-        <tr><td colspan="5" class="nombre">@L["Total"]</td><th class="nombre">@Format.Montant(Lignes.Sum(l => l.Solde.QuantitePhysique * l.Solde.Cump))</th></tr>
+        @* Sans recherche : valeur de tout le stock (calculée par le serveur) ; avec recherche : celle des lignes affichées. *@
+        <tr><td colspan="5" class="nombre">@L["Total"]</td><th class="nombre">@Format.Montant(string.IsNullOrWhiteSpace(_recherche) && _valeur is { } valeur ? valeur.Valeur : Lignes.Sum(l => l.Solde.QuantitePhysique * l.Solde.Cump))</th></tr>
     </tfoot>
 </table>
+@if (_tronquee)
+{
+    <p class="discret">@L["ListeTronquee", TailleListe]</p>
+}
 
 @code {
     // Premier chargement terminé : jusque-là, la liste montre l'attente et non « Aucun… ».
@@ -54,23 +60,56 @@
     private string _recherche = "";
     private string? _erreur;
 
-    private IEnumerable<(Article Article, SoldeStock Solde)> Lignes => string.IsNullOrWhiteSpace(_recherche)
-        ? _lignes
-        : _lignes.Where(l =>
-            l.Article.Code.Contains(_recherche, StringComparison.CurrentCultureIgnoreCase)
-            || l.Article.Libelle.Contains(_recherche, StringComparison.CurrentCultureIgnoreCase)
-            || l.Article.LibelleTraduit?.Contains(_recherche, StringComparison.CurrentCultureIgnoreCase) == true);
+    private const int TailleListe = 100;
+    private readonly RechercheDifferee _differee = new();
+    private ValeurStock? _valeur;
+    private bool _tronquee;
+
+    private IEnumerable<(Article Article, SoldeStock Solde)> Lignes => _lignes;
 
     protected override async Task OnInitializedAsync()
     {
-        var soldes = await Api.GetAsync<List<SoldeStock>>("api/stock/soldes");
-        var articles = await Api.GetAsync<List<Article>>("api/referentiel/articles?inclureInactifs=true");
-        _erreur = soldes.Erreur ?? articles.Erreur;
-        var parId = (articles.Valeur ?? []).ToDictionary(a => a.Id);
-        _lignes = [.. (soldes.Valeur ?? [])
-            .Where(s => parId.ContainsKey(s.ArticleId))
-            .Select(s => (parId[s.ArticleId], s))
-            .OrderBy(l => l.Item1.Code, StringComparer.Ordinal)];
+        var valeur = Api.GetAsync<ValeurStock>("api/stock/valeur");
+        await Task.WhenAll(valeur, Charger(null));
+        _valeur = valeur.Result.Valeur;
         _charge = true;
     }
+
+    private async Task RechercherDiffere()
+    {
+        if (await _differee.AttendreAsync() is { } numero)
+        {
+            await Charger(numero);
+        }
+    }
+
+    /// <summary>
+    /// Une page d'articles cherchés par le serveur (code ou libellé), puis leurs seuls soldes : jamais tout le catalogue ni
+    /// tous les soldes (ENF10).
+    /// </summary>
+    private async Task Charger(int? numero)
+    {
+        var articles = await Api.GetAsync<List<Article>>(
+            $"api/referentiel/articles?recherche={Uri.EscapeDataString(_recherche)}&inclureInactifs=true&taille={TailleListe + 1}");
+        var trouves = articles.Valeur ?? [];
+        var tronquee = trouves.Count > TailleListe;
+        trouves = [.. trouves.Take(TailleListe)];
+        var soldes = trouves.Count == 0
+            ? new Resultat<List<SoldeStock>>([], null)
+            : await Api.GetAsync<List<SoldeStock>>($"api/stock/soldes?articles={string.Join(',', trouves.Select(a => a.Id))}");
+        if (numero is { } n && !_differee.EstLaDerniere(n))
+        {
+            return;
+        }
+
+        _erreur = articles.Erreur ?? soldes.Erreur;
+        _tronquee = tronquee;
+        var parId = (soldes.Valeur ?? []).ToDictionary(s => s.ArticleId);
+        _lignes = [.. trouves
+            .Where(a => parId.ContainsKey(a.Id))
+            .Select(a => (a, parId[a.Id]))
+            .OrderBy(l => l.a.Code, StringComparer.Ordinal)];
+    }
+
+    public void Dispose() => _differee.Dispose();
 }
