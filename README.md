@@ -235,6 +235,11 @@ Si le port 5432 est déjà pris (PostgreSQL installé sur le poste), choisir un 
 | `POST /api/caisse/sessions/courante/cloture` | `Caisse.Vendre` | `{ especesComptees, dernierNumero? }` : clôture, écart calculé ; refusée (409 `Caisse.VentesNonSynchronisees`) tant que le dernier ticket numéroté par le poste n'est pas arrivé (RG36) |
 | `GET /api/caisse/anomalies?traitees=` | `Caisse.Sessions.Consulter` | Anomalies de synchronisation des opérations faites hors ligne (7.8) |
 | `POST /api/caisse/anomalies/{id}/traitement` | `Caisse.Anomalies.Traiter` | `{ commentaire }` : traitement par le Gérant, une fois, tracé |
+| `GET /api/exploitation/etat` | `Exploitation.Consulter` | Dernier contrôle, écarts ouverts, dernières sauvegardes réussies et retards (contrôle > 26 h, locale > 2 h, hors site > 26 h) |
+| `GET /api/exploitation/controles?nombre=` | `Exploitation.Consulter` | Passages du contrôle des soldes, du plus récent au plus ancien |
+| `POST /api/exploitation/controles` | `Exploitation.Controles.Lancer` | Lance le contrôle tout de suite ; 409 `Exploitation.ControleEnCours` si un passage tourne déjà |
+| `GET /api/exploitation/ecarts?statut=&nombre=` | `Exploitation.Consulter` | Écarts entre soldes et journaux (`Ouvert`, `Reconstruit`, `Disparu`) |
+| `POST /api/exploitation/ecarts/{id}/reconstruction` | `Exploitation.Soldes.Reconstruire` | Reconstruit depuis le journal les soldes de l'article (ou la dette du client) et clôt ses écarts ; 409 si déjà résolu |
 | `GET /api/exploitation/sauvegardes?type=&nombre=` | `Exploitation.Consulter` | Comptes rendus des sauvegardes (`Locale`, `HorsSite`), du plus récent au plus ancien (50 par défaut, 200 au plus) |
 | `GET /api/caisse/sessions`, `GET /api/caisse/sessions/{id}` | `Caisse.Sessions.Consulter` | Sessions (`?statut=Ouverte|Comptee|Validee`) et leurs totaux |
 | `POST /api/caisse/sessions/{id}/validation` | `Caisse.Sessions.Valider` | Valide une session clôturée et son écart |
@@ -529,6 +534,24 @@ récupérable, clé de répartition (**valeur** par défaut, ou quantité) et li
 - Un paiement n'est jamais modifié ni supprimé : une erreur se corrige par une **annulation** (paiement opposé, motif
   obligatoire, utilisateur et horodatage), une seule fois par paiement.
 
+## Contrôle nocturne des soldes (ENF04)
+
+Chaque nuit à 2 h (heure de Douala), une tâche Hangfire compare chaque solde à son journal ; si le PC serveur est
+éteint à cette heure, le passage a lieu à son redémarrage. L'Administrateur peut aussi le lancer à la main.
+
+- **Stock** : le journal de chaque article est rejoué dans l'ordre d'écriture avec les règles du domaine (CUMP compris)
+  et comparé aux soldes article × site (physique, réservé, bloqué, CUMP) et article × emplacement × lot (physique).
+  Un solde qu'aucun mouvement n'explique est attendu à zéro.
+- **Crédit** : la dette de chaque client doit égaler ses ventes à crédit moins ses remboursements et annulations.
+- Lecture dans un instantané cohérent (lecture répétable) : le contrôle tourne pendant que la caisse vend. Deux
+  passages ne tournent jamais en même temps (verrou consultatif PostgreSQL).
+- **Écarts** : un écart retrouvé au passage suivant reste le même (`Ouvert`) ; s'il ne se retrouve plus, il passe à
+  `Disparu`. L'Administrateur peut **reconstruire** le solde depuis le journal : tous les soldes de l'article, ou la dette
+  du client, sous verrou, sans écrire aucun mouvement ni opération (le journal fait foi, RG01) ; l'écart passe à
+  `Reconstruit` avec son auteur et l'heure (ENF03). Rien n'est jamais supprimé.
+- Une erreur technique enregistre le passage comme `Echoue` avec son message, sans toucher aux écarts ; pas de nouvel
+  essai automatique (passage suivant la nuit d'après).
+
 ## Rapports (décision 33)
 
 Le module Rapports n'a ni schéma ni DbContext. Il lit, avec Dapper et dans une transaction **en lecture seule**, les
@@ -726,7 +749,7 @@ sur une machine Linux de GitHub qui dispose de Docker :
 | 47 | Vérification, CI, README, démonstration de la tranche 7 | Fait |
 | 48 | Exploitation : module, suivi des sauvegardes, planificateur (Hangfire) | Fait |
 | 49 | Exploitation : contrôle des soldes de stock et de crédit par contrat | Fait |
-| 50 | Exploitation : contrôle nocturne, écarts, reconstruction | À faire |
+| 50 | Exploitation : contrôle nocturne, écarts, reconstruction | Fait |
 | 51 | Exploitation : conteneur de sauvegarde (locale horaire, hors site chiffrée) | À faire |
 | 52 | Exploitation : écrans Contrôles et Sauvegardes, accueil | À faire |
 | 53 | Vérification, CI, README, démonstration de la tranche 8 | À faire |
