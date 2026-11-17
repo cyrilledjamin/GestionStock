@@ -8,7 +8,7 @@
 
 @if (Session.DoitChangerMotDePasse)
 {
-    <Message Texte="@L["ChangerMotDePasseObligatoire"]" />
+    <div class="message avertissement" role="alert"><Icone Nom="attention" /><span>@L["ChangerMotDePasseObligatoire"]</span></div>
 }
 <Message Texte="@_erreur" />
 <Message Texte="@_succes" Erreur="false" />
@@ -22,18 +22,18 @@
             <div><dt>@L["Roles"]</dt><dd>@string.Join(", ", profil.Roles.Select(r => L[$"Role.{r}"].Value))</dd></div>
             <div><dt>@L["Langue"]</dt><dd>@(profil.Langue == "en" ? "English" : "Français")</dd></div>
         </dl>
-        <p class="discret">@L["FicheParAdministrateur"]</p>
+        <div class="message info" role="status"><Icone Nom="info" /><span>@L["FicheParAdministrateur"]</span></div>
     </div>
 
     <form class="fiche" @onsubmit="Changer">
         <h2>@L["ChangerMotDePasse"]</h2>
         <div class="grille">
-            <label>@L["MotDePasseActuel"] <ChampMotDePasse @bind-Valeur="_actuel" Requis="true" Autocomplete="current-password" /></label>
-            <label>@L["NouveauMotDePasse"] <ChampMotDePasse @bind-Valeur="_nouveau" Requis="true" Autocomplete="new-password" /></label>
-            <label>@L["ConfirmerMotDePasse"] <ChampMotDePasse @bind-Valeur="_confirmation" Requis="true" Autocomplete="new-password" /></label>
+            <Champ Libelle="@L["MotDePasseActuel"]" Requis="true"><ChampMotDePasse @bind-Valeur="_actuel" Requis="true" Autocomplete="current-password" /></Champ>
+            <Champ Libelle="@L["NouveauMotDePasse"]" Requis="true"><ChampMotDePasse @bind-Valeur="_nouveau" Requis="true" Autocomplete="new-password" /></Champ>
+            <Champ Libelle="@L["ConfirmerMotDePasse"]" Requis="true"><ChampMotDePasse @bind-Valeur="_confirmation" Requis="true" Autocomplete="new-password" /></Champ>
         </div>
-        <p class="discret">@L["MotDePasseRegle"]</p>
-        <div class="actions"><button type="submit" class="principal" disabled="@_enCours">@L["ChangerMotDePasse"]</button></div>
+        <div class="message info" role="status"><Icone Nom="info" /><span>@L["MotDePasseRegle"]</span></div>
+        <div class="actions"><Bouton Type="submit" Variante="VarianteBouton.Principal" Occupe="_enCours">@L["ChangerMotDePasse"]</Bouton></div>
     </form>
 }
 
@@ -54,10 +54,22 @@
             return;
         }
 
+        if (_enCours)
+        {
+            return;
+        }
+
         var etaitProvisoire = Session.DoitChangerMotDePasse;
         _enCours = true;
-        _erreur = await Session.ChangerMotDePasseAsync(_actuel, _nouveau);
-        _enCours = false;
+        try
+        {
+            _erreur = await Session.ChangerMotDePasseAsync(_actuel, _nouveau);
+        }
+        finally
+        {
+            _enCours = false;
+        }
+
         if (_erreur is null)
         {
             (_actuel, _nouveau, _confirmation) = ("", "", "");

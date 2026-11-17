@@ -35,7 +35,7 @@ else if (_ticket is not null)
                             <td>@ligne.Libelle</td>
                             <td class="nombre">@Format.Quantite(ligne.Quantite)</td>
                             <td class="nombre">@Format.Quantite(ligne.QuantiteRendue)</td>
-                            <td class="nombre"><input type="number" min="0" max="@(ligne.Quantite - ligne.QuantiteRendue)" step="any" @bind="_aRendre[ligne.Id]" /></td>
+                            <td class="nombre"><input type="number" min="0" max="@(ligne.Quantite - ligne.QuantiteRendue)" step="any" aria-label="@L["ARendre"]" @bind="_aRendre[ligne.Id]" /></td>
                         </tr>
                     }
                 </tbody>

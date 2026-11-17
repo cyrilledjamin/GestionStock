@@ -21,7 +21,7 @@
     {
         <div class="client-choisi">
             <span><code>@Article.Code</code> @Format.Libelle(Article)</span>
-            <button type="button" class="lien" title="@L["Retirer"]" aria-label="@L["Retirer"]" @onclick="() => Choisir(null)">✕</button>
+            <Bouton Variante="VarianteBouton.Discret" NomIcone="fermer" Libelle="@L["Retirer"]" OnClick="() => Choisir(null)" />
         </div>
     }
 </div>

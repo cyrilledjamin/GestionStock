@@ -7,7 +7,7 @@
     <Message Texte="@_erreur" />
     @if (Client is null)
     {
-        <input type="search" placeholder="@(Libelle ?? L["ChercherClient"])" @bind="_recherche" @bind:event="oninput" @bind:after="Rechercher" />
+        <input type="search" placeholder="@(Libelle ?? L["ChercherClient"])" aria-label="@(Libelle ?? L["ChercherClient"])" @bind="_recherche" @bind:event="oninput" @bind:after="Rechercher" />
         @if (_resultats.Count > 0)
         {
             <ul class="resultats">

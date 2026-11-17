@@ -645,4 +645,12 @@
   <data name="Traitee" xml:space="preserve"><value>Handled</value></data>
   <data name="AucunConditionnement" xml:space="preserve"><value>No packaging.</value></data>
   <data name="DebutValidite" xml:space="preserve"><value>Price effective date</value></data>
+  <data name="AucuneOperation" xml:space="preserve"><value>No operations.</value></data>
+  <data name="AucunCompte" xml:space="preserve"><value>No accounts.</value></data>
+  <data name="Periode" xml:space="preserve"><value>Period</value></data>
+  <data name="Periode7Jours" xml:space="preserve"><value>Last 7 days</value></data>
+  <data name="Periode30Jours" xml:space="preserve"><value>Last 30 days</value></data>
+  <data name="CeMois" xml:space="preserve"><value>This month</value></data>
+  <data name="VentesParJourGraphique" xml:space="preserve"><value>Sales and margin by day</value></data>
+  <data name="FichierReprise" xml:space="preserve"><value>Excel workbook (.xlsx)</value></data>
 </root>

@@ -14,16 +14,16 @@
 else
 {
     <a class="evitement" href="@($"{Navigation.ToBaseRelativePath(Navigation.Uri).Split('#')[0]}#contenu")">@L["AllerAuContenu"]</a>
-    <div class="cadre @(_menuOuvert ? "menu-ouvert" : "")">
+    <div class="cadre @(_menuOuvert ? "menu-ouvert" : "")" @onkeydown="SurTouche">
         @* Écran étroit : barre du haut avec le bouton du menu en tiroir. *@
         <header class="barre-haut">
             <span class="marque"><MarqueBoutique AvecLogiciel="false" /></span>
-            <button class="ouvrir-menu" aria-expanded="@(_menuOuvert ? "true" : "false")" aria-controls="menu" @onclick="BasculerMenu">
+            <button id="ouvrir-menu" class="ouvrir-menu" aria-expanded="@(_menuOuvert ? "true" : "false")" aria-controls="menu" @onclick="BasculerMenu">
                 <Icone Nom="menu" />@L["Menu"]
             </button>
         </header>
         <div class="voile" @onclick="FermerMenu"></div>
-        <nav class="menu" id="menu" aria-label="@L["Menu"]">
+        <nav class="menu" id="menu" aria-label="@L["Menu"]" tabindex="-1">
             <div class="marque"><MarqueBoutique /></div>
             <NavLink href="" Match="NavLinkMatch.All"><Icone Nom="accueil" />@L["Accueil"]</NavLink>
             @if (Session.A(Permissions.CaisseVendre))
@@ -33,7 +33,7 @@ else
             @if (Session.A(Permissions.SessionsConsulter))
             {
                 <NavLink href="sessions"><Icone Nom="sessions" />@L["SessionsCaisse"]</NavLink>
-                <NavLink href="anomalies"><Icone Nom="erreur" />@L["Anomalies"]</NavLink>
+                <NavLink href="anomalies"><Icone Nom="attention" />@L["Anomalies"]</NavLink>
             }
             @if (Session.A(Permissions.CreditConsulter))
             {
@@ -133,9 +133,35 @@ else
     /// <summary>Menu en tiroir, ouvert sur écran étroit seulement (la feuille de style l'ignore ailleurs).</summary>
     private bool _menuOuvert;
 
-    private void BasculerMenu() => _menuOuvert = !_menuOuvert;
+    // Focus à déplacer après le prochain rendu : vers le menu à son ouverture, vers son bouton à sa fermeture par Échap.
+    private string? _focaliser;
+
+    private void BasculerMenu()
+    {
+        _menuOuvert = !_menuOuvert;
+        _focaliser = _menuOuvert ? "menu" : null;
+    }
 
     private void FermerMenu() => _menuOuvert = false;
+
+    /// <summary>Échap referme le tiroir et rend le focus au bouton « Menu » (le clavier ne reste pas dans un menu caché).</summary>
+    private void SurTouche(KeyboardEventArgs touche)
+    {
+        if (touche.Key == "Escape" && _menuOuvert)
+        {
+            _menuOuvert = false;
+            _focaliser = "ouvrir-menu";
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_focaliser is { } id)
+        {
+            _focaliser = null;
+            await Js.InvokeVoidAsync("gestionStock.focaliser", id);
+        }
+    }
 
     private void SurNavigation(object? sender, LocationChangedEventArgs e)
     {

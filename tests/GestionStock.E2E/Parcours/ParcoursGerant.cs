@@ -95,13 +95,27 @@ public sealed class ParcoursGerant(Navigateur navigateur) : ParcoursBase(navigat
         await session.GetByRole(AriaRole.Button, new() { Name = T["ValiderEcart"], Exact = true }).ClickAsync();
         await Expect(session).ToContainTextAsync(T["StatutSession.Validee"]);
 
-        // Rapports (décision 33) : les quatre onglets s'affichent.
+        // Rapports (décision 33) : les quatre onglets s'affichent ; ce sont de vrais onglets (annoncés, au clavier).
         await AllerAsync("Rapports");
+        var panneau = Page.GetByRole(AriaRole.Tabpanel);
         foreach (var onglet in new[] { "Ventes", "Stock", "CreancesDettes", "Caisse" })
         {
-            await Bouton($"Rapport.{onglet}").ClickAsync();
-            await Expect(Page.GetByRole(AriaRole.Table).First).ToBeVisibleAsync();
+            await Page.GetByRole(AriaRole.Tab, new() { Name = T[$"Rapport.{onglet}"], Exact = true }).ClickAsync();
+            await Expect(Page.GetByRole(AriaRole.Tab, new() { Name = T[$"Rapport.{onglet}"], Exact = true })).ToHaveAttributeAsync("aria-selected", "true");
+            await Expect(panneau.Locator(".tableau table").First).ToBeVisibleAsync();
         }
+
+        // Flèche gauche depuis « Caisse » : l'onglet précédent est choisi et prend le focus.
+        await Page.Keyboard.PressAsync("ArrowLeft");
+        var creances = Page.GetByRole(AriaRole.Tab, new() { Name = T["Rapport.CreancesDettes"], Exact = true });
+        await Expect(creances).ToBeFocusedAsync();
+        await Expect(creances).ToHaveAttributeAsync("aria-selected", "true");
+
+        // Ventes sur 30 jours : graphique jour par jour (30 barres).
+        await Page.GetByRole(AriaRole.Tab, new() { Name = T["Rapport.Ventes"], Exact = true }).ClickAsync();
+        await Bouton("Periode30Jours").ClickAsync();
+        await Expect(Page.GetByRole(AriaRole.Img, new() { Name = T["VentesParJourGraphique"], Exact = true }).Locator(".barre-graphique")).ToHaveCountAsync(30);
+        await CapturerAsync("rapports-ventes");
 
         await AllerAsync("Anomalies");
         await Expect(Page.GetByRole(AriaRole.Table)).ToBeVisibleAsync();

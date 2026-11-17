@@ -7,12 +7,15 @@
 
 <h1>@L["Clients"]</h1>
 
-<div class="barre">
-    <input type="search" placeholder="@L["ChercherClient"]" @bind="_recherche" @bind:event="oninput" @bind:after="RechercherDiffere" />
+<div class="barre" role="search">
+    <div class="champ-recherche">
+        <Icone Nom="rechercher" />
+        <input type="search" placeholder="@L["ChercherClient"]" aria-label="@L["ChercherClient"]" @bind="_recherche" @bind:event="oninput" @bind:after="RechercherDiffere" />
+    </div>
     <label class="case"><input type="checkbox" @bind="_impayes" @bind:after="Charger" /> @L["SeulementImpayes"]</label>
     @if (Session.A(Permissions.ClientsGerer) && !_creation)
     {
-        <button class="principal" @onclick="() => _creation = true">@L["NouveauClient"]</button>
+        <Bouton Variante="VarianteBouton.Principal" NomIcone="ajouter" OnClick="() => _creation = true">@L["NouveauClient"]</Bouton>
     }
 </div>
 
@@ -23,41 +26,33 @@
     <form class="fiche" @onsubmit="Creer">
         <h2>@L["NouveauClient"]</h2>
         <div class="grille">
-            <label>@L["Nom"] <input @bind="_nom" required maxlength="200" /></label>
-            <label>@L["Telephone"] <input @bind="_telephone" required maxlength="30" placeholder="+237 6…" /></label>
-            <label>@L["DelaiPaiement"] <input type="number" min="0" step="1" @bind="_delai" /></label>
+            <Champ Libelle="@L["Nom"]" Requis="true"><input @bind="_nom" required maxlength="200" /></Champ>
+            <Champ Libelle="@L["Telephone"]" Requis="true"><input @bind="_telephone" required maxlength="30" placeholder="+237 6…" /></Champ>
+            <Champ Libelle="@L["DelaiPaiement"]"><input type="number" min="0" step="1" @bind="_delai" /></Champ>
         </div>
-        <p class="discret">@L["DonneesPersonnellesAide"]</p>
+        <div class="message info" role="status"><Icone Nom="info" /><span>@L["DonneesPersonnellesAide"]</span></div>
         <div class="actions">
-            <button type="submit" class="principal" disabled="@_enCours">@L["Enregistrer"]</button>
-            <button type="button" @onclick="() => _creation = false">@L["Annuler"]</button>
+            <Bouton Type="submit" Variante="VarianteBouton.Principal" Occupe="_enCours">@L["Enregistrer"]</Bouton>
+            <Bouton OnClick="() => _creation = false">@L["Annuler"]</Bouton>
         </div>
     </form>
 }
 
-<table class="cartes">
-    <thead><tr><th>@L["Nom"]</th><th>@L["Telephone"]</th><th class="nombre">@L["Plafond"]</th><th class="nombre">@L["SoldeDu"]</th><th class="nombre">@L["EnRetard"]</th></tr></thead>
-    <tbody>
+<Tableau Colonnes="5" Charge="_charge" EstVide="_clients.Count == 0" TexteVide="@L["AucunClient"]" Legende="@L["Clients"]">
+    <Entete><th>@L["Nom"]</th><th>@L["Telephone"]</th><th class="nombre">@L["Plafond"]</th><th class="nombre">@L["SoldeDu"]</th><th class="nombre">@L["EnRetard"]</th></Entete>
+    <Corps>
         @foreach (var client in _clients)
         {
             <tr class="@(client.Actif ? "" : "inactif") @(client.MontantEnRetard > 0 ? "negatif" : "")">
-                <td data-label="@L["Nom"]"><a href="clients/@client.Id">@client.Nom</a></td>
+                <td data-label="@L["Nom"]"><a href="clients/@client.Id"><strong>@client.Nom</strong></a></td>
                 <td data-label="@L["Telephone"]">@client.Telephone</td>
                 <td data-label="@L["Plafond"]" class="nombre">@Format.Montant(client.PlafondCredit)</td>
                 <td data-label="@L["SoldeDu"]" class="nombre">@Format.Montant(client.SoldeDu)</td>
-                <td data-label="@L["EnRetard"]" class="nombre">@(client.MontantEnRetard > 0 ? Format.Montant(client.MontantEnRetard) : "")</td>
+                <td data-label="@L["EnRetard"]" class="nombre">@if (client.MontantEnRetard > 0) { <Pastille Ton="Ton.Danger">@Format.Montant(client.MontantEnRetard)</Pastille> }</td>
             </tr>
         }
-        @if (!_charge)
-        {
-            <tr><td colspan="5"><Chargement /></td></tr>
-        }
-        else if (_clients.Count == 0)
-        {
-            <tr><td colspan="5" class="vide">@L["AucunClient"]</td></tr>
-        }
-    </tbody>
-</table>
+    </Corps>
+</Tableau>
 @if (_tronquee)
 {
     <p class="discret">@L["ListeTronquee", TailleListe]</p>

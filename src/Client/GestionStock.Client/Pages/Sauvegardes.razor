@@ -10,17 +10,13 @@
 
 @if (_etat is { } etat)
 {
-    <div class="indicateurs">
-        <div class="indicateur @(etat.SauvegardeLocaleEnRetard ? "alerte" : "")">
-            <span>@L["SauvegardeLocale"]</span>
-            <strong>@(etat.DerniereSauvegardeLocale is { } locale ? Format.Date(locale.FinUtc) : L["Jamais"].Value)</strong>
-            <small>@(etat.SauvegardeLocaleEnRetard ? L["SauvegardeLocaleEnRetard"] : L["SauvegardeLocaleAJour"])</small>
-        </div>
-        <div class="indicateur @(etat.SauvegardeHorsSiteEnRetard ? "alerte" : "")">
-            <span>@L["SauvegardeHorsSite"]</span>
-            <strong>@(etat.DerniereSauvegardeHorsSite is { } horsSite ? Format.Date(horsSite.FinUtc) : L["Jamais"].Value)</strong>
-            <small>@(etat.SauvegardeHorsSiteEnRetard ? L["SauvegardeHorsSiteEnRetard"] : L["SauvegardeHorsSiteAJour"])</small>
-        </div>
+    <div class="indicateurs resume">
+        <Indicateur Libelle="@L["SauvegardeLocale"]" Valeur="@(etat.DerniereSauvegardeLocale is { } locale ? Format.Date(locale.FinUtc) : L["Jamais"].Value)"
+                    Detail="@(etat.SauvegardeLocaleEnRetard ? L["SauvegardeLocaleEnRetard"].Value : L["SauvegardeLocaleAJour"].Value)"
+                    Ton="@(etat.SauvegardeLocaleEnRetard ? Ton.Danger : Ton.Succes)" />
+        <Indicateur Libelle="@L["SauvegardeHorsSite"]" Valeur="@(etat.DerniereSauvegardeHorsSite is { } horsSite ? Format.Date(horsSite.FinUtc) : L["Jamais"].Value)"
+                    Detail="@(etat.SauvegardeHorsSiteEnRetard ? L["SauvegardeHorsSiteEnRetard"].Value : L["SauvegardeHorsSiteAJour"].Value)"
+                    Ton="@(etat.SauvegardeHorsSiteEnRetard ? Ton.Danger : Ton.Succes)" />
     </div>
 }
 
@@ -33,11 +29,9 @@
     </select>
 </div>
 
-<table class="cartes">
-    <thead>
-        <tr><th>@L["Date"]</th><th>@L["Type"]</th><th>@L["Resultat"]</th><th>@L["Fichier"]</th><th class="nombre">@L["Taille"]</th></tr>
-    </thead>
-    <tbody>
+<Tableau Colonnes="5" Charge="_charge" EstVide="_passages.Count == 0" TexteVide="@L["AucuneSauvegarde"]" Legende="@L["DerniersPassages"]">
+    <Entete><th>@L["Date"]</th><th>@L["Type"]</th><th>@L["Resultat"]</th><th>@L["Fichier"]</th><th class="nombre">@L["Taille"]</th></Entete>
+    <Corps>
         @foreach (var passage in _passages)
         {
             <tr>
@@ -54,16 +48,8 @@
                 <td data-label="@L["Taille"]" class="nombre">@(passage.Taille is { } taille ? Taille(taille) : "")</td>
             </tr>
         }
-        @if (!_charge)
-        {
-            <tr><td colspan="5"><Chargement /></td></tr>
-        }
-        else if (_passages.Count == 0)
-        {
-            <tr><td colspan="5" class="vide">@L["AucuneSauvegarde"]</td></tr>
-        }
-    </tbody>
-</table>
+    </Corps>
+</Tableau>
 
 <h2>@L["Restauration"]</h2>
 <p>@L["RestaurationAide"]</p>

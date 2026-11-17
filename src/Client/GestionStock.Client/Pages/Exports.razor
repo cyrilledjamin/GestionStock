@@ -9,29 +9,29 @@
 
 <div class="fiche">
     <div class="grille">
-        <label>@L["Journal"]
+        <Champ Libelle="@L["Journal"]">
             <select @bind="_journal">
                 @foreach (var journal in JournauxComptables.Tous)
                 {
                     <option value="@journal">@L[$"Journal.{journal}"]</option>
                 }
             </select>
-        </label>
+        </Champ>
         @if (_journal != "valeur-stock")
         {
-            <label>@L["Du"] <input type="date" @bind="_du" /></label>
-            <label>@L["Au"] <input type="date" @bind="_au" /></label>
+            <Champ Libelle="@L["Du"]"><input type="date" @bind="_du" /></Champ>
+            <Champ Libelle="@L["Au"]"><input type="date" @bind="_au" /></Champ>
         }
-        <label>@L["Format"]
+        <Champ Libelle="@L["Format"]">
             <select @bind="_format">
                 <option value="xlsx">Excel (.xlsx)</option>
                 <option value="csv">CSV (;)</option>
             </select>
-        </label>
+        </Champ>
     </div>
-    <p class="discret">@L[$"JournalAide.{_journal}"]</p>
+    <div class="message info" role="status"><Icone Nom="info" /><span>@L[$"JournalAide.{_journal}"]</span></div>
     <div class="actions">
-        <button class="principal" disabled="@_enCours" @onclick="Telecharger">@L["Telecharger"]</button>
+        <Bouton Variante="VarianteBouton.Principal" NomIcone="telecharger" Occupe="_enCours" OnClick="Telecharger">@L["Telecharger"]</Bouton>
     </div>
 </div>
 
@@ -47,9 +47,22 @@
 
     private async Task Telecharger()
     {
+        if (_enCours)
+        {
+            return;
+        }
+
         _enCours = true;
-        var octets = await Api.GetOctetsAsync($"api/exports/{_journal}?du={_du:yyyy-MM-dd}&au={_au:yyyy-MM-dd}&format={_format}");
-        _enCours = false;
+        byte[]? octets;
+        try
+        {
+            octets = await Api.GetOctetsAsync($"api/exports/{_journal}?du={_du:yyyy-MM-dd}&au={_au:yyyy-MM-dd}&format={_format}");
+        }
+        finally
+        {
+            _enCours = false;
+        }
+
         _erreur = octets is null ? L["ExportImpossible"].Value : null;
         if (octets is not null)
         {

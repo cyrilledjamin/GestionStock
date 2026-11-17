@@ -9,16 +9,12 @@
     <h1><MarqueBoutique /></h1>
     <p class="discret">@L["ConnexionIntro"]</p>
     <form @onsubmit="Connecter">
-        <label>@L["Matricule"]
-            <input @bind="_identifiant" autocomplete="username" required autofocus />
-        </label>
-        <label>@L["MotDePasse"]
-            <ChampMotDePasse @bind-Valeur="_motDePasse" Requis="true" />
-        </label>
+        <Champ Libelle="@L["Matricule"]"><input @bind="_identifiant" autocomplete="username" required autofocus /></Champ>
+        <Champ Libelle="@L["MotDePasse"]"><ChampMotDePasse @bind-Valeur="_motDePasse" Requis="true" /></Champ>
         <Message Texte="@_erreur" />
-        <button type="submit" class="principal" disabled="@_enCours">@L["SeConnecter"]</button>
+        <Bouton Type="submit" Variante="VarianteBouton.Principal" Occupe="_enCours">@L["SeConnecter"]</Bouton>
     </form>
-    <button class="lien" @onclick="ChangerLangue">@L["AutreLangue"]</button>
+    <Bouton Variante="VarianteBouton.Discret" NomIcone="langue" OnClick="ChangerLangue">@L["AutreLangue"]</Bouton>
 </div>
 
 @code {
@@ -37,9 +33,21 @@
 
     private async Task Connecter()
     {
+        if (_enCours)
+        {
+            return;
+        }
+
         _enCours = true;
-        _erreur = await Session.ConnecterAsync(_identifiant.Trim(), _motDePasse);
-        _enCours = false;
+        try
+        {
+            _erreur = await Session.ConnecterAsync(_identifiant.Trim(), _motDePasse);
+        }
+        finally
+        {
+            _enCours = false;
+        }
+
         if (_erreur is null)
         {
             var cible = Session.DoitChangerMotDePasse ? "mon-compte" : "";

@@ -10,21 +10,21 @@
 <div class="fiche">
     <h2>1. @L["RepriseEtape1"]</h2>
     <div class="actions">
-        <button @onclick="() => Telecharger(false)">@L["ModeleVide"]</button>
-        <button @onclick="() => Telecharger(true)">@L["ModeleExemple"]</button>
+        <Bouton NomIcone="telecharger" OnClick="() => Telecharger(false)">@L["ModeleVide"]</Bouton>
+        <Bouton NomIcone="telecharger" OnClick="() => Telecharger(true)">@L["ModeleExemple"]</Bouton>
     </div>
 </div>
 
 <div class="fiche">
     <h2>2. @L["RepriseEtape2"]</h2>
-    <InputFile OnChange="Choisir" accept=".xlsx" />
+    <Champ Libelle="@L["FichierReprise"]"><InputFile OnChange="Choisir" accept=".xlsx" /></Champ>
     @if (_nomFichier is not null)
     {
         <p class="discret">@_nomFichier</p>
     }
     <div class="actions">
-        <button class="principal" disabled="@(_fichier is null || _enCours)" @onclick="() => Envoyer(simulation: true)">@L["Controler"]</button>
-        <button class="valider" disabled="@(_fichier is null || _enCours || _rapport is not { Erreurs.Count: 0 } || _rapport.Importe)" @onclick="() => Envoyer(simulation: false)">@L["Importer"]</button>
+        <Bouton Variante="VarianteBouton.Principal" NomIcone="valider" Occupe="@(_enCours == true)" Desactive="@(_fichier is null || _enCours is not null)" OnClick="() => Envoyer(simulation: true)">@L["Controler"]</Bouton>
+        <Bouton Variante="VarianteBouton.Valider" Occupe="@(_enCours == false)" Desactive="@(_fichier is null || _enCours is not null || _rapport is not { Erreurs.Count: 0 } || _rapport.Importe)" OnClick="() => Envoyer(simulation: false)">@L["Importer"]</Bouton>
     </div>
 </div>
 
@@ -34,34 +34,34 @@
 {
     <div class="fiche">
         <h2>@(_rapport.Importe ? L["ImportReussi"] : _rapport.Erreurs.Count == 0 ? L["ControleReussi"] : L["ControleErreurs", _rapport.Erreurs.Count])</h2>
-        <div class="tuiles">
-            <div class="tuile chiffre"><span>@L["Lignes"]</span><strong>@_rapport.Lignes</strong></div>
-            <div class="tuile chiffre"><span>@L["Articles"]</span><strong>@_rapport.Articles</strong></div>
-            <div class="tuile chiffre"><span>@L["Conditionnements"]</span><strong>@_rapport.Conditionnements</strong></div>
-            <div class="tuile chiffre"><span>@L["Codes"]</span><strong>@_rapport.CodesBarres</strong></div>
-            <div class="tuile chiffre"><span>@L["PrixFixes"]</span><strong>@_rapport.Prix</strong></div>
+        <div class="indicateurs resume">
+            <Indicateur Libelle="@L["Lignes"]" Valeur="@N(_rapport.Lignes)" />
+            <Indicateur Libelle="@L["Articles"]" Valeur="@N(_rapport.Articles)" />
+            <Indicateur Libelle="@L["Conditionnements"]" Valeur="@N(_rapport.Conditionnements)" />
+            <Indicateur Libelle="@L["Codes"]" Valeur="@N(_rapport.CodesBarres)" />
+            <Indicateur Libelle="@L["PrixFixes"]" Valeur="@N(_rapport.Prix)" />
         </div>
         @if (_rapport.InventaireOuvertureId is { } ouverture)
         {
             <Message Texte="@L["OuvertureCreee", _rapport.InventaireOuvertureNumero ?? ""]" Erreur="false" />
-            <a class="bouton principal" href="inventaires/@ouverture">@L["OuvrirInventaire"]</a>
+            <a class="bouton principal" href="inventaires/@ouverture"><Icone Nom="aller" />@L["OuvrirInventaire"]</a>
         }
         @if (_rapport.Erreurs.Count > 0)
         {
-            <table>
-                <thead><tr><th class="nombre">@L["Ligne"]</th><th>@L["Colonne"]</th><th>@L["Erreur"]</th><th>@L["Valeur"]</th></tr></thead>
-                <tbody>
+            <Tableau Colonnes="4" Legende="@L["Erreur"]">
+                <Entete><th class="nombre">@L["Ligne"]</th><th>@L["Colonne"]</th><th>@L["Erreur"]</th><th>@L["Valeur"]</th></Entete>
+                <Corps>
                     @foreach (var erreur in _rapport.Erreurs)
                     {
                         <tr>
-                            <td class="nombre">@(erreur.Ligne > 0 ? erreur.Ligne : "")</td>
-                            <td>@erreur.Colonne</td>
-                            <td>@erreur.Message</td>
-                            <td><code>@erreur.Detail</code></td>
+                            <td data-label="@L["Ligne"]" class="nombre">@(erreur.Ligne > 0 ? erreur.Ligne : "")</td>
+                            <td data-label="@L["Colonne"]">@erreur.Colonne</td>
+                            <td data-label="@L["Erreur"]">@erreur.Message</td>
+                            <td data-label="@L["Valeur"]"><code>@erreur.Detail</code></td>
                         </tr>
                     }
-                </tbody>
-            </table>
+                </Corps>
+            </Tableau>
         }
     </div>
 }
@@ -73,7 +73,10 @@
     private string? _nomFichier;
     private RapportReprise? _rapport;
     private string? _erreur;
-    private bool _enCours;
+    // Envoi en cours : true pour le contrôle, false pour l'import, null sinon (bouton occupé, double clic sans effet).
+    private bool? _enCours;
+
+    private static string N(int valeur) => valeur.ToString(System.Globalization.CultureInfo.CurrentCulture);
 
     private async Task Telecharger(bool exemple)
     {
@@ -108,9 +111,22 @@
 
     private async Task Envoyer(bool simulation)
     {
-        _enCours = true;
-        var resultat = await Api.EnvoyerFichierAsync<RapportReprise>(simulation ? "api/reprise/simulation" : "api/reprise/import", _fichier!);
-        _enCours = false;
+        if (_enCours is not null)
+        {
+            return;
+        }
+
+        _enCours = simulation;
+        Resultat<RapportReprise> resultat;
+        try
+        {
+            resultat = await Api.EnvoyerFichierAsync<RapportReprise>(simulation ? "api/reprise/simulation" : "api/reprise/import", _fichier!);
+        }
+        finally
+        {
+            _enCours = null;
+        }
+
         _erreur = resultat.Erreur;
         _rapport = resultat.Valeur ?? _rapport;
     }

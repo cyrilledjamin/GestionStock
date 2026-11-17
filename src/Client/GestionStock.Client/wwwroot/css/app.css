@@ -126,7 +126,7 @@ small { font-size: var(--t-s); }
 .voile { display: none; }
 .menu-ouvert .voile { display: block; position: fixed; inset: 0; z-index: 6; background: var(--voile); }
 .menu .marque { display: flex; align-items: center; gap: var(--e-2); font-weight: 700; padding: var(--e-1) var(--e-2) var(--e-4); }
-.menu a, .pied-menu .lien { display: flex; align-items: center; gap: var(--e-3); min-height: 2.25rem; color: var(--texte-menu); text-decoration: none; text-align: left; padding: var(--e-2) var(--e-3); border-radius: var(--rayon); }
+.menu a, .pied-menu .lien { display: flex; align-items: center; gap: var(--e-3); min-height: var(--cible); color: var(--texte-menu); text-decoration: none; text-align: left; padding: var(--e-2) var(--e-3); border-radius: var(--rayon); }
 .menu a .icone, .pied-menu .lien .icone { color: var(--discret); }
 .menu a:hover, .pied-menu .lien:hover { background: var(--survol); color: var(--texte); }
 .menu a.active { background: var(--accent-clair); color: var(--accent-fonce); font-weight: 600; }
@@ -492,3 +492,12 @@ fieldset.roles { margin: var(--e-2) 0; display: flex; flex-wrap: wrap; gap: var(
     .menu { transition: none; }
     .attente .roue, button[aria-busy=true] .roue { animation: none; }
 }
+
+/* Onglets (rapports) : motif ARIA « tabs », onglet choisi souligné d'accent */
+.onglets { display: flex; gap: var(--e-1); border-bottom: 1px solid var(--bordure); margin: var(--e-4) 0; overflow-x: auto; }
+.onglets [role=tab] { background: transparent; border: none; border-bottom: 3px solid transparent; border-radius: 0; color: var(--discret); font-weight: 600; padding: var(--e-2) var(--e-3); margin-bottom: -1px; white-space: nowrap; }
+.onglets [role=tab]:hover { color: var(--texte); background: var(--survol); }
+.onglets [role=tab].choisi { color: var(--accent-fonce); border-bottom-color: var(--accent); }
+[role=tabpanel]:focus-visible { outline-offset: 4px; }
+.barre.periode { align-items: flex-end; }
+.raccourcis-periode { display: flex; flex-wrap: wrap; gap: var(--e-1); }

@@ -4,66 +4,66 @@
 
 <PageTitle>@(_fiche?.Client.Nom ?? L["Clients"]) · GestionStock</PageTitle>
 
-<p><a href="clients">← @L["Clients"]</a></p>
+<p><a href="clients"><Icone Nom="retour" />@L["Clients"]</a></p>
 <Message Texte="@_erreur" />
 <Message Texte="@_succes" Erreur="false" />
 
-@if (_fiche is { Client: var client })
+@if (_fiche is null && _erreur is null)
+{
+    <Chargement />
+}
+else if (_fiche is { Client: var client })
 {
     <h1>@client.Nom</h1>
     <p class="discret">@client.Telephone · @L["DelaiPaiement"] : @client.DelaiPaiementJours</p>
 
-    <div class="tuiles">
-        <div class="tuile chiffre"><span>@L["SoldeDu"]</span><strong>@Format.Montant(client.SoldeDu)</strong></div>
-        <div class="tuile chiffre"><span>@L["Plafond"]</span><strong>@Format.Montant(client.PlafondCredit)</strong></div>
-        <div class="tuile chiffre"><span>@L["EnRetard"]</span><strong>@Format.Montant(client.MontantEnRetard)</strong></div>
+    <div class="indicateurs resume">
+        <Indicateur Libelle="@L["SoldeDu"]" Valeur="@Format.Montant(client.SoldeDu)" Ton="@(client.SoldeDu > client.PlafondCredit ? Ton.Danger : Ton.Neutre)" />
+        <Indicateur Libelle="@L["Plafond"]" Valeur="@Format.Montant(client.PlafondCredit)" />
+        <Indicateur Libelle="@L["EnRetard"]" Valeur="@Format.Montant(client.MontantEnRetard)" Ton="@(client.MontantEnRetard > 0 ? Ton.Danger : Ton.Neutre)" />
     </div>
 
     @if (Session.A(Permissions.PlafondsGerer))
     {
         <form class="barre" @onsubmit="FixerPlafond">
-            <label>@L["Plafond"] <input type="number" min="0" step="1" @bind="_plafond" /></label>
-            <button type="submit" class="principal">@L["Fixer"]</button>
+            <Champ Libelle="@L["Plafond"]"><input type="number" min="0" step="1" @bind="_plafond" /></Champ>
+            <Bouton Type="submit" Variante="VarianteBouton.Principal" Occupe="_enCours">@L["Fixer"]</Bouton>
         </form>
     }
 
     <h2>@L["VentesNonSoldees"]</h2>
-    <table>
-        <thead><tr><th>@L["Ticket"]</th><th>@L["Date"]</th><th>@L["Echeance"]</th><th class="nombre">@L["Montant"]</th><th class="nombre">@L["ResteDu"]</th></tr></thead>
-        <tbody>
+    <Tableau Colonnes="5" EstVide="_fiche.VentesOuvertes.Count == 0" TexteVide="@L["AucuneDette"]" Legende="@L["VentesNonSoldees"]">
+        <Entete><th>@L["Ticket"]</th><th>@L["Date"]</th><th>@L["Echeance"]</th><th class="nombre">@L["Montant"]</th><th class="nombre">@L["ResteDu"]</th></Entete>
+        <Corps>
             @foreach (var vente in _fiche.VentesOuvertes)
             {
                 <tr class="@(vente.EnRetard ? "negatif" : "")">
-                    <td class="court"><a href="caisse/tickets/@vente.TicketId">@vente.NumeroTicket</a></td>
-                    <td class="court">@Format.Date(vente.DateUtc)</td>
-                    <td class="court">@Format.Date(vente.EcheanceUtc)</td>
-                    <td class="nombre">@Format.Montant(vente.Montant)</td>
-                    <td class="nombre">@Format.Montant(vente.ResteDu)</td>
+                    <td data-label="@L["Ticket"]" class="court"><a href="caisse/tickets/@vente.TicketId"><code>@vente.NumeroTicket</code></a></td>
+                    <td data-label="@L["Date"]" class="court">@Format.Date(vente.DateUtc)</td>
+                    <td data-label="@L["Echeance"]" class="court">@Format.Date(vente.EcheanceUtc) @if (vente.EnRetard) { <Pastille Ton="Ton.Danger">@L["EnRetard"]</Pastille> }</td>
+                    <td data-label="@L["Montant"]" class="nombre">@Format.Montant(vente.Montant)</td>
+                    <td data-label="@L["ResteDu"]" class="nombre">@Format.Montant(vente.ResteDu)</td>
                 </tr>
             }
-            @if (_fiche.VentesOuvertes.Count == 0)
-            {
-                <tr><td colspan="5" class="vide">@L["AucuneDette"]</td></tr>
-            }
-        </tbody>
-    </table>
+        </Corps>
+    </Tableau>
 
     <h2>@L["Journal"]</h2>
-    <table>
-        <thead><tr><th>@L["Date"]</th><th>@L["Operation"]</th><th class="nombre">@L["Montant"]</th><th>@L["Utilisateur"]</th><th>@L["ValideePar"]</th></tr></thead>
-        <tbody>
+    <Tableau Colonnes="5" EstVide="_fiche.Operations.Count == 0" TexteVide="@L["AucuneOperation"]" Legende="@L["Journal"]">
+        <Entete><th>@L["Date"]</th><th>@L["Operation"]</th><th class="nombre">@L["Montant"]</th><th>@L["Utilisateur"]</th><th>@L["ValideePar"]</th></Entete>
+        <Corps>
             @foreach (var operation in _fiche.Operations)
             {
                 <tr>
-                    <td class="court">@Format.Date(operation.DateUtc)</td>
-                    <td>@L[$"Operation.{operation.Type}"] @operation.NumeroTicket</td>
-                    <td class="nombre">@Format.Montant(operation.Montant)</td>
-                    <td>@Format.Personne(_fiche.Personnel, operation.Utilisateur)</td>
-                    <td>@Format.Personne(_fiche.Personnel, operation.ValideePar)</td>
+                    <td data-label="@L["Date"]" class="court">@Format.Date(operation.DateUtc)</td>
+                    <td data-label="@L["Operation"]">@L[$"Operation.{operation.Type}"] @operation.NumeroTicket</td>
+                    <td data-label="@L["Montant"]" class="nombre">@Format.Montant(operation.Montant)</td>
+                    <td data-label="@L["Utilisateur"]">@Format.Personne(_fiche.Personnel, operation.Utilisateur)</td>
+                    <td data-label="@L["ValideePar"]">@Format.Personne(_fiche.Personnel, operation.ValideePar)</td>
                 </tr>
             }
-        </tbody>
-    </table>
+        </Corps>
+    </Tableau>
 }
 
 @code {
@@ -84,9 +84,26 @@
         _plafond = _fiche?.Client.PlafondCredit ?? 0;
     }
 
+    private bool _enCours;
+
     private async Task FixerPlafond()
     {
-        var resultat = await Api.PutAsync<ClientCredit>($"api/credit/clients/{Id}/plafond", new { PlafondCredit = _plafond });
+        if (_enCours)
+        {
+            return;
+        }
+
+        _enCours = true;
+        Resultat<ClientCredit> resultat;
+        try
+        {
+            resultat = await Api.PutAsync<ClientCredit>($"api/credit/clients/{Id}/plafond", new { PlafondCredit = _plafond });
+        }
+        finally
+        {
+            _enCours = false;
+        }
+
         _erreur = resultat.Erreur;
         _succes = resultat.Reussi ? L["PlafondFixe"].Value : null;
         await Charger();

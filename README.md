@@ -375,6 +375,18 @@ par des boutons à icône nommés ; annulation d'inventaire en bouton rouge. Tou
 passent par le dialogue de confirmation ; les ajouts de la fiche article et les créations d'inventaire sont protégés
 contre le double clic.
 
+**Refonte du reste et accessibilité** (étape 63) : clients et fiche client, rapports, exports, reprise, comptes,
+contrôle des soldes, sauvegardes, connexion et « Mon compte » passent aux composants du système de design (indicateurs,
+pastilles, tableaux, champs, boutons occupés pendant l'envoi). **Rapports** : vrais onglets (`tablist` / `tab` /
+`tabpanel`, annoncés par les lecteurs d'écran, flèches gauche et droite, Début et Fin) ; raccourcis de période
+(aujourd'hui, 7 et 30 derniers jours, mois en cours) ; graphique des ventes et de la marge par jour dès que la période
+compte deux jours (chaque jour présent, à zéro sans vente, jusqu'à 92 jours). **Accessibilité** : le menu en tiroir se
+referme par Échap et rend le focus à son bouton, il prend le focus à son ouverture ; liens du menu à 44 px au doigt ;
+focus visible au clavier partout ; chaque champ a un nom accessible (libellé ou `aria-label`), chaque bouton à icône
+seule un nom. Trois tests de conventions le vérifient sur les sources (champs nommés, boutons à icône nommés et sans
+symbole nu, onglets et tiroir au clavier) ; ils ont relevé et fait corriger quatre oubliés (recherche de client, champ
+de mot de passe hors libellé, quantité d'un avoir, « ✕ » du choix d'article).
+
 **Identité et finitions** : nom de la boutique (et logo s'il est configuré) dans le menu, à la connexion et sur le
 reçu ; quantités sans zéros inutiles (« 20 kg », « 2,5 kg ») ; unités courantes traduites en anglais (boîte → box,
 pièce → piece, sac → bag…, liste fixe côté client ; une unité absente de la liste reste telle quelle) ; caissier
@@ -929,7 +941,7 @@ sur une machine Linux de GitHub qui dispose de Docker :
 | 60 | Système de design : jetons, police embarquée, composants, dialogue de confirmation, guide de style | Fait |
 | 61 | Refonte : caisse et pilotage | Fait |
 | 62 | Refonte : stock et achats | Fait |
-| 63 | Refonte : le reste, accessibilité | À faire |
+| 63 | Refonte : le reste, accessibilité | Fait |
 | 64 | Vérification, CI, README, démonstration de la tranche 9 | À faire |
 
 ## Démonstration
