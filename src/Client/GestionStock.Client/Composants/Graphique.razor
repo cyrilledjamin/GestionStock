@@ -2,6 +2,8 @@
    une seconde série facultative en trait pointillé. Chaque point a son infobulle ; un tableau masqué donne les mêmes
    chiffres aux lecteurs d'écran. Couleurs et polices viennent de la feuille de style (classes .graphique). *@
 @using System.Globalization
+@implements IAsyncDisposable
+@inject IJSRuntime Js
 <figure class="graphique">
     <figcaption>
         <h3>@Titre</h3>
@@ -13,11 +15,12 @@
             </div>
         }
     </figcaption>
-    <svg viewBox="0 0 @Largeur @Hauteur" role="img" aria-label="@Titre" preserveAspectRatio="xMidYMid meet">
+    <div @ref="_zone" class="zone-graphique">
+    <svg viewBox="0 0 @N(_largeur) @N(Hauteur)" role="img" aria-label="@Titre" preserveAspectRatio="xMidYMid meet">
         @foreach (var repere in _echelle.Graduations)
         {
             var y = Y(repere);
-            <line class="axe" x1="@N(MargeGauche)" x2="@N(Largeur - MargeDroite)" y1="@N(y)" y2="@N(y)" />
+            <line class="axe" x1="@N(MargeGauche)" x2="@N(_largeur - MargeDroite)" y1="@N(y)" y2="@N(y)" />
             @Texte(MargeGauche - 6, y + 4, "end", Format.Compact(repere))
         }
         @if (Points.Count > 0)
@@ -55,6 +58,7 @@
             }
         }
     </svg>
+    </div>
     <table class="lecteur-seul">
         <caption>@Titre</caption>
         <thead><tr><th scope="col">@LibelleAbscisse</th><th scope="col">@LibelleSerie</th>@if (Points.Any(p => p.Secondaire is not null)) { <th scope="col">@LibelleSecondaire</th> }</tr></thead>
@@ -68,7 +72,6 @@
 </figure>
 
 @code {
-    private const double Largeur = 900;
     private const double MargeGauche = 56;
     private const double MargeDroite = 8;
     private const double MargeHaute = 8;
@@ -95,17 +98,58 @@
 
     [Parameter] public double Hauteur { get; set; } = 240;
 
+    /// <summary>Largeur de dessin : celle de la zone à l'écran une fois mesurée (échelle 1, graduations à 12 px).</summary>
+    private double _largeur = 900;
+    private ElementReference _zone;
+    private DotNetObjectReference<Graphique>? _reference;
+    private IJSObjectReference? _observateur;
+
     private EchelleGraphique _echelle = EchelleGraphique.Pour([]);
 
     protected override void OnParametersSet() =>
         _echelle = EchelleGraphique.Pour(Points.SelectMany(p => p.Secondaire is { } s ? new[] { p.Valeur, s } : new[] { p.Valeur }));
 
-    private double Pas => (Largeur - MargeGauche - MargeDroite) / Math.Max(Points.Count, 1);
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _reference = DotNetObjectReference.Create(this);
+            _observateur = await Js.InvokeAsync<IJSObjectReference>("gestionStock.observerLargeur", _zone, _reference);
+        }
+    }
+
+    /// <summary>Largeur réelle de la zone (pixels CSS), au moins 280 : le dessin suit l'écran au lieu d'être réduit.</summary>
+    [JSInvokable]
+    public void Redimensionner(double largeur)
+    {
+        _largeur = Math.Max(largeur, 280);
+        StateHasChanged();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try
+        {
+            if (_observateur is not null)
+            {
+                await _observateur.InvokeVoidAsync("arreter");
+                await _observateur.DisposeAsync();
+            }
+        }
+        catch (JSDisconnectedException)
+        {
+            // Page déjà fermée : plus rien à observer.
+        }
+
+        _reference?.Dispose();
+    }
+
+    private double Pas => (_largeur - MargeGauche - MargeDroite) / Math.Max(Points.Count, 1);
 
     private double LargeurBarre => Math.Max(Pas * .7, 1);
 
-    /// <summary>Un libellé d'abscisse sur n, pour en garder au plus 7 lisibles.</summary>
-    private int PasLibelles => Math.Max(1, (int)Math.Ceiling(Points.Count / 7.0));
+    /// <summary>Un libellé d'abscisse sur n : au plus 7, et un tous les 64 px au moins (5 sur un téléphone).</summary>
+    private int PasLibelles => Math.Max(1, (int)Math.Ceiling(Points.Count / Math.Clamp(Math.Floor((_largeur - MargeGauche) / 64), 2, 7)));
 
     private double X(int indice) => MargeGauche + Pas * (indice + .5);
 

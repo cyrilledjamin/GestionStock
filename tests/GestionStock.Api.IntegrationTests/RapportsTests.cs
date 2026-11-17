@@ -63,6 +63,26 @@ public sealed class RapportsTests(ApiDeTest api)
     }
 
     [Fact]
+    public async Task La_tendance_donne_chacun_des_30_derniers_jours_jusqu_a_aujourd_hui()
+    {
+        var b = await BoutiqueAsync();
+        await ReceptionnerAsync(b, 10m, 300m);
+        await VendreAsync(b, (b.Unite, 2m));
+
+        var tendance = await b.Gerant.GetFromJsonAsync<List<VenteJourTendance>>("/api/rapports/tendance", Annulation);
+        var caissier = await b.Caissier.GetAsync("/api/rapports/tendance", Annulation);
+        var aujourdhui = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeBySystemTimeZoneId(DateTime.UtcNow, "Africa/Douala"));
+
+        Assert.Equal(30, tendance!.Count);
+        Assert.Equal(aujourdhui, tendance[^1].Jour);
+        Assert.Equal(aujourdhui.AddDays(-29), tendance[0].Jour);
+        Assert.Equal(tendance.Count, tendance.Select(j => j.Jour).Distinct().Count());
+        Assert.True(tendance[^1].NombreTickets >= 1 && tendance[^1].ChiffreAffairesTtc > 0m);
+        Assert.Equal(tendance[^1].ChiffreAffairesHt - tendance[^1].CoutDesVentes, tendance[^1].Marge);
+        Assert.Equal(HttpStatusCode.Forbidden, caissier.StatusCode);
+    }
+
+    [Fact]
     public async Task Le_rapport_de_stock_valorise_chaque_article_au_CUMP()
     {
         var b = await BoutiqueAsync();
@@ -223,6 +243,8 @@ public sealed class RapportsTests(ApiDeTest api)
     private sealed record Totaux(int NombreVentes, int NombreAvoirs, decimal ChiffreAffairesTtc, decimal ChiffreAffairesHt, decimal CoutDesVentes, decimal Marge);
 
     private sealed record VenteJour(DateOnly Jour, int NombreTickets);
+
+    private sealed record VenteJourTendance(DateOnly Jour, int NombreTickets, decimal ChiffreAffairesTtc, decimal ChiffreAffairesHt, decimal CoutDesVentes, decimal Marge);
 
     private sealed record Article(Guid ArticleId, decimal Quantite, decimal ChiffreAffairesHt, decimal CoutDesVentes, decimal Marge);
 

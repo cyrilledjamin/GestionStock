@@ -23,7 +23,7 @@
         <div class="client-choisi">
             <span><strong>@Client.Nom</strong> · @Client.Telephone<br />
                 <small class="discret">@L["SoldeDu"] @Format.Montant(Client.SoldeDu) / @L["Plafond"] @Format.Montant(Client.PlafondCredit)</small></span>
-            <button type="button" class="lien" @onclick="() => Choisir(null)">✕</button>
+            <Bouton Variante="VarianteBouton.Discret" NomIcone="fermer" Libelle="@L["Retirer"]" OnClick="() => Choisir(null)" />
         </div>
     }
 </div>

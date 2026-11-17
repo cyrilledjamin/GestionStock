@@ -7,8 +7,8 @@
 @if (Ticket is not null)
 {
     <div class="recu-actions">
-        <button class="principal" @onclick="Imprimer">@L["ImprimerRecu"]</button>
-        <button @onclick="TelechargerPdf">@L["RecuPdf"]</button>
+        <Bouton Variante="VarianteBouton.Principal" NomIcone="imprimer" OnClick="Imprimer">@L["ImprimerRecu"]</Bouton>
+        <Bouton NomIcone="telecharger" OnClick="TelechargerPdf">@L["RecuPdf"]</Bouton>
         @ChildContent
     </div>
     <Message Texte="@_erreur" />
