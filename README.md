@@ -658,7 +658,9 @@ sur une machine Linux de GitHub qui dispose de Docker :
   ([.github/scripts/verifier-comptes.sh](.github/scripts/verifier-comptes.sh) : matricule généré, mot de passe
   provisoire sans aucune permission, changement par l'employé, droits de ses deux rôles, journal, désactivation qui
   refuse la connexion), que seuls le nom et la présence d'un logo de la boutique sont publics (l'en-tête des reçus
-  exige une connexion), que la feuille de style à jetons et les raccourcis de la caisse sont servis, et que le client
+  exige une connexion), que la feuille de style à jetons et les raccourcis de la caisse sont servis, que l'application
+  installable est servie (manifeste, service worker, liste des fichiers à garder) et que les données de la caisse et les
+  anomalies exigent une connexion, et que le client
   Blazor est servi. Les tests du client (`GestionStock.Client.Tests`) tournent avec les autres dans le job de build.
 
 ## Avancement du squelette
@@ -712,7 +714,7 @@ sur une machine Linux de GitHub qui dispose de Docker :
 | 44 | Hors ligne : application installable (PWA), stockage du poste, état de connexion | Fait |
 | 45 | Hors ligne : vente, avoir, remboursement en file, synchronisation | Fait |
 | 46 | Anomalies de synchronisation à traiter | Fait |
-| 47 | Vérification, CI, README, démonstration de la tranche 7 | À faire |
+| 47 | Vérification, CI, README, démonstration de la tranche 7 | Fait |
 
 ## Démonstration
 
@@ -825,6 +827,30 @@ Vérifiée dans le navigateur sur http://localhost:8080, sur la base de démonst
 Le logo (aucun n'est encore fourni), la clôture par le Gérant, les articles rapides, le comptage par coupure et la
 mise en forme des quantités et des unités sont couverts par les tests d'intégration et les tests du client.
 
+### Démonstration de la caisse hors ligne (tranche 7)
+
+Vérifiée dans Chromium (le navigateur intégré à l'application de bureau de Claude refuse les service workers), sur la
+base de démonstration, avec une vraie coupure : le conteneur de l'API arrêté (`docker compose -f
+deploy/docker-compose.yml stop api`) puis relancé (`start api`). Compte `caissier`, mot de passe de test `Secret123!`,
+poste de test `CAISSE-2` :
+
+1. **en ligne**, ouverture de la session (5 000 XAF de fond) : la session, le dernier numéro du poste, le catalogue
+   avec ses codes, la grille de prix, les clients à crédit et l'en-tête du reçu sont gardés sur le poste ;
+2. **API arrêtée** : bandeau « Hors ligne » ; scan des sardines, F4, F8 : ticket `CAISSE-2-000002`, numéroté par le
+   poste, reçu complet ; tuile « Riz parfumé » et billet de 1 000 XAF : ticket `CAISSE-2-000003`, 350 XAF rendus ;
+3. rechargement de la page, toujours hors ligne : la caisse reprend sa session et ses deux opérations en attente ;
+4. clôture refusée (« … opération(s) n'ont pas encore été envoyées ») ; avoir sur le ticket 2 depuis la liste des
+   tickets du poste : `CAISSE-2-000004` ; remise refusée hors ligne ;
+5. **API relancée** : la file part seule ; en base, chaque ticket une seule fois, à l'heure du terrain et avec le numéro
+   du poste, compteur du poste à 4, mouvements de stock écrits, aucune anomalie (prix du jour) ;
+6. clôture en ligne : 5 650 XAF comptés, écart 0 ;
+7. **Gérant** : une vente « hors ligne » envoyée avec un numéro sauté apparaît sur l'accueil (« Anomalies hors ligne :
+   1 ») et dans l'écran des anomalies (« Numéros manquants », détail « 5 ») ; il la marque traitée avec un commentaire.
+
+Le prix différent, le plafond dépassé, la session clôturée entre-temps, l'heure corrigée, le remboursement hors ligne,
+le refus sous le compte d'un autre caissier et la clôture gardée par le serveur sont couverts par les tests
+d'intégration (`HorsLigneTests`).
+
 ## Points ouverts
 
 - Validation par un responsable au poste du caissier (ses identifiants), et attribution au Gérant de la validation
@@ -862,4 +888,9 @@ mise en forme des quantités et des unités sont couverts par les tests d'intég
   conception, le dossier ne le fixe pas) ; le Gérant qui clôture une session à la place de son titulaire peut aussi en
   valider l'écart (le dossier ne sépare pas ces deux gestes) ; logo absent du reçu PDF (il figure sur le reçu imprimé
   par le navigateur) ; liste fixe des unités traduites en anglais.
-
+- Hors ligne (tranche 7, décisions 38 à 41) : réception et comptage hors ligne restent à faire ; l'avoir d'un ticket
+  payé en partie à crédit exige le serveur ; pas de connexion hors ligne (un onglet fermé ou un PC redémarré attend le
+  serveur, les opérations du poste sont gardées) ; les postes de caisse doivent utiliser Chrome ou Edge (le navigateur
+  intégré à l'application de bureau de Claude n'accepte pas les service workers) ; une opération refusée au rejeu
+  (cas qui ne devrait pas arriver, le poste faisant les contrôles du serveur) reste en file avec son message et demande
+  une intervention.
