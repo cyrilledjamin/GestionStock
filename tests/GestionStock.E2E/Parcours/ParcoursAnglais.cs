@@ -30,5 +30,8 @@ public sealed class ParcoursAnglais(Navigateur navigateur) : ParcoursCaisseBase(
         await Bouton("NouvelleVente").ClickAsync();
 
         await CloturerAsync(1_400);
+
+        // La page déclare l'anglais : un lecteur d'écran le lit avec une voix anglaise.
+        await Expect(Page.Locator("html")).ToHaveAttributeAsync("lang", "en");
     }
 }

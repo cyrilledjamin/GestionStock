@@ -583,4 +583,16 @@
   <data name="AucuneSauvegarde" xml:space="preserve"><value>No backup recorded.</value></data>
   <data name="Restauration" xml:space="preserve"><value>Restore</value></data>
   <data name="RestaurationAide" xml:space="preserve"><value>A restore replaces the database and files with a backup: it is done on the server PC, with the application stopped, using the restaurer.sh script (procedure in docs/exploitation.md). An off-site copy can only be read with the owner's private key.</value></data>
+  <data name="ConfirmerValidationInventaire" xml:space="preserve"><value>Validate stock count {0}? Each difference becomes a stock movement; the count can no longer be changed.</value></data>
+  <data name="ConfirmerAnnulationInventaire" xml:space="preserve"><value>Cancel stock count {0}? Its counts will be discarded.</value></data>
+  <data name="ConfirmerValidationReception" xml:space="preserve"><value>Validate the receipt? The goods enter stock and the supplier debt is created; the receipt can no longer be changed.</value></data>
+  <data name="ConfirmerRetraitFrais" xml:space="preserve"><value>Remove this landed cost?</value></data>
+  <data name="ConfirmerAnnulationPaiement" xml:space="preserve"><value>Cancel this payment? An opposite payment will be recorded; the original stays in the journal.</value></data>
+  <data name="ConfirmerValidationEcart" xml:space="preserve"><value>Validate the difference of this session? The session can no longer be changed.</value></data>
+  <data name="ConfirmerAvoir" xml:space="preserve"><value>Issue a credit note on ticket {0}? The amount is refunded to the customer and the goods return to stock.</value></data>
+  <data name="ConfirmerReinitialisation" xml:space="preserve"><value>Give {0} a temporary password? Their current password will stop working.</value></data>
+  <data name="ConfirmerDesactivationCompte" xml:space="preserve"><value>Deactivate {0}'s account? They will no longer be able to sign in; nothing is deleted.</value></data>
+  <data name="ConfirmerDesactivationCode" xml:space="preserve"><value>Deactivate this barcode? It will no longer be recognised when scanned.</value></data>
+  <data name="ConfirmerValidationDemarque" xml:space="preserve"><value>Validate this write-off? The goods leave stock at average cost.</value></data>
+  <data name="ConfirmerRefusDemarque" xml:space="preserve"><value>Refuse this write-off? Stock does not change.</value></data>
 </root>

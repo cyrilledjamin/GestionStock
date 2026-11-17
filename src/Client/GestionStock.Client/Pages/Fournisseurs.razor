@@ -33,7 +33,7 @@
             }
         </div>
         <div class="actions">
-            <button type="submit" class="principal">@L["Enregistrer"]</button>
+            <button type="submit" class="principal" disabled="@_enCours">@L["Enregistrer"]</button>
             <button type="button" @onclick="() => _edition = null">@L["Annuler"]</button>
         </div>
     </form>
@@ -56,7 +56,11 @@
                 </td>
             </tr>
         }
-        @if (_fournisseurs.Count == 0)
+        @if (!_charge)
+        {
+            <tr><td colspan="4"><Chargement /></td></tr>
+        }
+        else if (_fournisseurs.Count == 0)
         {
             <tr><td colspan="4" class="vide">@L["AucunFournisseur"]</td></tr>
         }
@@ -64,9 +68,13 @@
 </table>
 
 @code {
+    // Premier chargement terminé : jusque-là, la liste montre l'attente et non « Aucun… ».
+    private bool _charge;
+
     private List<Fournisseur> _fournisseurs = [];
     private bool _inclureInactifs;
     private string? _erreur;
+    private bool _enCours;
     private Edition? _edition;
 
     protected override Task OnInitializedAsync() => Charger();
@@ -76,20 +84,35 @@
         var resultat = await Api.GetAsync<List<Fournisseur>>($"api/achats/fournisseurs?inclureInactifs={_inclureInactifs}");
         _fournisseurs = resultat.Valeur ?? [];
         _erreur = resultat.Erreur;
+        _charge = true;
     }
 
     private async Task Enregistrer()
     {
-        var edition = _edition!;
-        var corps = new { edition.Nom, edition.Telephone, edition.Actif };
-        var resultat = edition.Id is null
-            ? await Api.PostAsync<Fournisseur>("api/achats/fournisseurs", corps)
-            : await Api.PutAsync<Fournisseur>($"api/achats/fournisseurs/{edition.Id}", corps);
-        _erreur = resultat.Erreur;
-        if (resultat.Reussi)
+        // Un seul envoi à la fois : un double clic ou une connexion lente ne crée pas deux fois la même chose.
+        if (_enCours)
         {
-            _edition = null;
-            await Charger();
+            return;
+        }
+
+        _enCours = true;
+        try
+        {
+            var edition = _edition!;
+            var corps = new { edition.Nom, edition.Telephone, edition.Actif };
+            var resultat = edition.Id is null
+                ? await Api.PostAsync<Fournisseur>("api/achats/fournisseurs", corps)
+                : await Api.PutAsync<Fournisseur>($"api/achats/fournisseurs/{edition.Id}", corps);
+            _erreur = resultat.Erreur;
+            if (resultat.Reussi)
+            {
+                _edition = null;
+                await Charger();
+            }
+        }
+        finally
+        {
+            _enCours = false;
         }
     }
 

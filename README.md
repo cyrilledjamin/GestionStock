@@ -276,6 +276,15 @@ Tout autre endpoint est refusé par défaut (401 sans jeton) : chaque endpoint m
 l'en-tête `Authorization: Bearer <jeton>`. Les erreurs sont des ProblemDetails : titre traduit selon
 `Accept-Language` (fr par défaut, en) et code stable dans l'extension `code` (ex. `Identite.IdentifiantsInvalides`).
 
+**Coupure de la base** (PostgreSQL redémarré : courant, mise à jour) : la requête qui reprend une connexion morte reçoit
+un **503** `Base.Indisponible` (« rien n'a été enregistré ») avec `Retry-After: 1`, jamais une erreur 500. Le pool de
+connexions est vidé et la requête suivante passe. Le client redemande une lecture une fois ; une écriture n'est pas
+renvoyée seule, son message invite à réessayer.
+
+Les fiches qui citent des personnes (session de caisse, anomalie, réception, dette, fiche client) gardent le
+**matricule** tracé. Elles portent aussi le nom à afficher, « Prénom Nom (matricule) » : champs `Nom…` ou table
+`personnel` (matricule → nom).
+
 ## Écrans (client Blazor)
 
 Ouvrir http://localhost:8080 (docker-compose) puis se connecter. Le menu dépend des permissions de l'utilisateur.
@@ -772,7 +781,7 @@ sur une machine Linux de GitHub qui dispose de Docker :
   `local` ; passage de sauvegarde consigné en base et dans `GET /api/exploitation/etat`, copie hors site chiffrée,
   archive locale complète, refus sans `--oui`, puis un compte créé après la sauvegarde, l'API arrêtée et la copie hors
   site restaurée : le compte a disparu, le jeton émis avant reste valide car les clés sont revenues avec les fichiers,
-  et le contrôle des soldes ne trouve aucun écart), que les parcours de bout en bout passent dans Chromium (la trace
+  et le contrôle des soldes ne trouve aucun écart), que la base redémarrée donne un 503 traduit puis reprend, que les parcours de bout en bout passent dans Chromium (la trace
   d'un parcours en échec est gardée en artefact `traces-e2e`), et que le client
   Blazor est servi. Les tests du client (`GestionStock.Client.Tests`) tournent avec les autres dans le job de build.
 
@@ -835,7 +844,7 @@ sur une machine Linux de GitHub qui dispose de Docker :
 | 52 | Exploitation : écrans Contrôles et Sauvegardes, accueil | Fait |
 | 53 | Vérification, CI, README, démonstration de la tranche 8 | Fait |
 | 54 | Tests de bout en bout par rôle (Playwright) en CI, grille de recette | Fait |
-| 55 | Corrections du check (double clic, confirmations, erreurs, noms, langue de la page) | À faire |
+| 55 | Corrections du check (double clic, confirmations, erreurs, noms, langue de la page) | Fait |
 | 56 | Jeu de données volumineux et mesures de référence | À faire |
 | 57 | Performances serveur (index, requêtes, pagination) | À faire |
 | 58 | Performances de la caisse et du client | À faire |

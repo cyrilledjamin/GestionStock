@@ -35,7 +35,7 @@ else if (_session is null)
             @* Poste bloqué par une session restée ouverte : qui la tient, depuis quand, et à qui s'adresser (décision 36). *@
             <div class="message avertissement" role="status">
                 <Icone Nom="erreur" />
-                <span>@L["PosteOccupePar", occupation.Caissier, Format.Date(occupation.OuvertureUtc)]</span>
+                <span>@L["PosteOccupePar", occupation.NomCaissier ?? occupation.Caissier, Format.Date(occupation.OuvertureUtc)]</span>
             </div>
         }
         <label>@L["FondCaisse"]
@@ -114,7 +114,7 @@ else
                     }
                 </div>
                 <div class="actions">
-                    <button type="submit" class="principal" disabled="@(_clientRemboursement is null)">@L["Encaisser"]</button>
+                    <button type="submit" class="principal" disabled="@(_clientRemboursement is null || _remboursementEnCours)">@L["Encaisser"]</button>
                     <button type="button" @onclick="() => _panneau = Panneau.Aucun">@L["Annuler"]</button>
                 </div>
             </form>
@@ -309,6 +309,11 @@ else
     private decimal _especesComptees;
     private ClientCredit? _clientRemboursement;
     private decimal _montantRemboursement;
+    private bool _remboursementEnCours;
+
+    // Clé du remboursement en cours de saisie : gardée jusqu'à son enregistrement, un nouvel envoi (double clic,
+    // réponse perdue) est reconnu par le serveur au lieu d'être compté deux fois.
+    private Guid _idRemboursement = Guid.NewGuid();
     private string _modeRemboursement = ModesPaiement.Especes;
     private string? _referenceRemboursement;
 
@@ -831,44 +836,59 @@ else
 
     private async Task Rembourser()
     {
-        var idIdempotence = Guid.NewGuid();
-        var demande = new
+        if (_remboursementEnCours)
         {
-            IdIdempotence = idIdempotence,
-            ClientId = _clientRemboursement!.Id,
-            Mode = _modeRemboursement,
-            Montant = _montantRemboursement,
-            Reference = _referenceRemboursement,
-        };
-        var resultat = Connexion.EnLigne
-            ? await Api.PostAsync<RemboursementCredit>("api/caisse/remboursements", demande)
-            : new Resultat<RemboursementCredit>(default, null, Api.CodeHorsLigne);
-        if (resultat.Code == Api.CodeHorsLigne && _session is { } session)
-        {
-            // Hors ligne (7.8) : le remboursement part avec la file ; il diminue déjà la dette connue du poste.
-            var maintenant = DateTime.UtcNow;
-            await HorsLigne.AjouterAsync(new OperationEnAttente(
-                CaisseHorsLigne.NouvelleCle(), OperationEnAttente.Remboursement, idIdempotence, Session.Profil!.Identifiant, session.Id, "api/caisse/remboursements",
-                System.Text.Json.JsonSerializer.SerializeToElement(new { demande.IdIdempotence, demande.ClientId, demande.Mode, demande.Montant, demande.Reference, HorsLigne = new { SessionId = session.Id, Numero = (long?)null, DateUtc = maintenant } }, System.Text.Json.JsonSerializerOptions.Web),
-                _clientRemboursement.Id, -_montantRemboursement, $"{_clientRemboursement.Nom} · {Format.Montant(_montantRemboursement)}", maintenant));
-            _succes = L["RemboursementEnAttente", Format.Montant(_montantRemboursement), _clientRemboursement.Nom];
-            _erreur = null;
-            _panneau = Panneau.Aucun;
-            _clientRemboursement = null;
-            _montantRemboursement = 0;
-            _referenceRemboursement = null;
             return;
         }
 
-        _erreur = resultat.Erreur;
-        if (resultat.Valeur is { } remboursement)
+        _remboursementEnCours = true;
+        try
         {
-            _succes = L["RemboursementEnregistre", Format.Montant(remboursement.Montant), Format.Montant(remboursement.SoldeDuApres)];
-            _panneau = Panneau.Aucun;
-            _clientRemboursement = null;
-            _montantRemboursement = 0;
-            _referenceRemboursement = null;
-            await ChargerSession();
+            var idIdempotence = _idRemboursement;
+            var demande = new
+            {
+                IdIdempotence = idIdempotence,
+                ClientId = _clientRemboursement!.Id,
+                Mode = _modeRemboursement,
+                Montant = _montantRemboursement,
+                Reference = _referenceRemboursement,
+            };
+            var resultat = Connexion.EnLigne
+                ? await Api.PostAsync<RemboursementCredit>("api/caisse/remboursements", demande)
+                : new Resultat<RemboursementCredit>(default, null, Api.CodeHorsLigne);
+            if (resultat.Code == Api.CodeHorsLigne && _session is { } session)
+            {
+                // Hors ligne (7.8) : le remboursement part avec la file ; il diminue déjà la dette connue du poste.
+                var maintenant = DateTime.UtcNow;
+                await HorsLigne.AjouterAsync(new OperationEnAttente(
+                    CaisseHorsLigne.NouvelleCle(), OperationEnAttente.Remboursement, idIdempotence, Session.Profil!.Identifiant, session.Id, "api/caisse/remboursements",
+                    System.Text.Json.JsonSerializer.SerializeToElement(new { demande.IdIdempotence, demande.ClientId, demande.Mode, demande.Montant, demande.Reference, HorsLigne = new { SessionId = session.Id, Numero = (long?)null, DateUtc = maintenant } }, System.Text.Json.JsonSerializerOptions.Web),
+                    _clientRemboursement.Id, -_montantRemboursement, $"{_clientRemboursement.Nom} · {Format.Montant(_montantRemboursement)}", maintenant));
+                _idRemboursement = Guid.NewGuid();
+                _succes = L["RemboursementEnAttente", Format.Montant(_montantRemboursement), _clientRemboursement.Nom];
+                _erreur = null;
+                _panneau = Panneau.Aucun;
+                _clientRemboursement = null;
+                _montantRemboursement = 0;
+                _referenceRemboursement = null;
+                return;
+            }
+
+            _erreur = resultat.Erreur;
+            if (resultat.Valeur is { } remboursement)
+            {
+                _idRemboursement = Guid.NewGuid();
+                _succes = L["RemboursementEnregistre", Format.Montant(remboursement.Montant), Format.Montant(remboursement.SoldeDuApres)];
+                _panneau = Panneau.Aucun;
+                _clientRemboursement = null;
+                _montantRemboursement = 0;
+                _referenceRemboursement = null;
+                await ChargerSession();
+            }
+        }
+        finally
+        {
+            _remboursementEnCours = false;
         }
     }
 

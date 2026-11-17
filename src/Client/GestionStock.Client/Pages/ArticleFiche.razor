@@ -1,5 +1,6 @@
 @page "/articles/{Id:guid}"
 @inject Api Api
+@inject Confirmation Confirmation
 @inject Session Session
 
 <PageTitle>@(_article?.Code ?? L["Article"]) · GestionStock</PageTitle>
@@ -124,8 +125,11 @@
         var article = await Api.GetAsync<Article>($"api/referentiel/articles/{Id}");
         _erreur = article.Erreur;
         _article = article.Valeur;
-        _conditionnements = (await Api.GetAsync<List<Conditionnement>>($"api/referentiel/articles/{Id}/conditionnements")).Valeur ?? [];
-        _prix = (await Api.GetAsync<List<PrixConditionnement>>($"api/prix/articles/{Id}")).Valeur ?? [];
+        var conditionnements = await Api.GetAsync<List<Conditionnement>>($"api/referentiel/articles/{Id}/conditionnements");
+        var prix = await Api.GetAsync<List<PrixConditionnement>>($"api/prix/articles/{Id}");
+        _erreur ??= conditionnements.Erreur ?? prix.Erreur;
+        _conditionnements = conditionnements.Valeur ?? [];
+        _prix = prix.Valeur ?? [];
         foreach (var conditionnement in _conditionnements)
         {
             _nouveauxCodes.TryAdd(conditionnement.Id, null);
@@ -171,8 +175,15 @@
     private Task GenererCode(Guid conditionnement) =>
         Executer(Api.PostAsync<Conditionnement>($"api/referentiel/conditionnements/{conditionnement}/codes/interne"), L["CodeAjoute"]);
 
-    private Task DesactiverCode(Guid code) =>
-        Executer(Api.PostAsync<Conditionnement>($"api/referentiel/codes/{code}/desactivation"), L["CodeDesactive"]);
+    private async Task DesactiverCode(Guid code)
+    {
+        if (!await Confirmation.DemanderAsync(L["ConfirmerDesactivationCode"].Value))
+        {
+            return;
+        }
+
+        await Executer(Api.PostAsync<Conditionnement>($"api/referentiel/codes/{code}/desactivation"), L["CodeDesactive"]);
+    }
 
     private async Task FixerPrix(Guid conditionnement)
     {

@@ -1,6 +1,7 @@
 @page "/receptions/nouvelle"
 @page "/receptions/{Id:guid}"
 @inject Api Api
+@inject Confirmation Confirmation
 @inject Session Session
 @inject NavigationManager Navigation
 
@@ -88,10 +89,10 @@
                 <div><dt>@L["Statut"]</dt><dd><span class="pastille @_reception.Statut.ToLowerInvariant()">@L[$"Statut.{_reception.Statut}"]</span></dd></div>
                 <div><dt>@L["Fournisseur"]</dt><dd>@_reception.Fournisseur</dd></div>
                 <div><dt>@L["BonLivraison"]</dt><dd>@(_reception.NumeroBonLivraison ?? "—")</dd></div>
-                <div><dt>@L["SaisiePar"]</dt><dd>@_reception.CreePar, @Format.Date(_reception.DateCreationUtc)</dd></div>
+                <div><dt>@L["SaisiePar"]</dt><dd>@Format.Personne(_reception.Personnel, _reception.CreePar), @Format.Date(_reception.DateCreationUtc)</dd></div>
                 @if (_reception.DateValidationUtc is { } validation)
                 {
-                    <div><dt>@L["ValideePar"]</dt><dd>@_reception.ValideePar, @Format.Date(validation)</dd></div>
+                    <div><dt>@L["ValideePar"]</dt><dd>@Format.Personne(_reception.Personnel, _reception.ValideePar), @Format.Date(validation)</dd></div>
                 }
             </dl>
         </div>
@@ -135,7 +136,7 @@
                                 <td>@frais.Libelle</td>
                                 <td>@L[$"Cle.{frais.Cle}"]</td>
                                 <td class="nombre">@Format.Montant(frais.Montant)</td>
-                                <td>@frais.SaisiPar, @Format.Date(frais.SaisiLeUtc)</td>
+                                <td>@Format.Personne(_reception.Personnel, frais.SaisiPar), @Format.Date(frais.SaisiLeUtc)</td>
                                 <td class="nombre">@(frais.MontantNonIncorpore > 0 ? Format.Montant(frais.MontantNonIncorpore) : "")</td>
                                 <td>
                                     @if (!EstValidee && Session.A(Permissions.FraisSaisir))
@@ -209,7 +210,7 @@
                                 <td>@L[$"Mode.{paiement.Mode}"]</td>
                                 <td>@paiement.Reference @if (paiement.Motif is not null) { <br /><small class="discret">@L["AnnulationMotif", paiement.Motif]</small> }</td>
                                 <td class="nombre">@Format.Montant(paiement.Montant)</td>
-                                <td>@paiement.SaisiPar</td>
+                                <td>@Format.Personne(_dette.Personnel, paiement.SaisiPar)</td>
                                 <td class="actions-ligne">
                                     @if (paiement.PaiementAnnuleId is null && !paiement.EstAnnule && Session.A(Permissions.PaiementsFournisseursSaisir))
                                     {
@@ -289,13 +290,18 @@
 
         if (EstValidee)
         {
-            AfficherDette((await Api.GetAsync<DetailDette>($"api/achats/receptions/{_reception!.Id}/dette")).Valeur);
+            var dette = await Api.GetAsync<DetailDette>($"api/achats/receptions/{_reception!.Id}/dette");
+            _erreur ??= dette.Erreur;
+            AfficherDette(dette.Valeur);
         }
 
         if (Modifiable)
         {
-            _fournisseurs = (await Api.GetAsync<List<Fournisseur>>("api/achats/fournisseurs")).Valeur ?? [];
-            _articles = (await Api.GetAsync<List<Article>>("api/referentiel/articles")).Valeur ?? [];
+            var fournisseurs = await Api.GetAsync<List<Fournisseur>>("api/achats/fournisseurs");
+            var articles = await Api.GetAsync<List<Article>>("api/referentiel/articles");
+            _erreur ??= fournisseurs.Erreur ?? articles.Erreur;
+            _fournisseurs = fournisseurs.Valeur ?? [];
+            _articles = articles.Valeur ?? [];
         }
 
         _chargee = true;
@@ -344,6 +350,11 @@
 
     private async Task Valider()
     {
+        if (!await Confirmation.DemanderAsync(L["ConfirmerValidationReception"].Value))
+        {
+            return;
+        }
+
         // Le brouillon est enregistré tel qu'affiché avant la validation.
         await Enregistrer();
         if (_erreur is not null || _reception is null)
@@ -397,6 +408,11 @@
 
     private async Task RetirerFrais(Guid frais)
     {
+        if (!await Confirmation.DemanderAsync(L["ConfirmerRetraitFrais"].Value))
+        {
+            return;
+        }
+
         var resultat = await Api.DeleteAsync<DetailReception>($"api/achats/receptions/{_reception!.Id}/frais/{frais}");
         _erreur = resultat.Erreur;
         Afficher(resultat.Valeur ?? _reception);
@@ -421,6 +437,11 @@
 
     private async Task AnnulerPaiement(Guid paiement)
     {
+        if (!await Confirmation.DemanderAsync(L["ConfirmerAnnulationPaiement"].Value))
+        {
+            return;
+        }
+
         var resultat = await Api.PostAsync<DetailDette>($"api/achats/paiements/{paiement}/annulation", new { Motif = _motifsAnnulation.GetValueOrDefault(paiement) ?? "" });
         _erreur = resultat.Erreur;
         AfficherDette(resultat.Valeur);

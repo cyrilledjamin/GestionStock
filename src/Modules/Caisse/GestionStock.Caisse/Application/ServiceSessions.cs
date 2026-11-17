@@ -1,5 +1,6 @@
 using GestionStock.Caisse.Domain;
 using GestionStock.Caisse.Infrastructure;
+using GestionStock.Identite.Contracts;
 using GestionStock.SharedKernel;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -43,7 +44,10 @@ internal sealed record SessionDto(
     decimal? Ecart,
     string? ValideePar,
     TotauxSession Totaux,
-    long DernierNumeroPoste);
+    long DernierNumeroPoste,
+    string NomCaissier,
+    string? NomClotureePar,
+    string? NomValideePar);
 
 internal sealed record OuvertureSession(string NumeroCaisse, decimal FondCaisse);
 
@@ -54,14 +58,15 @@ internal sealed record OuvertureSession(string NumeroCaisse, decimal FondCaisse)
 internal sealed record ClotureSession(decimal EspecesComptees, long? DernierNumero = null);
 
 /// <summary>Poste occupé par une session ouverte : qui la tient et depuis quand (le caissier bloqué sait à qui s'adresser).</summary>
-internal sealed record OccupationPoste(string NumeroCaisse, Guid SessionId, string Caissier, DateTime OuvertureUtc);
+internal sealed record OccupationPoste(string NumeroCaisse, Guid SessionId, string Caissier, DateTime OuvertureUtc, string NomCaissier);
 
 /// <summary>Sessions de caisse (UC24, RG36) : ouverture avec fond, clôture par comptage des espèces, validation de l'écart.</summary>
 internal sealed class ServiceSessions(
     CaisseDbContext contexte,
     IUtilisateurCourant utilisateur,
     IHorloge horloge,
-    IOptions<OptionsCaisse> options)
+    IOptions<OptionsCaisse> options,
+    IAnnuairePersonnel annuaire)
 {
     private const string ViolationUnicite = "23505";
 
@@ -157,12 +162,21 @@ internal sealed class ServiceSessions(
     }
 
     /// <summary>Postes occupés par une session ouverte, avec son titulaire et son heure d'ouverture.</summary>
-    public async Task<IReadOnlyList<OccupationPoste>> OccupationAsync(CancellationToken annulation) =>
-        await contexte.Sessions.AsNoTracking()
+    public async Task<IReadOnlyList<OccupationPoste>> OccupationAsync(CancellationToken annulation)
+    {
+        var ouvertes = await contexte.Sessions.AsNoTracking()
             .Where(s => s.Statut == StatutSession.Ouverte)
             .OrderBy(s => s.NumeroCaisse)
-            .Select(s => new OccupationPoste(s.NumeroCaisse, s.Id, s.Caissier, s.OuvertureUtc))
+            .Select(s => new { s.NumeroCaisse, s.Id, s.Caissier, s.OuvertureUtc })
             .ToListAsync(annulation);
+        var resultat = new List<OccupationPoste>(ouvertes.Count);
+        foreach (var s in ouvertes)
+        {
+            resultat.Add(new OccupationPoste(s.NumeroCaisse, s.Id, s.Caissier, s.OuvertureUtc, await annuaire.DesignationAsync(s.Caissier, annulation)));
+        }
+
+        return resultat;
+    }
 
     public async Task<SessionDto> ValiderAsync(Guid id, CancellationToken annulation)
     {
@@ -235,5 +249,8 @@ internal sealed class ServiceSessions(
     private async Task<SessionDto> VersDto(SessionCaisse s, CancellationToken annulation) =>
         new(s.Id, s.NumeroCaisse, s.Caissier, s.OuvertureUtc, s.FondCaisse, s.Statut, s.ClotureUtc, s.ClotureePar, s.EspecesComptees, s.Ecart, s.ValideePar,
             await Totaux(s, annulation),
-            await contexte.Compteurs.AsNoTracking().Where(c => c.NumeroCaisse == s.NumeroCaisse).Select(c => c.DernierNumero).SingleOrDefaultAsync(annulation));
+            await contexte.Compteurs.AsNoTracking().Where(c => c.NumeroCaisse == s.NumeroCaisse).Select(c => c.DernierNumero).SingleOrDefaultAsync(annulation),
+            await annuaire.DesignationAsync(s.Caissier, annulation),
+            s.ClotureePar is null ? null : await annuaire.DesignationAsync(s.ClotureePar, annulation),
+            s.ValideePar is null ? null : await annuaire.DesignationAsync(s.ValideePar, annulation));
 }

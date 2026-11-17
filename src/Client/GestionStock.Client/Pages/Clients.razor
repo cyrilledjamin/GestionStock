@@ -28,7 +28,7 @@
         </div>
         <p class="discret">@L["DonneesPersonnellesAide"]</p>
         <div class="actions">
-            <button type="submit" class="principal">@L["Enregistrer"]</button>
+            <button type="submit" class="principal" disabled="@_enCours">@L["Enregistrer"]</button>
             <button type="button" @onclick="() => _creation = false">@L["Annuler"]</button>
         </div>
     </form>
@@ -47,7 +47,11 @@
                 <td data-label="@L["EnRetard"]" class="nombre">@(client.MontantEnRetard > 0 ? Format.Montant(client.MontantEnRetard) : "")</td>
             </tr>
         }
-        @if (_clients.Count == 0)
+        @if (!_charge)
+        {
+            <tr><td colspan="5"><Chargement /></td></tr>
+        }
+        else if (_clients.Count == 0)
         {
             <tr><td colspan="5" class="vide">@L["AucunClient"]</td></tr>
         }
@@ -55,6 +59,9 @@
 </table>
 
 @code {
+    // Premier chargement terminé : jusque-là, la liste montre l'attente et non « Aucun… ».
+    private bool _charge;
+
     private List<ClientCredit> _clients = [];
     private string _recherche = "";
     private bool _impayes;
@@ -63,6 +70,7 @@
     private string _telephone = "";
     private int _delai = 30;
     private string? _erreur;
+    private bool _enCours;
 
     protected override Task OnInitializedAsync() => Charger();
 
@@ -72,18 +80,33 @@
         var resultat = await Api.GetAsync<List<ClientCredit>>(url);
         _clients = resultat.Valeur ?? [];
         _erreur = resultat.Erreur;
+        _charge = true;
     }
 
     private async Task Creer()
     {
-        var resultat = await Api.PostAsync<ClientCredit>("api/credit/clients", new { Nom = _nom, Telephone = _telephone, DelaiPaiementJours = _delai });
-        _erreur = resultat.Erreur;
-        if (resultat.Reussi)
+        // Un seul envoi à la fois : un double clic ou une connexion lente ne crée pas deux fois la même chose.
+        if (_enCours)
         {
-            _creation = false;
-            _nom = "";
-            _telephone = "";
-            await Charger();
+            return;
+        }
+
+        _enCours = true;
+        try
+        {
+            var resultat = await Api.PostAsync<ClientCredit>("api/credit/clients", new { Nom = _nom, Telephone = _telephone, DelaiPaiementJours = _delai });
+            _erreur = resultat.Erreur;
+            if (resultat.Reussi)
+            {
+                _creation = false;
+                _nom = "";
+                _telephone = "";
+                await Charger();
+            }
+        }
+        finally
+        {
+            _enCours = false;
         }
     }
 }

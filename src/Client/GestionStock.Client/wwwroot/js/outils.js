@@ -18,6 +18,11 @@ window.gestionStock = {
         window.print();
     },
 
+    // Langue de la page (attribut lang de <html>), celle de l'interface choisie.
+    definirLangue: function (langue) {
+        document.documentElement.lang = langue;
+    },
+
     // Remet le curseur dans un champ (scan à la douchette).
     focaliser: function (id) {
         const element = document.getElementById(id);

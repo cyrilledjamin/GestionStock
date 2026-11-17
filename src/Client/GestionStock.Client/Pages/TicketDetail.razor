@@ -1,5 +1,6 @@
 @page "/caisse/tickets/{Id:guid}"
 @inject Api Api
+@inject Confirmation Confirmation
 @inject Session Session
 @inject CaisseHorsLigne HorsLigne
 @inject EtatConnexion Connexion
@@ -154,6 +155,11 @@ else if (_ticket is not null)
 
     private async Task FaireAvoir()
     {
+        if (!await Confirmation.DemanderAsync(L["ConfirmerAvoir", _ticket?.Numero ?? ""].Value))
+        {
+            return;
+        }
+
         if (!Connexion.EnLigne)
         {
             await FaireAvoirHorsLigne();

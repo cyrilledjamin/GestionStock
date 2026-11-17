@@ -65,7 +65,8 @@ public sealed record DetailReception(
     decimal TotalFrais,
     decimal MontantTotal,
     List<DetailLigneReception> Lignes,
-    List<FraisApproche> Frais);
+    List<FraisApproche> Frais,
+    Dictionary<string, string>? Personnel = null);
 
 public sealed record DetailLigneReception(
     Guid Id,
@@ -131,7 +132,7 @@ public sealed record PaiementFournisseur(
     string? Motif,
     bool EstAnnule);
 
-public sealed record DetailDette(DetteReception Dette, List<PaiementFournisseur> Paiements);
+public sealed record DetailDette(DetteReception Dette, List<PaiementFournisseur> Paiements, Dictionary<string, string>? Personnel = null);
 
 public static class ModesPaiementFournisseur
 {
@@ -209,7 +210,9 @@ public sealed record AnomalieCaisse(
     bool Traitee,
     string? TraiteePar,
     DateTime? TraitementUtc,
-    string? Commentaire);
+    string? Commentaire,
+    string? NomCaissier = null,
+    string? NomTraiteePar = null);
 
 /// <summary>Passage du contrôle de cohérence des soldes (ENF04).</summary>
 public sealed record ControleSoldes(Guid Id, DateTime DebutUtc, DateTime? FinUtc, string Declencheur, string Statut, int SoldesControles, int Ecarts, string? Message);
@@ -361,7 +364,7 @@ public sealed record VenteOuverte(Guid OperationId, Guid TicketId, string? Numer
 
 public sealed record OperationCredit(Guid Id, DateTime DateUtc, string Type, decimal Montant, Guid DocumentId, string? NumeroTicket, string Utilisateur, string? ValideePar);
 
-public sealed record FicheClient(ClientCredit Client, List<VenteOuverte> VentesOuvertes, List<OperationCredit> Operations);
+public sealed record FicheClient(ClientCredit Client, List<VenteOuverte> VentesOuvertes, List<OperationCredit> Operations, Dictionary<string, string>? Personnel = null);
 
 // --- Caisse ------------------------------------------------------------------------------------------------------
 
@@ -390,10 +393,17 @@ public sealed record SessionCaisse(
     decimal? Ecart,
     string? ValideePar,
     TotauxSession Totaux,
-    long DernierNumeroPoste = 0);
+    long DernierNumeroPoste = 0,
+    string? NomCaissier = null,
+    string? NomClotureePar = null,
+    string? NomValideePar = null)
+{
+    /// <summary>Le caissier tel qu'affiché : son nom (annuaire), ou son matricule pour une session gardée sur le poste.</summary>
+    public string AfficheCaissier => NomCaissier ?? Caissier;
+}
 
 /// <summary>Poste tenu par une session ouverte (le caissier bloqué voit qui l'occupe et depuis quand).</summary>
-public sealed record OccupationPoste(string NumeroCaisse, Guid SessionId, string Caissier, DateTime OuvertureUtc);
+public sealed record OccupationPoste(string NumeroCaisse, Guid SessionId, string Caissier, DateTime OuvertureUtc, string? NomCaissier = null);
 
 public sealed record LigneTicket(
     Guid Id,

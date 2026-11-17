@@ -15,7 +15,7 @@ public sealed class ParcoursCaissier(Navigateur navigateur) : ParcoursCaisseBase
     {
         var article = await Donnees.ArticleEnStockAsync($"SAVON{Suffixe}", $"Savon {Suffixe}", prixTtc: 500, quantite: 50, coutUnitaire: 300);
         var nomClient = $"Client {Suffixe}";
-        await Donnees.ClientAsync(nomClient, "+237 690 00 00 01", plafond: 20_000);
+        var clientId = await Donnees.ClientAsync(nomClient, "+237 690 00 00 01", plafond: 20_000);
         var gerant = await Donnees.CompteAsync("Gerant", $"Remise{Suffixe}", ["Gerant"]);
         var caissier = await Donnees.CompteAsync("Caissier", $"Comptoir{Suffixe}", ["Caissier"]);
 
@@ -54,14 +54,15 @@ public sealed class ParcoursCaissier(Navigateur navigateur) : ParcoursCaisseBase
         await NumeroTicketAsync();
         await Bouton("NouvelleVente").ClickAsync();
 
-        // Remboursement d'une partie du crédit.
+        // Remboursement d'une partie du crédit, d'un double clic : il n'est enregistré qu'une fois.
         await Bouton("RemboursementCredit").ClickAsync();
         var formulaire = Page.Locator("form.fiche");
         await formulaire.GetByRole(AriaRole.Searchbox).FillAsync(nomClient);
         await formulaire.GetByRole(AriaRole.Button, new() { NameRegex = new(nomClient) }).ClickAsync();
         await formulaire.GetByLabel(T["Montant"]).FillAsync("200");
-        await formulaire.GetByRole(AriaRole.Button, new() { Name = T["Encaisser"], Exact = true }).ClickAsync();
+        await formulaire.GetByRole(AriaRole.Button, new() { Name = T["Encaisser"], Exact = true }).DblClickAsync();
         await VoirModeleAsync("RemboursementEnregistre");
+        Assert.Equal(1, await Donnees.OperationsCreditAsync(clientId, "Remboursement"));
 
         // Avoir (UC18) sur une unité du premier ticket, remboursée en espèces.
         await Lien("TicketsDuJour").ClickAsync();

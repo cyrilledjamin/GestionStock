@@ -1,5 +1,6 @@
 @page "/sessions"
 @inject Api Api
+@inject Confirmation Confirmation
 @inject Session Session
 
 <PageTitle>@L["SessionsCaisse"] · GestionStock</PageTitle>
@@ -22,7 +23,7 @@
 {
     @* Session restée ouverte qui bloque un poste : le Gérant la compte et la clôture à la place de son titulaire (décision 36). *@
     <form class="fiche etroite" @onsubmit="CloturerAPlace">
-        <h2>@L["CloturerSessionDe", aCloturer.Caissier, aCloturer.NumeroCaisse]</h2>
+        <h2>@L["CloturerSessionDe", aCloturer.AfficheCaissier, aCloturer.NumeroCaisse]</h2>
         <p class="discret">@L["CloturerAPlaceAide", Format.Date(aCloturer.OuvertureUtc)]</p>
         <ComptageEspeces @bind-Total="_especesComptees" />
         <div class="actions">
@@ -44,7 +45,7 @@
         {
             <tr class="@(session.Ecart < 0 ? "negatif" : "")">
                 <td data-label="@L["Poste"]">@session.NumeroCaisse</td>
-                <td data-label="@L["Caissier"]">@session.Caissier</td>
+                <td data-label="@L["Caissier"]">@session.AfficheCaissier</td>
                 <td data-label="@L["Ouverture"]" class="court">@Format.Date(session.OuvertureUtc)</td>
                 <td data-label="@L["Ventes"]" class="nombre">@Format.Montant(session.Totaux.Ventes - session.Totaux.Avoirs)</td>
                 <td data-label="@L["EspecesTheoriques"]" class="nombre">@Format.Montant(session.Totaux.EspecesTheoriques)</td>
@@ -54,9 +55,9 @@
                     @L[$"StatutSession.{session.Statut}"]
                     @if (session.ClotureePar is { } par && par != session.Caissier)
                     {
-                        <small class="pastille brouillon">@L["CompteePar", par]</small>
+                        <small class="pastille brouillon">@L["CompteePar", session.NomClotureePar ?? par]</small>
                     }
-                    @if (session.ValideePar is not null) { <small class="discret">(@session.ValideePar)</small> }
+                    @if (session.ValideePar is not null) { <small class="discret">(@(session.NomValideePar ?? session.ValideePar))</small> }
                 </td>
                 <td>
                     @if (session.Statut == "Comptee" && Session.A(Permissions.SessionsValider))
@@ -70,7 +71,11 @@
                 </td>
             </tr>
         }
-        @if (_sessions.Count == 0)
+        @if (!_charge)
+        {
+            <tr><td colspan="9"><Chargement /></td></tr>
+        }
+        else if (_sessions.Count == 0)
         {
             <tr><td colspan="9" class="vide">@L["AucuneSession"]</td></tr>
         }
@@ -78,6 +83,9 @@
 </table>
 
 @code {
+    // Premier chargement terminé : jusque-là, la liste montre l'attente et non « Aucun… ».
+    private bool _charge;
+
     private List<SessionCaisse> _sessions = [];
     private string _statut = "";
     private string? _erreur;
@@ -93,6 +101,7 @@
         var resultat = await Api.GetAsync<List<SessionCaisse>>(url);
         _sessions = resultat.Valeur ?? [];
         _erreur = resultat.Erreur;
+        _charge = true;
     }
 
     private void Preparer(SessionCaisse session)
@@ -110,7 +119,7 @@
         _erreur = resultat.Erreur;
         if (resultat.Valeur is { } cloturee)
         {
-            _succes = L["SessionClotureeAPlace", cloturee.NumeroCaisse, cloturee.Caissier, Format.Montant(cloturee.Ecart ?? 0)];
+            _succes = L["SessionClotureeAPlace", cloturee.NumeroCaisse, cloturee.AfficheCaissier, Format.Montant(cloturee.Ecart ?? 0)];
             _aCloturer = null;
             await Charger();
         }
@@ -118,6 +127,11 @@
 
     private async Task Valider(Guid id)
     {
+        if (!await Confirmation.DemanderAsync(L["ConfirmerValidationEcart"].Value))
+        {
+            return;
+        }
+
         var resultat = await Api.PostAsync<SessionCaisse>($"api/caisse/sessions/{id}/validation");
         _erreur = resultat.Erreur;
         await Charger();

@@ -52,7 +52,7 @@
             <p class="discret">@L["ArticleFige"]</p>
         }
         <div class="actions">
-            <button type="submit" class="principal">@L["Enregistrer"]</button>
+            <button type="submit" class="principal" disabled="@_enCours">@L["Enregistrer"]</button>
             <button type="button" @onclick="() => _edition = null">@L["Annuler"]</button>
         </div>
     </form>
@@ -83,7 +83,11 @@
                 </td>
             </tr>
         }
-        @if (_articles.Count == 0)
+        @if (!_charge)
+        {
+            <tr><td colspan="6"><Chargement /></td></tr>
+        }
+        else if (_articles.Count == 0)
         {
             <tr><td colspan="6" class="vide">@L["AucunArticle"]</td></tr>
         }
@@ -91,10 +95,14 @@
 </table>
 
 @code {
+    // Premier chargement terminé : jusque-là, la liste montre l'attente et non « Aucun… ».
+    private bool _charge;
+
     private List<Article> _articles = [];
     private string _recherche = "";
     private bool _inclureInactifs;
     private string? _erreur;
+    private bool _enCours;
     private Edition? _edition;
 
     protected override Task OnInitializedAsync() => Charger();
@@ -105,6 +113,7 @@
         var resultat = await Api.GetAsync<List<Article>>(url);
         _articles = resultat.Valeur ?? [];
         _erreur = resultat.Erreur;
+        _charge = true;
     }
 
     private void Nouveau() => _edition = new Edition();
@@ -122,15 +131,29 @@
 
     private async Task Enregistrer()
     {
-        var edition = _edition!;
-        var resultat = edition.Id is null
-            ? await Api.PostAsync<Article>("api/referentiel/articles", new { edition.Code, edition.Libelle, edition.LibelleTraduit, edition.UniteStock, edition.PrecisionQuantite })
-            : await Api.PutAsync<Article>($"api/referentiel/articles/{edition.Id}", new { edition.Libelle, edition.LibelleTraduit, edition.Actif });
-        _erreur = resultat.Erreur;
-        if (resultat.Reussi)
+        // Un seul envoi à la fois : un double clic ou une connexion lente ne crée pas deux fois la même chose.
+        if (_enCours)
         {
-            _edition = null;
-            await Charger();
+            return;
+        }
+
+        _enCours = true;
+        try
+        {
+            var edition = _edition!;
+            var resultat = edition.Id is null
+                ? await Api.PostAsync<Article>("api/referentiel/articles", new { edition.Code, edition.Libelle, edition.LibelleTraduit, edition.UniteStock, edition.PrecisionQuantite })
+                : await Api.PutAsync<Article>($"api/referentiel/articles/{edition.Id}", new { edition.Libelle, edition.LibelleTraduit, edition.Actif });
+            _erreur = resultat.Erreur;
+            if (resultat.Reussi)
+            {
+                _edition = null;
+                await Charger();
+            }
+        }
+        finally
+        {
+            _enCours = false;
         }
     }
 

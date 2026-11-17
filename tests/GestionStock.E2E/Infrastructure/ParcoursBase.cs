@@ -25,6 +25,9 @@ public abstract class ParcoursBase(Navigateur navigateur) : IAsyncLifetime
 
     protected Donnees Donnees { get; } = new();
 
+    /// <summary>Messages des confirmations acceptées pendant le parcours, dans l'ordre.</summary>
+    protected List<string> Confirmations { get; } = [];
+
     /// <summary>Suffixe unique : les parcours peuvent être rejoués sur la même base sans collision de codes ou de noms.</summary>
     protected string Suffixe { get; } = DateTime.UtcNow.ToString("HHmmssfff", System.Globalization.CultureInfo.InvariantCulture);
 
@@ -41,8 +44,13 @@ public abstract class ParcoursBase(Navigateur navigateur) : IAsyncLifetime
         await Contexte.AddInitScriptAsync($"try {{ window.localStorage.setItem('gestionstock.langue', '{Langue}'); }} catch {{ }}");
         Page = await Contexte.NewPageAsync();
         Page.SetDefaultTimeout(15_000);
-        // Les confirmations (fenêtre « confirm » du navigateur) sont acceptées : le parcours a décidé du geste.
-        Page.Dialog += async (_, dialogue) => await dialogue.AcceptAsync();
+        // Les confirmations (fenêtre « confirm » du navigateur) sont acceptées et gardées : le parcours a décidé du geste,
+        // et peut vérifier qu'une action irréversible a bien demandé confirmation.
+        Page.Dialog += async (_, dialogue) =>
+        {
+            Confirmations.Add(dialogue.Message);
+            await dialogue.AcceptAsync();
+        };
     }
 
     public async ValueTask DisposeAsync()

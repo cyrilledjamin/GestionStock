@@ -123,17 +123,14 @@ Lancement : voir le README, section « Tests ».
 - UC23 (étiquettes) ;
 - RG38 (fonctions activables).
 
-## Défauts relevés par le check (étape 54, à corriger à l'étape 55)
+## Défauts relevés par le check (étape 54), corrigés à l'étape 55
 
-1. **Remboursement de crédit enregistré deux fois sur un double clic.** Une nouvelle clé d'idempotence est générée à
-   chaque clic. Création de client, d'article, de fournisseur et d'inventaire : boutons non désactivés pendant
-   l'appel.
-2. **Actions irréversibles sans confirmation.** Il y en a 12 : validation d'inventaire, de réception et de démarque,
-   avoir, désactivation de compte, annulation de paiement fournisseur…
-3. **Le Gérant ne voit pas qui est le caissier.** L'écran « Sessions de caisse » montre le matricule du caissier et
-   de l'auteur de la clôture, pas son nom (les rapports montrent le nom depuis l'étape 32).
-4. **Page toujours déclarée en français.** La langue de la page (`<html lang>`) reste « fr » quand l'interface est en
-   anglais. Un lecteur d'écran prononce alors l'anglais à la française.
-5. **Listes vides pendant le chargement.** Elles affichent « Aucun… » tant que la réponse n'est pas arrivée.
-6. **Erreur 500 après un redémarrage de la base.** La première requête réutilise une connexion rompue.
-7. **Erreurs avalées sans message :** choix du client, démarque, fiche article, réception.
+| # | Défaut | Correction | Test |
+| --- | --- | --- | --- |
+| 1 | Remboursement de crédit enregistré deux fois sur un double clic (clé d'idempotence nouvelle à chaque clic) ; boutons de création actifs pendant l'appel | Clé gardée jusqu'à l'enregistrement, second clic ignoré ; création de client, article, fournisseur, inventaire et démarque protégée (bouton désactivé, un seul envoi) | E2E `ParcoursCaissier` : double clic, une seule opération au journal du client |
+| 2 | 12 actions irréversibles sans confirmation | Confirmation traduite avant : validation et annulation d'inventaire, validation de réception, retrait de frais, annulation de paiement, validation d'écart, avoir, mot de passe provisoire, désactivation de compte et de code, validation et refus de démarque | E2E `ParcoursComptable` : confirmations de l'inventaire et de la démarque |
+| 3 | Sessions de caisse, poste occupé, anomalies, réception, dette et fiche client montrent le matricule | Nom « Prénom Nom (matricule) » donné par l'annuaire du personnel (`IAnnuairePersonnel`) | Api `CaisseTests.La_cloture_calcule_l_ecart_que_le_comptable_valide` ; E2E `ParcoursGerant` (ligne trouvée par le nom) |
+| 4 | Page déclarée en français (`<html lang>`) dans l'interface anglaise | Langue de la page fixée au démarrage | E2E `ParcoursAnglais` |
+| 5 | « Aucun… » affiché pendant le chargement des listes | Indicateur d'attente jusqu'au premier chargement (13 écrans) | Pas de test automatisé (relu dans le code) |
+| 6 | Erreur 500 à la première requête après un redémarrage de la base | 503 traduit `Base.Indisponible`, pool vidé, lecture redemandée par le client | Infra `GestionnaireCoupureBaseTests` ; CI : base redémarrée, 503 puis 200 |
+| 7 | Erreurs avalées (choix du client, recherche de démarque, fiche article, réception) | Message d'erreur affiché | Pas de test automatisé (relu dans le code) |

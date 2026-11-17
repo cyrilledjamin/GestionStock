@@ -16,8 +16,8 @@
     </select>
     @if (Session.A(Permissions.InventaireCompter))
     {
-        <button class="principal" @onclick='() => Creer("Complet")'>@L["NouvelInventaireComplet"]</button>
-        <button @onclick='() => Creer("Partiel")'>@L["NouvelInventairePartiel"]</button>
+        <button class="principal" disabled="@_enCours" @onclick='() => Creer("Complet")'>@L["NouvelInventaireComplet"]</button>
+        <button disabled="@_enCours" @onclick='() => Creer("Partiel")'>@L["NouvelInventairePartiel"]</button>
     }
 </div>
 
@@ -37,7 +37,11 @@
                 <td><span class="pastille @(inventaire.Statut == "EnCours" ? "brouillon" : "validee")">@L[$"StatutInventaire.{inventaire.Statut}"]</span></td>
             </tr>
         }
-        @if (_inventaires.Count == 0)
+        @if (!_charge)
+        {
+            <tr><td colspan="6"><Chargement /></td></tr>
+        }
+        else if (_inventaires.Count == 0)
         {
             <tr><td colspan="6" class="vide">@L["AucunInventaire"]</td></tr>
         }
@@ -45,9 +49,13 @@
 </table>
 
 @code {
+    // Premier chargement terminé : jusque-là, la liste montre l'attente et non « Aucun… ».
+    private bool _charge;
+
     private List<ResumeInventaire> _inventaires = [];
     private string _statut = "";
     private string? _erreur;
+    private bool _enCours;
 
     protected override Task OnInitializedAsync() => Charger();
 
@@ -56,15 +64,30 @@
         var resultat = await Api.GetAsync<List<ResumeInventaire>>(string.IsNullOrEmpty(_statut) ? "api/inventaires" : $"api/inventaires?statut={_statut}");
         _inventaires = resultat.Valeur ?? [];
         _erreur = resultat.Erreur;
+        _charge = true;
     }
 
     private async Task Creer(string type)
     {
-        var resultat = await Api.PostAsync<DetailInventaire>("api/inventaires", new { Type = type, Articles = Array.Empty<Guid>() });
-        _erreur = resultat.Erreur;
-        if (resultat.Valeur is { } inventaire)
+        // Un seul envoi à la fois : un double clic ou une connexion lente ne crée pas deux fois la même chose.
+        if (_enCours)
         {
-            Navigation.NavigateTo($"inventaires/{inventaire.Inventaire.Id}");
+            return;
+        }
+
+        _enCours = true;
+        try
+        {
+            var resultat = await Api.PostAsync<DetailInventaire>("api/inventaires", new { Type = type, Articles = Array.Empty<Guid>() });
+            _erreur = resultat.Erreur;
+            if (resultat.Valeur is { } inventaire)
+            {
+                Navigation.NavigateTo($"inventaires/{inventaire.Inventaire.Id}");
+            }
+        }
+        finally
+        {
+            _enCours = false;
         }
     }
 }

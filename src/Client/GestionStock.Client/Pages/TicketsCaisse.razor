@@ -28,7 +28,11 @@
                 <td>@if (ticket.EstAvoir) { <span class="pastille brouillon">@L["Avoir"]</span> }</td>
             </tr>
         }
-        @if (_tickets.Count == 0)
+        @if (!_charge)
+        {
+            <tr><td colspan="5"><Chargement /></td></tr>
+        }
+        else if (_tickets.Count == 0)
         {
             <tr><td colspan="5" class="vide">@L["AucunTicket"]</td></tr>
         }
@@ -36,6 +40,9 @@
 </table>
 
 @code {
+    // Premier chargement terminé : jusque-là, la liste montre l'attente et non « Aucun… ».
+    private bool _charge;
+
     private List<TicketCaisse> _tickets = [];
     private string _numero = "";
     private string? _erreur;
@@ -55,6 +62,7 @@
         {
             _tickets = (await Api.GetAsync<List<TicketCaisse>>($"api/caisse/sessions/{courante.Id}/tickets")).Valeur ?? [];
         }
+        _charge = true;
     }
 
     private async Task ChercherNumero()

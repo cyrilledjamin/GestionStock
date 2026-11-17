@@ -51,6 +51,7 @@ public sealed class ParcoursComptable(Navigateur navigateur) : ParcoursBase(navi
         await Page.GetByRole(AriaRole.Link, new() { Name = inventaire, Exact = true }).ClickAsync();
         await Bouton("ValiderInventaire").ClickAsync();
         await VoirAsync("InventaireValide");
+        Assert.Contains(Confirmations, message => Motif("ConfirmerValidationInventaire").IsMatch(message));
 
         await AllerAsync("Demarque");
         var ligneDemarque = Ligne(demarque);
@@ -58,6 +59,7 @@ public sealed class ParcoursComptable(Navigateur navigateur) : ParcoursBase(navi
         await Expect(Page.GetByRole(AriaRole.Combobox).First).ToBeVisibleAsync();
         await Page.GetByRole(AriaRole.Combobox).First.SelectOptionAsync(new SelectOptionValue { Label = T["TousStatuts"] });
         await Expect(Ligne(demarque)).ToContainTextAsync(T["StatutDemarque.Validee"]);
+        Assert.Contains(T["ConfirmerValidationDemarque"], Confirmations);
 
         // Export comptable (UC16) : un fichier est téléchargé.
         await AllerAsync("Exports");

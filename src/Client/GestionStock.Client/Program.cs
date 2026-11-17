@@ -13,6 +13,7 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 builder.Services.AddScoped(_ => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 builder.Services.AddScoped<Session>();
 builder.Services.AddScoped<Api>();
+builder.Services.AddScoped<Confirmation>();
 builder.Services.AddScoped<Boutique>();
 builder.Services.AddScoped<EtatConnexion>();
 builder.Services.AddScoped<StockageLocal>();
@@ -28,6 +29,8 @@ var langue = await js.InvokeAsync<string?>("localStorage.getItem", Langues.Cle) 
 var culture = CultureInfo.GetCultureInfo(langue == "en" ? "en-GB" : "fr-CM");
 CultureInfo.DefaultThreadCurrentCulture = culture;
 CultureInfo.DefaultThreadCurrentUICulture = culture;
+// La page déclare sa langue : un lecteur d'écran lit l'anglais avec une voix anglaise (index.html est en « fr »).
+await js.InvokeVoidAsync("gestionStock.definirLangue", langue);
 
 await hote.Services.GetRequiredService<EtatConnexion>().DemarrerAsync();
 await hote.Services.GetRequiredService<Session>().InitialiserAsync();

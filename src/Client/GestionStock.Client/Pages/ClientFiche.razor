@@ -58,8 +58,8 @@
                     <td class="court">@Format.Date(operation.DateUtc)</td>
                     <td>@L[$"Operation.{operation.Type}"] @operation.NumeroTicket</td>
                     <td class="nombre">@Format.Montant(operation.Montant)</td>
-                    <td>@operation.Utilisateur</td>
-                    <td>@operation.ValideePar</td>
+                    <td>@Format.Personne(_fiche.Personnel, operation.Utilisateur)</td>
+                    <td>@Format.Personne(_fiche.Personnel, operation.ValideePar)</td>
                 </tr>
             }
         </tbody>

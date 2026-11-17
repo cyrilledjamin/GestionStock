@@ -32,7 +32,11 @@
                 <td data-label="@L["ValeurStock"]" class="nombre">@Format.Montant(ligne.Solde.QuantitePhysique * ligne.Solde.Cump)</td>
             </tr>
         }
-        @if (!Lignes.Any())
+        @if (!_charge)
+        {
+            <tr><td colspan="6"><Chargement /></td></tr>
+        }
+        else if (!Lignes.Any())
         {
             <tr><td colspan="6" class="vide">@L["AucunStock"]</td></tr>
         }
@@ -43,6 +47,9 @@
 </table>
 
 @code {
+    // Premier chargement terminé : jusque-là, la liste montre l'attente et non « Aucun… ».
+    private bool _charge;
+
     private List<(Article Article, SoldeStock Solde)> _lignes = [];
     private string _recherche = "";
     private string? _erreur;
@@ -64,5 +71,6 @@
             .Where(s => parId.ContainsKey(s.ArticleId))
             .Select(s => (parId[s.ArticleId], s))
             .OrderBy(l => l.Item1.Code, StringComparer.Ordinal)];
+        _charge = true;
     }
 }

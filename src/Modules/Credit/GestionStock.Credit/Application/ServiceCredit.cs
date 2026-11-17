@@ -1,6 +1,7 @@
 using GestionStock.Credit.Contracts;
 using GestionStock.Credit.Domain;
 using GestionStock.Credit.Infrastructure;
+using GestionStock.Identite.Contracts;
 using GestionStock.Infrastructure.Persistance;
 using GestionStock.SharedKernel;
 using Microsoft.EntityFrameworkCore;
@@ -21,14 +22,14 @@ internal sealed record VenteOuverte(Guid OperationId, Guid TicketId, string? Num
 
 internal sealed record OperationDto(Guid Id, DateTime DateUtc, TypeOperationCredit Type, decimal Montant, Guid DocumentId, string? NumeroTicket, string Utilisateur, string? ValideePar);
 
-internal sealed record FicheClient(ClientDto Client, IReadOnlyList<VenteOuverte> VentesOuvertes, IReadOnlyList<OperationDto> Operations);
+internal sealed record FicheClient(ClientDto Client, IReadOnlyList<VenteOuverte> VentesOuvertes, IReadOnlyList<OperationDto> Operations, IReadOnlyDictionary<string, string> Personnel);
 
 internal sealed record SaisieClient(string Nom, string Telephone, int? DelaiPaiementJours, bool Actif = true);
 
 internal sealed record SaisiePlafond(decimal PlafondCredit);
 
 /// <summary>Clients et crédit (UC26, UC27, RG39 à RG43).</summary>
-internal sealed class ServiceCredit(CreditDbContext contexte, IUniteDeTravail uniteDeTravail, IHorloge horloge) : IServiceCredit
+internal sealed class ServiceCredit(CreditDbContext contexte, IUniteDeTravail uniteDeTravail, IHorloge horloge, IAnnuairePersonnel annuaire) : IServiceCredit
 {
     // --- Contrat utilisé par la Caisse ---------------------------------------------------------------------------
 
@@ -149,7 +150,8 @@ internal sealed class ServiceCredit(CreditDbContext contexte, IUniteDeTravail un
             .OrderByDescending(o => o.DateUtc)
             .Select(o => new OperationDto(o.Id, o.DateUtc, o.Type, o.Montant, o.DocumentId, o.NumeroTicket, o.Utilisateur, o.ValideePar))
             .ToListAsync(annulation);
-        return new FicheClient(VersDto(client, ventes.Where(v => v.EnRetard).Sum(v => v.ResteDu)), ventes, operations);
+        var personnel = await annuaire.DesignationsAsync(operations.SelectMany(o => new[] { o.Utilisateur, o.ValideePar }), annulation);
+        return new FicheClient(VersDto(client, ventes.Where(v => v.EnRetard).Sum(v => v.ResteDu)), ventes, operations, personnel);
     }
 
     public async Task<ClientDto> CreerAsync(SaisieClient saisie, CancellationToken annulation)

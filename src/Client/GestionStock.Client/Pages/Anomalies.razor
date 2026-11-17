@@ -32,13 +32,13 @@
                 </td>
                 <td data-label="@L["Date"]" class="court">@Format.Date(anomalie.DateUtc)</td>
                 <td data-label="@L["Poste"]">@anomalie.NumeroCaisse</td>
-                <td data-label="@L["Caissier"]">@anomalie.Caissier</td>
+                <td data-label="@L["Caissier"]">@(anomalie.NomCaissier ?? anomalie.Caissier)</td>
                 <td data-label="@L["Document"]">@anomalie.NumeroDocument</td>
                 <td data-label="@L["Detail"]"><code>@anomalie.Detail</code></td>
                 <td data-label="@L["Traitement"]">
                     @if (anomalie.Traitee)
                     {
-                        <span>@anomalie.Commentaire</span><br /><small class="discret">@anomalie.TraiteePar · @(anomalie.TraitementUtc is { } le ? Format.Date(le) : "")</small>
+                        <span>@anomalie.Commentaire</span><br /><small class="discret">@(anomalie.NomTraiteePar ?? anomalie.TraiteePar) · @(anomalie.TraitementUtc is { } le ? Format.Date(le) : "")</small>
                     }
                     else if (Session.A(Permissions.AnomaliesTraiter))
                     {
@@ -54,7 +54,11 @@
                 </td>
             </tr>
         }
-        @if (_anomalies.Count == 0)
+        @if (!_charge)
+        {
+            <tr><td colspan="7"><Chargement /></td></tr>
+        }
+        else if (_anomalies.Count == 0)
         {
             <tr><td colspan="7" class="vide">@L["AucuneAnomalie"]</td></tr>
         }
@@ -62,6 +66,9 @@
 </table>
 
 @code {
+    // Premier chargement terminé : jusque-là, la liste montre l'attente et non « Aucun… ».
+    private bool _charge;
+
     private List<AnomalieCaisse> _anomalies = [];
     private Dictionary<Guid, string?> _commentaires = [];
     private string _filtre = "false";
@@ -80,6 +87,7 @@
         {
             _commentaires.TryAdd(anomalie.Id, null);
         }
+        _charge = true;
     }
 
     /// <summary>Traitement par le Gérant (7.8) : un commentaire dit ce qui a été fait ; l'anomalie reste dans l'historique.</summary>

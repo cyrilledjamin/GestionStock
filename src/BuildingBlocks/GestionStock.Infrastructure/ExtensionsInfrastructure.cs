@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using GestionStock.Infrastructure.Http;
 using GestionStock.Infrastructure.Persistance;
 using GestionStock.Infrastructure.Stockage;
 using GestionStock.Infrastructure.Temps;
@@ -48,6 +49,9 @@ public static class ExtensionsInfrastructure
         });
         services.TryAddScoped<ConnexionPartagee>();
         services.TryAddScoped<IUniteDeTravail, UniteDeTravail>();
+
+        // Coupure de la base : 503 traduit et pool vidé, au lieu d'une erreur 500 (voir GestionnaireCoupureBase).
+        services.AddExceptionHandler<GestionnaireCoupureBase>();
         services.AddHealthChecks().AddCheck<VerificationBaseDeDonnees>(VerificationBaseDeDonnees.Nom, tags: [EtiquettePret]);
 
         // Stockage de fichiers

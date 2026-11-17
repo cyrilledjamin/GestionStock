@@ -68,15 +68,15 @@ public sealed class ParcoursGerant(Navigateur navigateur) : ParcoursBase(navigat
 
         // Session restée ouverte (décision 36) : le Gérant compte et clôture à la place du titulaire.
         await AllerAsync("SessionsCaisse");
-        // À corriger à l'étape 55 : l'écran montre le matricule du caissier, pas son nom.
-        var session = Ligne(caissier.Matricule);
+        // Le caissier et l'auteur du comptage sont désignés par leur nom (et leur matricule).
+        var session = Ligne(caissier.NomComplet);
         await session.GetByRole(AriaRole.Button, new() { Name = T["CloturerAPlace"], Exact = true }).ClickAsync();
         await Champ("SaisirTotal").CheckAsync();
         await Champ("EspecesComptees").FillAsync("1500");
         await Champ("EspecesComptees").PressAsync("Tab");
         await BoutonModele("CloturerAvec").ClickAsync();
         await Expect(session).ToContainTextAsync(T["StatutSession.Comptee"]);
-        await Expect(session).ToContainTextAsync(T["CompteePar", gerant.Matricule]);
+        await Expect(session).ToContainTextAsync(T["CompteePar", $"{gerant.NomComplet} ({gerant.Matricule})"]);
 
         // Validation de l'écart (RG36).
         await session.GetByRole(AriaRole.Button, new() { Name = T["ValiderEcart"], Exact = true }).ClickAsync();

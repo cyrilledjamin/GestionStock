@@ -583,4 +583,16 @@
   <data name="AucuneSauvegarde" xml:space="preserve"><value>Aucune sauvegarde enregistrée.</value></data>
   <data name="Restauration" xml:space="preserve"><value>Restauration</value></data>
   <data name="RestaurationAide" xml:space="preserve"><value>Une restauration remplace la base et les fichiers par une sauvegarde : elle se fait sur le PC serveur, l'application arrêtée, avec le script restaurer.sh (procédure dans docs/exploitation.md). Une copie hors site ne se relit qu'avec la clé privée du propriétaire.</value></data>
+  <data name="ConfirmerValidationInventaire" xml:space="preserve"><value>Valider l'inventaire {0} ? Chaque écart devient un mouvement de stock ; l'inventaire ne pourra plus être modifié.</value></data>
+  <data name="ConfirmerAnnulationInventaire" xml:space="preserve"><value>Annuler l'inventaire {0} ? Ses comptages seront abandonnés.</value></data>
+  <data name="ConfirmerValidationReception" xml:space="preserve"><value>Valider la réception ? La marchandise entre en stock et la dette fournisseur est créée ; la réception ne pourra plus être modifiée.</value></data>
+  <data name="ConfirmerRetraitFrais" xml:space="preserve"><value>Retirer ce frais d'approche ?</value></data>
+  <data name="ConfirmerAnnulationPaiement" xml:space="preserve"><value>Annuler ce paiement ? Un paiement opposé sera enregistré, l'original reste au journal.</value></data>
+  <data name="ConfirmerValidationEcart" xml:space="preserve"><value>Valider l'écart de cette session ? La session ne pourra plus être modifiée.</value></data>
+  <data name="ConfirmerAvoir" xml:space="preserve"><value>Faire l'avoir sur le ticket {0} ? Le montant est rendu au client et la marchandise revient en stock.</value></data>
+  <data name="ConfirmerReinitialisation" xml:space="preserve"><value>Donner un mot de passe provisoire à {0} ? Son mot de passe actuel ne fonctionnera plus.</value></data>
+  <data name="ConfirmerDesactivationCompte" xml:space="preserve"><value>Désactiver le compte de {0} ? Il ne pourra plus se connecter ; rien n'est supprimé.</value></data>
+  <data name="ConfirmerDesactivationCode" xml:space="preserve"><value>Désactiver ce code-barres ? Il ne sera plus reconnu au scan.</value></data>
+  <data name="ConfirmerValidationDemarque" xml:space="preserve"><value>Valider cette démarque ? La marchandise sort du stock au coût moyen.</value></data>
+  <data name="ConfirmerRefusDemarque" xml:space="preserve"><value>Refuser cette démarque ? Le stock ne change pas.</value></data>
 </root>

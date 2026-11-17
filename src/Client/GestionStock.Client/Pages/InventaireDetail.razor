@@ -1,5 +1,6 @@
 @page "/inventaires/{Id:guid}"
 @inject Api Api
+@inject Confirmation Confirmation
 @inject Session Session
 @inject IJSRuntime Js
 
@@ -168,6 +169,11 @@
 
     private async Task Valider()
     {
+        if (!await Confirmation.DemanderAsync(L["ConfirmerValidationInventaire", _detail?.Inventaire.Numero ?? ""].Value))
+        {
+            return;
+        }
+
         _enCours = true;
         var resultat = await Api.PostAsync<DetailInventaire>($"api/inventaires/{Id}/validation");
         _enCours = false;
@@ -178,6 +184,11 @@
 
     private async Task Annuler()
     {
+        if (!await Confirmation.DemanderAsync(L["ConfirmerAnnulationInventaire", _detail?.Inventaire.Numero ?? ""].Value))
+        {
+            return;
+        }
+
         var resultat = await Api.PostAsync<DetailInventaire>($"api/inventaires/{Id}/annulation");
         _erreur = resultat.Erreur;
         Afficher(resultat.Valeur);
