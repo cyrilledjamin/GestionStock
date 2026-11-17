@@ -1,6 +1,6 @@
 # Gestion de stock — Dossier d'analyse et de modélisation UML
 
-Version consolidée du 13/11/2026, décisions ouvertes validées. Ce document intègre toutes les décisions prises à cette date, y compris la caisse intégrée, la vente à crédit, la vente au détail et le contexte d'exploitation au Cameroun.
+Version consolidée du 13/11/2026, décisions ouvertes validées. Ce document intègre toutes les décisions prises à cette date, y compris la caisse intégrée, la vente à crédit, la vente au détail et le contexte d'exploitation au Cameroun. Complété par les décisions du 16/11/2026 (section 8.2 bis) et du 17/11/2026 (section 8.2 ter).
 
 ---
 
@@ -940,13 +940,21 @@ Infrastructure : onduleurs pour le serveur, les PC, les imprimantes et le résea
 | 40 | Hors ligne : ouverture de session | L'ouverture d'une session exige le serveur ; une coupure en cours de session n'empêche pas de vendre |
 | 41 | Hors ligne : redémarrage du poste | Pas de connexion hors ligne : un rechargement de la page garde la session de l'onglet, mais un onglet fermé ou un PC redémarré exige le serveur pour se reconnecter. Les opérations en attente restent sur le poste et partent quand leur caissier se reconnecte |
 
+### 8.2 ter Décisions du 17/11/2026 (tranche « exploitation »)
+
+| # | Sujet | Décision |
+| --- | --- | --- |
+| 42 | Écart de solde (ENF04) | Le contrôle nocturne (2 h, heure de Douala ; rattrapé au redémarrage si le PC était éteint) compare chaque solde de stock et chaque dette client à son journal. Un écart est signalé à l'accueil et dans « Contrôle des soldes », jamais corrigé automatiquement. L'Administrateur peut reconstruire le solde depuis son journal, qui fait foi : aucun mouvement n'est écrit ; l'auteur, l'heure et les valeurs avant et après sont enregistrés (ENF03). Un écart absent au contrôle suivant passe à « Disparu » |
+| 43 | Copie hors site (précise la décision 32) | Stockage en ligne par rclone, choisi par la boutique. Copie complète (base et fichiers), chiffrée pour la clé publique age du propriétaire ; la clé privée n'est jamais sur le serveur, et rien n'est envoyé en clair. Données personnelles comprises : stockage situé au Cameroun, ou hors du Cameroun avec l'autorisation de transfert obtenue par la boutique (loi n° 2024/017) |
+| 44 | Conservation et alertes | Locale : toutes les sauvegardes horaires pendant 48 h, la première de chaque jour pendant 30 jours, la première de chaque mois pendant 12 mois. Hors site : 30 quotidiennes et 12 mensuelles. Alerte à l'accueil si la dernière sauvegarde locale réussie a plus de 2 h, la dernière copie hors site plus de 26 h, ou le dernier contrôle des soldes plus de 26 h |
+
 ### 8.3 Rôles et droits (V1)
 
 | Rôle | Droits |
 | --- | --- |
-| Administrateur | Utilisateurs, rôles, paramètres, fonctionnalités activables, sauvegardes. Aucune opération de vente |
-| Gérant | Prix, clients, seuils, validations (écarts de caisse, remises hors plafond), clôture d'une session de caisse restée ouverte (décision 36), articles rapides de la caisse (décision 37), tous les rapports |
-| Comptable | Lecture de tout, exports, frais d'approche, paiements fournisseurs, validation des clôtures de caisse, des écarts d'inventaire et de la démarque, gestion des plafonds de crédit. Ni vente ni modification de prix |
+| Administrateur | Utilisateurs, rôles, paramètres, fonctionnalités activables, sauvegardes, contrôle des soldes : lancement hors du passage nocturne et reconstruction d'un solde depuis son journal (décision 42). Aucune opération de vente |
+| Gérant | Prix, clients, seuils, validations (écarts de caisse, remises hors plafond), clôture d'une session de caisse restée ouverte (décision 36), articles rapides de la caisse (décision 37), tous les rapports, état du contrôle des soldes et des sauvegardes (lecture) |
+| Comptable | Lecture de tout (dont l'état du contrôle des soldes et des sauvegardes), exports, frais d'approche, paiements fournisseurs, validation des clôtures de caisse, des écarts d'inventaire et de la démarque, gestion des plafonds de crédit. Ni vente ni modification de prix |
 | Caissier | Vente, avoir et remise sous plafond, remboursement de crédit, sa propre caisse |
 | Magasinier | Réception, inventaire, déclaration de démarque (validée par le Comptable ou le Gérant) |
 

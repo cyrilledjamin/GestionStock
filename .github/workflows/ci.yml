@@ -53,6 +53,19 @@ jobs:
       - name: Variables de déploiement (valeurs de développement)
         run: cp deploy/.env.example deploy/.env
 
+      # Copie hors site vers un distant rclone de type « local » (un dossier du disque de sauvegarde), chiffrée pour
+      # une clé age jetable dont la clé privée reste sur le runner, comme chez le propriétaire.
+      - name: Distant rclone et clé age d'essai
+        run: |
+          mkdir -p deploy/rclone
+          printf '[essai]\ntype = local\n' > deploy/rclone/rclone.conf
+          $COMPOSE build sauvegarde
+          docker run --rm --entrypoint age-keygen gestionstock-sauvegarde > "$RUNNER_TEMP/cle-age.txt" 2>/dev/null
+          publique=$(sed -n 's/^# public key: //p' "$RUNNER_TEMP/cle-age.txt")
+          test -n "$publique"
+          sed -i -e 's|^SAUVEGARDE_DISTANT=.*|SAUVEGARDE_DISTANT=essai:/sauvegardes/hors-site|' \
+                 -e "s|^SAUVEGARDE_CLE_PUBLIQUE=.*|SAUVEGARDE_CLE_PUBLIQUE=$publique|" deploy/.env
+
       - name: Construction et démarrage
         run: $COMPOSE up -d --build --wait
 
@@ -148,6 +161,12 @@ jobs:
             test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/api/$route)" = "401"
           done
 
+      - name: Sauvegarde, copie chiffrée hors site et restauration (tranche 8)
+        run: |
+          source deploy/.env
+          bash .github/scripts/verifier-sauvegarde.sh http://localhost:8080 "$ADMIN_IDENTIFIANT" "$ADMIN_MOT_DE_PASSE" \
+            "$RUNNER_TEMP/cle-age.txt" essai:/sauvegardes/hors-site
+
       - name: Le client Blazor est servi
         run: |
           curl -fsS http://localhost:8080/ | grep -q '_framework/blazor.webassembly.js'
@@ -160,4 +179,6 @@ jobs:
 
       - name: Arrêt
         if: always()
-        run: $COMPOSE down -v
+        run: |
+          $COMPOSE down -v
+          rm -f "$RUNNER_TEMP/cle-age.txt"
