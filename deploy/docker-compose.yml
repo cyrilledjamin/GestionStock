@@ -1,5 +1,5 @@
 # Base locale seule :   docker compose -f deploy/docker-compose.yml up -d db
-# Base et API :         docker compose -f deploy/docker-compose.yml up -d --build
+# Base, API et sauvegardes : docker compose -f deploy/docker-compose.yml up -d --build
 # Les variables viennent de deploy/.env (copie de deploy/.env.example).
 name: gestionstock
 
@@ -47,6 +47,32 @@ services:
       - "${API_PORT:-8080}:8080"
     volumes:
       - donnees-fichiers:/donnees/fichiers
+
+  # Sauvegardes (décision 32) : locale chaque heure sur le disque externe, copie chiffrée quotidienne hors de la boutique.
+  # Tourne même si l'API est arrêtée. Voir docs/exploitation.md (disque externe, rclone, clés age, restauration).
+  sauvegarde:
+    build:
+      context: sauvegarde
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PGHOST: db
+      PGPORT: "5432"
+      PGDATABASE: ${POSTGRES_DB:-gestionstock}
+      PGUSER: ${POSTGRES_USER:-gestionstock}
+      PGPASSWORD: ${POSTGRES_PASSWORD:?Définir POSTGRES_PASSWORD dans deploy/.env}
+      SAUVEGARDE_MINUTE: ${SAUVEGARDE_MINUTE:-5}
+      SAUVEGARDE_DISTANT: ${SAUVEGARDE_DISTANT:-}
+      SAUVEGARDE_CLE_PUBLIQUE: ${SAUVEGARDE_CLE_PUBLIQUE:-}
+      RCLONE_CONFIG: /config/rclone/rclone.conf
+    volumes:
+      # Disque externe de la boutique (chemin de l'hôte) ; par défaut deploy/sauvegardes, à remplacer en boutique.
+      - ${SAUVEGARDE_REPERTOIRE:-./sauvegardes}:/sauvegardes
+      - donnees-fichiers:/donnees/fichiers
+      # Configuration de rclone (contient les accès au stockage en ligne : jamais versionnée).
+      - ${SAUVEGARDE_RCLONE:-./rclone}:/config/rclone
 
 volumes:
   donnees-postgres:

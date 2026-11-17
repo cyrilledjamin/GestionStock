@@ -72,7 +72,8 @@ tests/
   GestionStock.Stock.Domain.Tests    règles du domaine Stock
   GestionStock.Stock.IntegrationTests  PostgreSQL réelle (Testcontainers)
 deploy/
-  docker-compose.yml                 PostgreSQL 17 (db) et API (api)
+  docker-compose.yml                 PostgreSQL 17 (db), API (api) et sauvegardes (sauvegarde)
+  sauvegarde/                        image et scripts de sauvegarde : sauvegarder.sh, restaurer.sh, boucle.sh
   Dockerfile                         image Linux de l'API
   .env.example                       variables à copier dans deploy/.env
 docs/                                dossier d'analyse
@@ -552,6 +553,36 @@ Chaque nuit à 2 h (heure de Douala), une tâche Hangfire compare chaque solde �
 - Une erreur technique enregistre le passage comme `Echoue` avec son message, sans toucher aux écarts ; pas de nouvel
   essai automatique (passage suivant la nuit d'après).
 
+## Sauvegardes (décision 32)
+
+Le service `sauvegarde` de docker-compose (image `postgres:17-alpine` + rclone + age) tourne même si l'API est arrêtée :
+
+- **Chaque heure** (minute `SAUVEGARDE_MINUTE`, 5 par défaut, et au démarrage) : base complète (`pg_dump`, vérifiée
+  par `pg_restore --list`) et volume des fichiers (reçus, clés des jetons), dans une archive datée
+  `gestionstock-AAAAMMJJ-HHMM.tar` sur le disque externe (`SAUVEGARDE_REPERTOIRE`). Rotation : `horaire/` 48 h,
+  `quotidien/` 30 jours, `mensuel/` 12 mois. Perte maximale en cas de panne : 1 h.
+- **Chaque jour** (au premier passage qui suit 24 h sans copie réussie, ce qui rattrape un PC éteint la nuit) : la
+  dernière archive, **chiffrée avec age** pour la clé publique du propriétaire (`SAUVEGARDE_CLE_PUBLIQUE`), est envoyée
+  par rclone vers `SAUVEGARDE_DISTANT` (`quotidien/` 30, `mensuel/` 12). Sans clé, rien n'est envoyé en clair. La clé
+  privée n'est jamais sur le serveur. Perte maximale en cas de vol ou d'incendie : 1 jour.
+- **Copie complète** (choix du 17/11/2026) : elle contient les noms et téléphones des clients et du personnel ; elle
+  n'est permise que vers un stockage au Cameroun, ou hors du Cameroun avec l'autorisation de transfert obtenue par la
+  boutique (loi n° 2024/017).
+- Chaque passage écrit son compte rendu dans `exploitation.sauvegarde`, lu par `GET /api/exploitation/etat`.
+
+Restauration (API arrêtée) :
+
+```bash
+docker compose -f deploy/docker-compose.yml stop api
+```
+
+```bash
+docker compose -f deploy/docker-compose.yml run --rm --entrypoint restaurer.sh sauvegarde --oui /sauvegardes/horaire/gestionstock-AAAAMMJJ-HHMM.tar
+```
+
+Une copie hors site se restaure de la même façon avec `--cle <clé privée>` (chemin monté dans le conteneur) ;
+`--base <nom> --sans-fichiers` restaure dans une base d'essai sans toucher à la boutique.
+
 ## Rapports (décision 33)
 
 Le module Rapports n'a ni schéma ni DbContext. Il lit, avec Dapper et dans une transaction **en lecture seule**, les
@@ -750,7 +781,7 @@ sur une machine Linux de GitHub qui dispose de Docker :
 | 48 | Exploitation : module, suivi des sauvegardes, planificateur (Hangfire) | Fait |
 | 49 | Exploitation : contrôle des soldes de stock et de crédit par contrat | Fait |
 | 50 | Exploitation : contrôle nocturne, écarts, reconstruction | Fait |
-| 51 | Exploitation : conteneur de sauvegarde (locale horaire, hors site chiffrée) | À faire |
+| 51 | Exploitation : conteneur de sauvegarde (locale horaire, hors site chiffrée) | Fait |
 | 52 | Exploitation : écrans Contrôles et Sauvegardes, accueil | À faire |
 | 53 | Vérification, CI, README, démonstration de la tranche 8 | À faire |
 
