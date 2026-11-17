@@ -169,3 +169,33 @@ longs par nature (données de la caisse, contrôle des soldes, exports, reprise)
 **Non fait :**
 - `Virtualize` : les listes sont maintenant bornées à 100 ou 200 lignes, le gain serait faible.
 - Téléchargements par flux : les exports restent en base64 ; ils sont rares et bornés à 366 jours.
+
+## Étape 64 : vérification après la refonte
+
+Même jeu (échelle 0,25), régénéré sur la pile de test, statistiques recalculées (`VACUUM ANALYZE`). Le poste était
+nettement plus chargé qu'aux étapes 57 et 58 (disque presque plein, Docker Desktop partagé) : toutes les routes, même
+les plus simples, y sont environ deux fois et demie plus lentes (inventaires : 4 → 14 ms ; scan : 4 → 14 ms). Les
+chiffres se comparent donc entre eux, pas aux tableaux précédents.
+
+| Mesure | Route | Médiane (ms) | 95e centile (ms) | Budget |
+| --- | --- | --- | --- | --- |
+| Accueil : tableau de bord | `GET /api/rapports/tableau-de-bord` | 340 | 403 | tenu |
+| Accueil : tendance sur 30 jours (nouvelle) | `GET /api/rapports/tendance` | 1 736 | 1 893 | tenu (rapport d'un mois < 2 s) |
+| Rapport des ventes, 30 jours | `GET /api/rapports/ventes` | 1 957 | 2 113 | limite sur ce poste |
+| Rapport de caisse, 30 jours | `GET /api/rapports/caisse` | 537 | 610 | tenu |
+| Sessions de caisse | `GET /api/caisse/sessions` | 203 | 233 | tenu |
+| Réceptions | `GET /api/achats/receptions` | 256 | 284 | tenu |
+| Validation d'un ticket de 3 lignes | `POST /api/caisse/tickets` | **68** | **84** | **tenu (ENF05)** |
+| Contrôle des soldes | `POST /api/exploitation/controles` | 23 819 (une fois) | — | nuit : sans contrainte |
+
+Le contrôle des soldes a vérifié 10 250 soldes et trouvé 0 écart.
+
+**Tendance de l'accueil** : elle reprend le calcul du rapport des ventes (mêmes chiffres, coût au CUMP des mouvements
+du ticket), sur 30 jours. En SQL seul, ce calcul prend environ 650 ms sur ce poste ; une variante regroupée par jour
+seulement est plus lente (≈ 1 s, autre plan d'exécution) et n'a pas été retenue. L'accueil ne l'attend pas : les
+chiffres du jour s'affichent d'abord, le graphique ensuite (route séparée). **Point à surveiller à l'échelle 1**
+(quatre fois plus de tickets par jour) avec le workflow **Performances** : si la tendance y dépasse 2 s, la calculer
+la nuit pour les jours passés (ils ne changent plus) et en direct pour aujourd'hui seulement.
+
+**Client** : 120 captures (20 écrans × 3 largeurs × 2 langues) sans débordement ; parcours « Connexion lente »
+toujours vert (ouverture de la caisse < 3 s, scan < 1 s).

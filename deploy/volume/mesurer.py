@@ -106,6 +106,7 @@ def main():
 
     routes = [
         ("Accueil : tableau de bord", "/api/rapports/tableau-de-bord"),
+        ("Accueil : tendance sur 30 jours", "/api/rapports/tendance"),
         ("Rapport des ventes, 30 jours", f"/api/rapports/ventes?du={mois}&au={aujourd_hui}"),
         ("Rapport de caisse, 30 jours", f"/api/rapports/caisse?du={mois}&au={aujourd_hui}"),
         ("Rapport du stock", "/api/rapports/stock"),

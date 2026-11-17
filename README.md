@@ -788,11 +788,13 @@ caisse). Sans `E2E_URL`, `dotnet test` les compile et les ignore.
 | Administrateur | Compte créé (matricule généré, deux rôles, mot de passe provisoire), changement par l'employé, droits des rôles, désactivation qui refuse la connexion ; contrôle des soldes ; sauvegardes |
 | Caissier | Ouverture, scan, quantité, compte juste, vente à crédit, remise validée par le Gérant, remboursement de crédit, avoir, clôture ; vente **hors ligne** (réseau du navigateur coupé) puis synchronisation et ticket au serveur avec le numéro du poste |
 | Magasinier | Fournisseur, réception (brouillon puis validation), stock, inventaire partiel compté au scan, démarque déclarée |
-| Gérant | Article, conditionnement « carton de 12 », prix de l'unité et du carton, article rapide, client ; session restée ouverte clôturée à la place du caissier puis écart validé ; les quatre rapports, anomalies |
+| Gérant | Article, conditionnement « carton de 12 », prix de l'unité et du carton, article rapide, client ; accueil avec la tendance sur 30 jours (graduations lisibles sur téléphone) ; session restée ouverte clôturée à la place du caissier puis écart validé ; les quatre rapports en onglets (au clavier), graphique des ventes sur 30 jours, anomalies |
 | Comptable | Frais d'approche, paiement partiel et dette, plafond de crédit, validation d'un inventaire et d'une démarque, export téléchargé |
 | Anglais | Caissier dont le compte est en anglais : vente et clôture, textes lus dans `Textes.en.resx` |
 | Téléphone | 390 × 844 : menu en tiroir, vente par la barre du total en bas de l'écran |
 | Connexion lente | « 3G lente » émulée (400 ms, ≈ 400 kbit/s) : la caisse s'ouvre en moins de 3 s et un scan s'ajoute en moins d'1 s (ENF10) |
+| Guide de style | Composants du système de design, graphiques ; dialogue de confirmation : focus sur Annuler, Échap répond « non » |
+| Écrans (fr, en) | Les 20 écrans du menu, ouverts par le menu, sur un PC (1366 px), une tablette (768 px) et un téléphone (390 px) : aucun ne déborde en largeur ; Échap referme le tiroir et rend le focus à son bouton ; une capture de chaque écran |
 
 **Ne jamais les lancer sur la base d'une boutique** : ils créent des comptes, des articles et des ventes. Contre
 l'application de docker-compose (valeurs de `deploy/.env.example`) :
@@ -810,7 +812,8 @@ E2E_URL=http://localhost:8080 E2E_ADMIN=admin E2E_MOT_DE_PASSE=<ADMIN_MOT_DE_PAS
 ```
 
 `-class GestionStock.E2E.Parcours.ParcoursCaissier` lance un seul parcours ; `E2E_VISIBLE=1` montre le navigateur ;
-`E2E_TRACES=<dossier>` garde la trace d'un parcours en échec (`playwright show-trace <fichier>.zip`). Correspondance
+`E2E_TRACES=<dossier>` garde la trace d'un parcours en échec (`playwright show-trace <fichier>.zip`) et les captures
+de la revue visuelle (`ecran-<écran>-<pc|tablette|telephone>-<langue>.png`, accueil, rapports, stock…). Correspondance
 entre cas d'utilisation, règles et tests : [docs/recette.md](docs/recette.md).
 
 ### Performances (jeu volumineux)
@@ -942,7 +945,7 @@ sur une machine Linux de GitHub qui dispose de Docker :
 | 61 | Refonte : caisse et pilotage | Fait |
 | 62 | Refonte : stock et achats | Fait |
 | 63 | Refonte : le reste, accessibilité | Fait |
-| 64 | Vérification, CI, README, démonstration de la tranche 9 | À faire |
+| 64 | Vérification, CI, README, démonstration de la tranche 9 | Fait |
 
 ## Démonstration
 
@@ -1095,6 +1098,21 @@ Vérifiée dans le navigateur sur la base de démonstration, compte `admin` :
 
 La copie hors site chiffrée et la restauration complète (base et fichiers) sont vérifiées par la CI et ont été
 rejouées sur une pile docker-compose séparée.
+
+### Vérification et refonte (tranche 9)
+
+Vérifiée sur une pile docker-compose séparée (port 8081), puis la démonstration (port 8080) passe à la nouvelle version
+sans perdre ses données :
+
+1. **Tests** : 718 tests (unitaires, intégration sur PostgreSQL réelle, architecture et conventions, dont contrastes,
+   champs nommés, boutons à icône nommés, onglets et tiroir au clavier) et 14 parcours de bout en bout dans Chromium ;
+2. **Écrans** : les 20 écrans du menu, en français et en anglais, sur un PC, une tablette et un téléphone (120
+   captures) : aucun ne déborde en largeur ; le menu en tiroir se referme par Échap ;
+3. **Performances** : jeu volumineux à l'échelle 0,25 (≈ 1,8 million de mouvements), contrôle des soldes sans écart,
+   validation d'un ticket en 68 ms (ENF05) ; mesures dans [docs/performances.md](docs/performances.md) ;
+4. **Démonstration** : se connecter en Gérant sur http://localhost:8080 : accueil avec la tendance des ventes sur
+   30 jours, rapports en onglets avec le graphique par jour (« 30 derniers jours »), pastilles colorées dans les
+   listes ; sur un téléphone, menu en tiroir et listes en cartes.
 
 ## Points ouverts
 
