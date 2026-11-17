@@ -76,6 +76,11 @@
                             <small>@L["EcartsCumules", Format.Montant(t.EcartsAValider)]</small>
                         }
                     </a>
+                    <a class="indicateur @(t.AnomaliesATraiter > 0 ? "attention" : "")" href="anomalies">
+                        <span>@L["AnomaliesATraiter"]</span>
+                        <strong>@t.AnomaliesATraiter</strong>
+                        <small>@L["AnomaliesHorsLigne"]</small>
+                    </a>
                     <a class="indicateur @(t.StocksNegatifs > 0 ? "alerte" : "")" href="stock">
                         <span>@L["StocksNegatifs"]</span>
                         <strong>@t.StocksNegatifs</strong>

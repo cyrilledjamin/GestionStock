@@ -197,6 +197,24 @@ public sealed class HorsLigneTests(ApiDeTest api)
         Assert.Equal(HttpStatusCode.Conflict, deuxFois.StatusCode);
     }
 
+    [Fact]
+    public async Task Une_anomalie_figure_dans_le_rapport_de_caisse_et_sur_l_accueil_tant_qu_elle_n_est_pas_traitee()
+    {
+        var b = await BoutiqueAsync();
+        var ticket = await Lire<Ticket>(await b.Caissier.PostAsJsonAsync("/api/caisse/tickets", DemandeHorsLigne(b, numero: 4, DateTime.UtcNow, [(b.Unite, 1m, 500m)], Especes(500)), Annulation));
+        var anomalie = Assert.Single(await AnomaliesAsync(b, ticket.Id));
+
+        var rapport = await b.Gerant.GetFromJsonAsync<RapportCaisse>("/api/rapports/caisse", Annulation);
+        var avant = await b.Gerant.GetFromJsonAsync<TableauDeBord>("/api/rapports/tableau-de-bord", Annulation);
+        (await b.Gerant.PostAsJsonAsync($"/api/caisse/anomalies/{anomalie.Id}/traitement", new { commentaire = "Tickets 1 à 3 retrouvés sur papier" }, Annulation)).EnsureSuccessStatusCode();
+        var relu = await b.Gerant.GetFromJsonAsync<RapportCaisse>("/api/rapports/caisse", Annulation);
+
+        var dansLeRapport = Assert.Single(rapport!.Anomalies, a => a.AnomalieId == anomalie.Id);
+        Assert.Equal(("NumeroManquant", ticket.Numero, false), (dansLeRapport.Type, dansLeRapport.NumeroDocument, dansLeRapport.Traitee));
+        Assert.True(avant!.AnomaliesATraiter >= 1);
+        Assert.True(Assert.Single(relu!.Anomalies, a => a.AnomalieId == anomalie.Id).Traitee);
+    }
+
     // --- Outillage -----------------------------------------------------------------------------------------------
 
     /// <summary>Boutique de test : unité à 500, carton de 12 à 5 500, caissier en session sur son poste.</summary>
@@ -282,4 +300,10 @@ public sealed class HorsLigneTests(ApiDeTest api)
     private sealed record FicheClient(ClientCredit Client);
 
     private sealed record Anomalie(Guid Id, string Type, Guid DocumentId, string Detail, bool Traitee, string? TraiteePar);
+
+    private sealed record AnomalieRapport(Guid AnomalieId, string Type, string? NumeroDocument, bool Traitee);
+
+    private sealed record RapportCaisse(List<AnomalieRapport> Anomalies);
+
+    private sealed record TableauDeBord(int AnomaliesATraiter);
 }

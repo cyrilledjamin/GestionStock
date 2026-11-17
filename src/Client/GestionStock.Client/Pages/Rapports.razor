@@ -172,6 +172,31 @@
             }
         </tbody>
     </table>
+
+    @* Opérations faites hors ligne (7.8) : écarts relevés à la synchronisation, et leur traitement par le Gérant. *@
+    <h2>@L["Anomalies"]</h2>
+    <p class="discret">@L["AnomaliesAide"] <a href="anomalies">@L["VoirAnomalies"]</a></p>
+    <table>
+        <thead><tr><th>@L["Date"]</th><th>@L["Anomalie"]</th><th>@L["Poste"]</th><th>@L["Caissier"]</th><th>@L["Document"]</th><th>@L["Detail"]</th><th>@L["Traitement"]</th></tr></thead>
+        <tbody>
+            @foreach (var anomalie in _caisse.Anomalies ?? [])
+            {
+                <tr class="@(anomalie.Traitee ? "" : "negatif")">
+                    <td class="court">@Format.Date(anomalie.DateUtc)</td>
+                    <td>@L[$"Anomalie.{anomalie.Type}"]</td>
+                    <td>@anomalie.NumeroCaisse</td>
+                    <td>@anomalie.Caissier</td>
+                    <td>@anomalie.NumeroDocument</td>
+                    <td><code>@anomalie.Detail</code></td>
+                    <td>@(anomalie.Traitee ? $"{anomalie.Commentaire} ({anomalie.TraiteePar})" : L["ATraiter"].Value)</td>
+                </tr>
+            }
+            @if ((_caisse.Anomalies ?? []).Count == 0)
+            {
+                <tr><td colspan="7" class="vide">@L["Aucun"]</td></tr>
+            }
+        </tbody>
+    </table>
 }
 
 @code {

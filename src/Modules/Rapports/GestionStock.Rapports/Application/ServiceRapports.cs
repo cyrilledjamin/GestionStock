@@ -80,7 +80,21 @@ internal sealed record RapportCaisse(
     IReadOnlyList<TicketSignale> Avoirs,
     IReadOnlyList<TicketSignale> CreditsValides,
     IReadOnlyList<LigneStock> StocksNegatifs,
-    IReadOnlyList<FraisNonIncorpore> FraisNonIncorpores);
+    IReadOnlyList<FraisNonIncorpore> FraisNonIncorpores,
+    IReadOnlyList<AnomalieRapport> Anomalies);
+
+/// <summary>Anomalie de synchronisation d'une opération faite hors ligne (7.8), traitée ou non par le Gérant.</summary>
+internal sealed record AnomalieRapport(
+    Guid AnomalieId,
+    string Type,
+    string NumeroCaisse,
+    string Caissier,
+    string? NumeroDocument,
+    string Detail,
+    DateTime DateUtc,
+    bool Traitee,
+    string? TraiteePar,
+    string? Commentaire);
 
 // --- Tableau de bord de l'accueil --------------------------------------------------------------------------------
 
@@ -98,7 +112,8 @@ internal sealed record TableauDeBord(
     decimal ValeurStock,
     decimal TotalCreances,
     decimal TotalEnRetard,
-    decimal TotalDettes);
+    decimal TotalDettes,
+    int AnomaliesATraiter);
 
 /// <summary>
 /// Rapports V1 (décision 33) : ventes et marge, stock et valeur, créances et dettes, caisse et anomalies.
@@ -205,7 +220,8 @@ internal sealed class ServiceRapports(NpgsqlDataSource sourceDeDonnees, IHorloge
         const string SqlSessions = """
             SELECT count(*) FILTER (WHERE s.statut = 'Ouverte') AS ouvertes,
                    count(*) FILTER (WHERE s.statut = 'Comptee') AS a_valider,
-                   COALESCE(sum(s.ecart) FILTER (WHERE s.statut = 'Comptee'), 0) AS ecarts
+                   COALESCE(sum(s.ecart) FILTER (WHERE s.statut = 'Comptee'), 0) AS ecarts,
+                   (SELECT count(*) FROM caisse.v_anomalies a WHERE NOT a.traitee) AS anomalies
             FROM caisse.v_sessions s
             """;
 
@@ -226,7 +242,8 @@ internal sealed class ServiceRapports(NpgsqlDataSource sourceDeDonnees, IHorloge
             stock.ValeurTotale,
             creances.TotalCreances,
             creances.TotalEnRetard,
-            creances.TotalDettes);
+            creances.TotalDettes,
+            (int)sessions.Anomalies);
     }
 
     public async Task<RapportStock> StockAsync(CancellationToken annulation)
@@ -311,13 +328,25 @@ internal sealed class ServiceRapports(NpgsqlDataSource sourceDeDonnees, IHorloge
             ORDER BY f.saisi_le_utc
             """;
 
+        // Anomalies de synchronisation des opérations faites hors ligne (7.8), relevées pendant la période.
+        const string SqlAnomalies = """
+            SELECT a.anomalie_id, a.type, a.numero_caisse, COALESCE(uc.designation, a.caissier) AS caissier, a.numero_document,
+                   a.detail, a.date_utc, a.traitee, COALESCE(ut.designation, a.traitee_par) AS traitee_par, a.commentaire
+            FROM caisse.v_anomalies a
+            LEFT JOIN identite.v_utilisateurs uc ON uc.matricule = a.caissier
+            LEFT JOIN identite.v_utilisateurs ut ON ut.matricule = a.traitee_par
+            WHERE a.date_utc >= @Debut AND a.date_utc < @Fin
+            ORDER BY a.date_utc
+            """;
+
         var parametres = new { Debut = periode.DebutUtc, Fin = periode.FinUtc, Seuil = SeuilSignalement };
-        var (sessions, tickets, frais, stock) = await LireAsync(
+        var (sessions, tickets, frais, stock, anomalies) = await LireAsync(
             async (connexion, transaction) => (
                 (await connexion.QueryAsync<SessionRapport>(new CommandDefinition(SqlSessions, parametres, transaction, cancellationToken: annulation))).ToList(),
                 (await connexion.QueryAsync<LigneTicket>(new CommandDefinition(SqlTickets, parametres, transaction, cancellationToken: annulation))).ToList(),
                 (await connexion.QueryAsync<FraisNonIncorpore>(new CommandDefinition(SqlFrais, parametres, transaction, cancellationToken: annulation))).ToList(),
-                await ListeStockAsync(connexion, transaction, annulation)),
+                await ListeStockAsync(connexion, transaction, annulation),
+                (await connexion.QueryAsync<AnomalieRapport>(new CommandDefinition(SqlAnomalies, parametres, transaction, cancellationToken: annulation))).ToList()),
             annulation);
 
         static TicketSignale Signale(LigneTicket t, string? validePar) =>
@@ -332,7 +361,8 @@ internal sealed class ServiceRapports(NpgsqlDataSource sourceDeDonnees, IHorloge
             [.. tickets.Where(t => t.EstAvoir).Select(t => Signale(t, null))],
             [.. tickets.Where(t => t.CreditValidePar is not null).Select(t => Signale(t, t.CreditValidePar))],
             [.. stock.Where(a => a.Quantite < 0m)],
-            frais);
+            frais,
+            anomalies);
     }
 
     private static async Task<List<LigneStock>> ListeStockAsync(NpgsqlConnection connexion, DbTransaction transaction, CancellationToken annulation)
@@ -363,7 +393,7 @@ internal sealed class ServiceRapports(NpgsqlDataSource sourceDeDonnees, IHorloge
         return resultat;
     }
 
-    private sealed record SyntheseSessions(long Ouvertes, long AValider, decimal Ecarts);
+    private sealed record SyntheseSessions(long Ouvertes, long AValider, decimal Ecarts, long Anomalies);
 
     private static object Parametres(Periode periode) => new { Debut = periode.DebutUtc, Fin = periode.FinUtc };
 

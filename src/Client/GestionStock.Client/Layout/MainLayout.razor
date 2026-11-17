@@ -33,6 +33,7 @@ else
             @if (Session.A(Permissions.SessionsConsulter))
             {
                 <NavLink href="sessions"><Icone Nom="sessions" />@L["SessionsCaisse"]</NavLink>
+                <NavLink href="anomalies"><Icone Nom="erreur" />@L["Anomalies"]</NavLink>
             }
             @if (Session.A(Permissions.CreditConsulter))
             {

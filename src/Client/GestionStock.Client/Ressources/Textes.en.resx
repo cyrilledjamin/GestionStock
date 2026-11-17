@@ -493,4 +493,30 @@
   <data name="TicketHorsPoste" xml:space="preserve"><value>Receipt not found on this till: offline, only the current session's receipts are available.</value></data>
   <data name="AvoirCreditEnLigne" xml:space="preserve"><value>This receipt has a credit part: its credit note needs the server (debt to cancel).</value></data>
   <data name="QuantiteARendreInvalide" xml:space="preserve"><value>Enter a quantity to return, no more than what is left to return.</value></data>
+  <data name="Anomalies" xml:space="preserve"><value>Offline anomalies</value></data>
+  <data name="Anomalie" xml:space="preserve"><value>Anomaly</value></data>
+  <data name="AnomaliesAide" xml:space="preserve"><value>Differences found when an operation made offline reaches the server: it was recorded as it happened, never refused. The manager checks and notes what was done.</value></data>
+  <data name="ATraiter" xml:space="preserve"><value>To handle</value></data>
+  <data name="Traitees" xml:space="preserve"><value>Handled</value></data>
+  <data name="Toutes" xml:space="preserve"><value>All</value></data>
+  <data name="Traitement" xml:space="preserve"><value>Handling</value></data>
+  <data name="CommentaireTraitement" xml:space="preserve"><value>What was checked or done</value></data>
+  <data name="Traiter" xml:space="preserve"><value>Mark handled</value></data>
+  <data name="AnomalieTraitee" xml:space="preserve"><value>Anomaly handled.</value></data>
+  <data name="AucuneAnomalie" xml:space="preserve"><value>No anomaly.</value></data>
+  <data name="AnomaliesATraiter" xml:space="preserve"><value>Offline anomalies</value></data>
+  <data name="AnomaliesHorsLigne" xml:space="preserve"><value>to handle</value></data>
+  <data name="VoirAnomalies" xml:space="preserve"><value>Handle them</value></data>
+  <data name="Anomalie.NumeroManquant" xml:space="preserve"><value>Missing numbers</value></data>
+  <data name="Anomalie.NumeroReattribue" xml:space="preserve"><value>Number reassigned</value></data>
+  <data name="Anomalie.PrixDifferent" xml:space="preserve"><value>Different price</value></data>
+  <data name="Anomalie.PlafondDepasse" xml:space="preserve"><value>Credit limit exceeded</value></data>
+  <data name="Anomalie.SessionCloturee" xml:space="preserve"><value>Session already closed</value></data>
+  <data name="Anomalie.DateCorrigee" xml:space="preserve"><value>Time corrected</value></data>
+  <data name="AnomalieAide.NumeroManquant" xml:space="preserve"><value>Some receipts from this till never arrived: check the till's paper receipts.</value></data>
+  <data name="AnomalieAide.NumeroReattribue" xml:space="preserve"><value>The till's number was already taken: the printed receipt shows another number than the recorded receipt.</value></data>
+  <data name="AnomalieAide.PrixDifferent" xml:space="preserve"><value>The till sold at another price than today's (old till data): the price paid stands.</value></data>
+  <data name="AnomalieAide.PlafondDepasse" xml:space="preserve"><value>The credit sale exceeds the customer's limit, known only at synchronisation.</value></data>
+  <data name="AnomalieAide.SessionCloturee" xml:space="preserve"><value>The operation arrived after its session was closed: that session's cash difference needs reviewing.</value></data>
+  <data name="AnomalieAide.DateCorrigee" xml:space="preserve"><value>The till's clock was wrong (before opening or in the future): it was brought back within the session.</value></data>
 </root>

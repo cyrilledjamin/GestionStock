@@ -77,6 +77,7 @@ public sealed partial class ConventionsClientTests
         utilisees.UnionWith(["ActionCompte.Creation", "ActionCompte.Modification", "ActionCompte.Desactivation", "ActionCompte.Reactivation"]);
         utilisees.UnionWith(["ActionCompte.ReinitialisationMotDePasse", "ActionCompte.ChangementMotDePasse"]);
         utilisees.UnionWith(["FicheEnregistree", "CompteDesactive", "CompteReactive", "MotDePasseReinitialise"]);
+        utilisees.UnionWith(Enum.GetNames<GestionStock.Caisse.Domain.TypeAnomalie>().SelectMany(t => new[] { $"Anomalie.{t}", $"AnomalieAide.{t}" }));
 
         Assert.Empty(utilisees.Except(francais));
         Assert.Empty(utilisees.Except(anglais));

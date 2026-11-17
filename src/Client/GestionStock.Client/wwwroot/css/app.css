@@ -175,6 +175,10 @@ a.tuile:hover { border-color: var(--vert); box-shadow: var(--ombre-haute); }
 /* Hors ligne (7.8) : bandeau visible sur toutes les pages tant que le serveur ne répond pas */
 .bandeau-hors-ligne { display: flex; align-items: flex-start; gap: var(--e-2); margin: 0 0 var(--e-4); padding: var(--e-3) var(--e-4); background: var(--ambre-clair); color: var(--ambre); border-left: 4px solid var(--ambre); border-radius: var(--rayon); font-weight: 500; }
 
+/* Anomalies de synchronisation : commentaire et bouton de traitement sur la ligne */
+.traitement { display: flex; gap: var(--e-2); align-items: center; flex-wrap: wrap; }
+.traitement input { flex: 1 1 9rem; min-width: 0; }
+
 /* Accueil : tableau de bord par rôle */
 .bloc-accueil { margin: var(--e-5) 0; }
 .bloc-accueil h2 { display: flex; align-items: baseline; gap: var(--e-2); flex-wrap: wrap; }
