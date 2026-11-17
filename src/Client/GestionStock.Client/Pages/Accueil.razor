@@ -24,20 +24,17 @@
                 <div class="indicateurs">
                     @if (_maSession is { } session)
                     {
-                        <a class="indicateur" href="caisse">
-                            <span>@L["SessionOuverteSur", session.NumeroCaisse, Format.Date(session.OuvertureUtc)]</span>
-                            <strong>@Format.Montant(session.Totaux.Ventes - session.Totaux.Avoirs)</strong>
-                            <small>@L["NombreVentes", session.Totaux.NombreVentes]</small>
-                            <em class="aller">@L["ReprendreLaVente"] →</em>
-                        </a>
+                        <Indicateur Libelle="@L["SessionOuverteSur", session.NumeroCaisse, Format.Date(session.OuvertureUtc)]"
+                                    Valeur="@Format.Montant(session.Totaux.Ventes - session.Totaux.Avoirs)"
+                                    Detail="@L["NombreVentes", session.Totaux.NombreVentes]" Lien="caisse">
+                            <em class="aller">@L["ReprendreLaVente"] <Icone Nom="aller" /></em>
+                        </Indicateur>
                     }
                     else
                     {
-                        <a class="indicateur" href="caisse">
-                            <span>@L["AucuneSessionOuverte"]</span>
-                            <strong>—</strong>
-                            <em class="aller">@L["OuvrirLaCaisse"] →</em>
-                        </a>
+                        <Indicateur Libelle="@L["AucuneSessionOuverte"]" Valeur="—" Lien="caisse">
+                            <em class="aller">@L["OuvrirLaCaisse"] <Icone Nom="aller" /></em>
+                        </Indicateur>
                     }
                 </div>
             </section>
@@ -48,56 +45,40 @@
             <section class="bloc-accueil">
                 <h2>@L["Aujourdhui"] <small class="discret">@t.Jour.ToString("D", CultureInfo.CurrentCulture)</small></h2>
                 <div class="indicateurs">
-                    <a class="indicateur" href="rapports">
-                        <span>@L["VentesDuJour"]</span>
-                        <strong>@Format.Montant(t.VentesDuJour.ChiffreAffairesTtc)</strong>
-                        <small>@L["NombreTickets", t.VentesDuJour.NombreVentes, t.VentesDuJour.NombreAvoirs]</small>
-                    </a>
-                    <a class="indicateur @(t.VentesDuJour.Marge < 0 ? "alerte" : "")" href="rapports">
-                        <span>@L["Marge"]</span>
-                        <strong>@Format.Montant(t.VentesDuJour.Marge)</strong>
-                        <small>@(t.VentesDuJour.TauxMarge is { } taux ? $"{taux.ToString("0.#", CultureInfo.CurrentCulture)} %" : "")</small>
-                    </a>
-                    <a class="indicateur" href="sessions">
-                        <span>@L["CaissesOuvertes"]</span>
-                        <strong>@t.SessionsOuvertes</strong>
-                    </a>
+                    <Indicateur Libelle="@L["VentesDuJour"]" Valeur="@Format.Montant(t.VentesDuJour.ChiffreAffairesTtc)"
+                                Detail="@L["NombreTickets", t.VentesDuJour.NombreVentes, t.VentesDuJour.NombreAvoirs]" Lien="rapports" />
+                    <Indicateur Libelle="@L["Marge"]" Valeur="@Format.Montant(t.VentesDuJour.Marge)" Lien="rapports"
+                                Detail="@TauxMarge(t.VentesDuJour.TauxMarge)" Ton="@(t.VentesDuJour.Marge < 0 ? Ton.Danger : Ton.Neutre)" />
+                    <Indicateur Libelle="@L["CaissesOuvertes"]" Valeur="@Nombre(t.SessionsOuvertes)" Lien="sessions" />
                 </div>
+
+                @* Tendance : chargée après les chiffres du jour, qui ne l'attendent pas. *@
+                @if (_tendance is { Count: > 0 } tendance)
+                {
+                    <Graphique Titre="@L["Tendance30Jours"]" Points="tendance" LibelleSerie="@L["VentesTtc"]" LibelleSecondaire="@L["Marge"]"
+                               LibelleAbscisse="@L["Jour"]" />
+                    <p class="discret resume-graphique">@L["TendanceResume", Format.Montant(_tendanceVentes), Format.Montant(_tendanceMarge)]</p>
+                }
+                else if (_tendanceEnCours)
+                {
+                    <Chargement />
+                }
             </section>
 
             <section class="bloc-accueil">
                 <h2>@L["ASurveiller"]</h2>
                 <div class="indicateurs">
-                    <a class="indicateur @(t.SessionsAValider > 0 ? "attention" : "")" href="sessions">
-                        <span>@L["SessionsAValider"]</span>
-                        <strong>@t.SessionsAValider</strong>
-                        @if (t.SessionsAValider > 0)
-                        {
-                            <small>@L["EcartsCumules", Format.Montant(t.EcartsAValider)]</small>
-                        }
-                    </a>
-                    <a class="indicateur @(t.AnomaliesATraiter > 0 ? "attention" : "")" href="anomalies">
-                        <span>@L["AnomaliesATraiter"]</span>
-                        <strong>@t.AnomaliesATraiter</strong>
-                        <small>@L["AnomaliesHorsLigne"]</small>
-                    </a>
-                    <a class="indicateur @(t.StocksNegatifs > 0 ? "alerte" : "")" href="stock">
-                        <span>@L["StocksNegatifs"]</span>
-                        <strong>@t.StocksNegatifs</strong>
-                        <small>@L["ValeurDuStock", Format.Montant(t.ValeurStock)]</small>
-                    </a>
-                    <a class="indicateur @(t.TotalEnRetard > 0 ? "attention" : "")" href="clients">
-                        <span>@L["CreancesClients"]</span>
-                        <strong>@Format.Montant(t.TotalCreances)</strong>
-                        @if (t.TotalEnRetard > 0)
-                        {
-                            <small>@L["DontEnRetard", Format.Montant(t.TotalEnRetard)]</small>
-                        }
-                    </a>
-                    <a class="indicateur" href="dettes">
-                        <span>@L["DettesFournisseurs"]</span>
-                        <strong>@Format.Montant(t.TotalDettes)</strong>
-                    </a>
+                    <Indicateur Libelle="@L["SessionsAValider"]" Valeur="@Nombre(t.SessionsAValider)" Lien="sessions"
+                                Detail="@(t.SessionsAValider > 0 ? L["EcartsCumules", Format.Montant(t.EcartsAValider)].Value : null)"
+                                Ton="@(t.SessionsAValider > 0 ? Ton.Attention : Ton.Neutre)" />
+                    <Indicateur Libelle="@L["AnomaliesATraiter"]" Valeur="@Nombre(t.AnomaliesATraiter)" Lien="anomalies"
+                                Detail="@L["AnomaliesHorsLigne"]" Ton="@(t.AnomaliesATraiter > 0 ? Ton.Attention : Ton.Neutre)" />
+                    <Indicateur Libelle="@L["StocksNegatifs"]" Valeur="@Nombre(t.StocksNegatifs)" Lien="stock"
+                                Detail="@L["ValeurDuStock", Format.Montant(t.ValeurStock)]" Ton="@(t.StocksNegatifs > 0 ? Ton.Danger : Ton.Neutre)" />
+                    <Indicateur Libelle="@L["CreancesClients"]" Valeur="@Format.Montant(t.TotalCreances)" Lien="clients"
+                                Detail="@(t.TotalEnRetard > 0 ? L["DontEnRetard", Format.Montant(t.TotalEnRetard)].Value : null)"
+                                Ton="@(t.TotalEnRetard > 0 ? Ton.Attention : Ton.Neutre)" />
+                    <Indicateur Libelle="@L["DettesFournisseurs"]" Valeur="@Format.Montant(t.TotalDettes)" Lien="dettes" />
                 </div>
             </section>
         }
@@ -105,19 +86,17 @@
         @if (_exploitation is { } e)
         {
             @* Administrateur, Gérant, Comptable : cohérence des soldes (ENF04) et sauvegardes (décision 32). *@
+            var sauvegardesEnRetard = e.SauvegardeLocaleEnRetard || e.SauvegardeHorsSiteEnRetard;
             <section class="bloc-accueil">
                 <h2>@L["Exploitation"]</h2>
                 <div class="indicateurs">
-                    <a class="indicateur @(e.EcartsOuverts > 0 ? "alerte" : e.ControleEnRetard ? "attention" : "")" href="controles">
-                        <span>@L["ControleDesSoldes"]</span>
-                        <strong>@L["NombreEcarts", e.EcartsOuverts]</strong>
-                        <small>@(e.DernierControle is { } c ? L["DernierControleLe", Format.Date(c.DebutUtc)] : L["AucunControle"])</small>
-                    </a>
-                    <a class="indicateur @(e.SauvegardeLocaleEnRetard || e.SauvegardeHorsSiteEnRetard ? "alerte" : "")" href="sauvegardes">
-                        <span>@L["Sauvegardes"]</span>
-                        <strong>@(e.DerniereSauvegardeLocale is { } s ? Format.Date(s.FinUtc) : L["Jamais"].Value)</strong>
-                        <small>@(e.SauvegardeLocaleEnRetard || e.SauvegardeHorsSiteEnRetard ? L["SauvegardesEnRetard"] : L["SauvegardesAJour"])</small>
-                    </a>
+                    <Indicateur Libelle="@L["ControleDesSoldes"]" Valeur="@L["NombreEcarts", e.EcartsOuverts]" Lien="controles"
+                                Detail="@(e.DernierControle is { } c ? L["DernierControleLe", Format.Date(c.DebutUtc)].Value : L["AucunControle"].Value)"
+                                Ton="@(e.EcartsOuverts > 0 ? Ton.Danger : e.ControleEnRetard ? Ton.Attention : Ton.Neutre)" />
+                    <Indicateur Libelle="@L["Sauvegardes"]" Lien="sauvegardes"
+                                Valeur="@(e.DerniereSauvegardeLocale is { } s ? Format.Date(s.FinUtc) : L["Jamais"].Value)"
+                                Detail="@(sauvegardesEnRetard ? L["SauvegardesEnRetard"].Value : L["SauvegardesAJour"].Value)"
+                                Ton="@(sauvegardesEnRetard ? Ton.Danger : Ton.Neutre)" />
                 </div>
             </section>
         }
@@ -129,24 +108,18 @@
                 <div class="indicateurs">
                     @if (_receptionsBrouillon is { } receptions)
                     {
-                        <a class="indicateur @(receptions > 0 ? "attention" : "")" href="receptions">
-                            <span>@L["ReceptionsEnBrouillon"]</span>
-                            <strong>@receptions</strong>
-                        </a>
+                        <Indicateur Libelle="@L["ReceptionsEnBrouillon"]" Valeur="@Nombre(receptions)" Lien="receptions"
+                                    Ton="@(receptions > 0 ? Ton.Attention : Ton.Neutre)" />
                     }
                     @if (_inventairesEnCours is { } inventaires)
                     {
-                        <a class="indicateur @(inventaires > 0 ? "attention" : "")" href="inventaires">
-                            <span>@L["InventairesEnCours"]</span>
-                            <strong>@inventaires</strong>
-                        </a>
+                        <Indicateur Libelle="@L["InventairesEnCours"]" Valeur="@Nombre(inventaires)" Lien="inventaires"
+                                    Ton="@(inventaires > 0 ? Ton.Attention : Ton.Neutre)" />
                     }
                     @if (_demarquesDeclarees is { } demarques)
                     {
-                        <a class="indicateur @(demarques > 0 ? "attention" : "")" href="demarques">
-                            <span>@(Session.A(Permissions.DemarqueValider) ? L["DemarquesAValider"] : L["DemarquesEnAttente"])</span>
-                            <strong>@demarques</strong>
-                        </a>
+                        <Indicateur Libelle="@(Session.A(Permissions.DemarqueValider) ? L["DemarquesAValider"] : L["DemarquesEnAttente"])"
+                                    Valeur="@Nombre(demarques)" Lien="demarques" Ton="@(demarques > 0 ? Ton.Attention : Ton.Neutre)" />
                     }
                 </div>
             </section>
@@ -214,6 +187,10 @@
 @code {
     private bool _charge;
     private TableauDeBord? _tableau;
+    private List<PointGraphique>? _tendance;
+    private bool _tendanceEnCours;
+    private decimal _tendanceVentes;
+    private decimal _tendanceMarge;
     private SessionCaisse? _maSession;
     private int? _receptionsBrouillon;
     private int? _inventairesEnCours;
@@ -222,14 +199,18 @@
 
     /// <summary>
     /// Chaque bloc ne se charge qu'avec la permission correspondante, en parallèle ; un bloc dont la lecture échoue
-    /// est simplement omis (l'accueil reste utilisable, ses raccourcis aussi).
+    /// est simplement omis (l'accueil reste utilisable, ses raccourcis aussi). La tendance des 30 jours, plus longue
+    /// à calculer, s'affiche ensuite : les chiffres du jour ne l'attendent pas.
     /// </summary>
     protected override async Task OnInitializedAsync()
     {
         var lectures = new List<Task>();
+        Task? tendance = null;
         if (Session.A(Permissions.RapportsConsulter))
         {
             lectures.Add(Lire(async () => _tableau = (await Api.GetAsync<TableauDeBord>("api/rapports/tableau-de-bord")).Valeur));
+            _tendanceEnCours = true;
+            tendance = Lire(LireTendanceAsync);
         }
 
         if (Session.A(Permissions.CaisseVendre))
@@ -255,7 +236,30 @@
 
         await Task.WhenAll(lectures);
         _charge = true;
+        if (tendance is not null)
+        {
+            StateHasChanged();
+            await tendance;
+            _tendanceEnCours = false;
+        }
     }
+
+    private async Task LireTendanceAsync()
+    {
+        if ((await Api.GetAsync<List<VentesDuJour>>("api/rapports/tendance")).Valeur is not { } jours)
+        {
+            return;
+        }
+
+        // Libellé court du jour (« 17 nov. ») ; la dernière barre, aujourd'hui, est mise en avant par le graphique.
+        _tendance = [.. jours.Select(j => new PointGraphique(j.Jour.ToString("d MMM", CultureInfo.CurrentCulture), j.ChiffreAffairesTtc, j.Marge))];
+        _tendanceVentes = jours.Sum(j => j.ChiffreAffairesTtc);
+        _tendanceMarge = jours.Sum(j => j.Marge);
+    }
+
+    private static string Nombre(int valeur) => valeur.ToString(CultureInfo.CurrentCulture);
+
+    private static string? TauxMarge(decimal? taux) => taux is { } t ? $"{t.ToString("0.#", CultureInfo.CurrentCulture)} %" : null;
 
     private static async Task Lire(Func<Task> lecture)
     {

@@ -7,7 +7,7 @@
 
 <PageTitle>@(_ticket?.Numero ?? L["Ticket"]) · GestionStock</PageTitle>
 
-<p><a href="caisse/tickets">← @L["TicketsDuJour"]</a></p>
+<p><a href="caisse/tickets"><Icone Nom="retour" />@L["TicketsDuJour"]</a></p>
 
 <Message Texte="@_erreur" />
 
@@ -54,7 +54,7 @@ else if (_ticket is not null)
                 }
             </div>
             <p class="discret">@L["AvoirAide"]</p>
-            <div class="actions"><button type="submit" class="principal" disabled="@_enCours">@L["FaireAvoir"]</button></div>
+            <div class="actions"><Bouton Type="submit" Variante="VarianteBouton.Principal" Occupe="_enCours">@L["FaireAvoir"]</Bouton></div>
         </form>
     }
 

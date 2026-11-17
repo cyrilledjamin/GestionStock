@@ -36,6 +36,10 @@ internal static class EndpointsRapports
         groupe.MapGet("/tableau-de-bord", async (ServiceRapports service, CancellationToken annulation) =>
             TypedResults.Ok(await service.TableauDeBordAsync(annulation)));
 
+        // Ventes et marge des 30 derniers jours (graphique de l'accueil), à part : le tableau de bord n'attend pas ce calcul.
+        groupe.MapGet("/tendance", async (ServiceRapports service, CancellationToken annulation) =>
+            TypedResults.Ok(await service.TendanceAsync(annulation)));
+
         groupe.MapGet("/stock", async (ServiceRapports service, CancellationToken annulation) =>
             TypedResults.Ok(await service.StockAsync(annulation)));
 

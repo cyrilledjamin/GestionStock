@@ -267,7 +267,9 @@ a.indicateur:hover { border-color: var(--accent); box-shadow: var(--ombre-haute)
 .indicateur span { font-size: var(--t-s); color: var(--discret); }
 .indicateur strong { font-size: 1.375rem; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
 .indicateur small { color: var(--discret); }
-.indicateur .aller { font-style: normal; color: var(--accent); font-weight: 600; margin-top: var(--e-1); }
+.indicateur .aller { display: inline-flex; align-items: center; gap: var(--e-1); font-style: normal; color: var(--accent); font-weight: 600; margin-top: var(--e-1); }
+.indicateurs.resume { margin: var(--e-4) 0; }
+.resume-graphique { margin: calc(-1 * var(--e-2)) 0 var(--e-4); font-size: var(--t-s); }
 .indicateur.attention { border-color: var(--attention-clair); background: var(--attention-clair); }
 .indicateur.attention span, .indicateur.attention small { color: var(--attention); }
 .indicateur.alerte { border-color: var(--danger-clair); background: var(--danger-clair); }
@@ -301,6 +303,7 @@ a.indicateur:hover { border-color: var(--accent); box-shadow: var(--ombre-haute)
 .graphique .legende span { display: inline-flex; align-items: center; gap: var(--e-1); }
 .graphique .legende i { display: inline-block; width: .75rem; height: .75rem; border-radius: 3px; background: var(--accent-doux); }
 .graphique .legende i.serie-secondaire { height: 3px; background: var(--attention); }
+.zone-graphique { width: 100%; }
 .graphique svg { display: block; width: 100%; height: auto; overflow: visible; }
 .graphique .axe { stroke: var(--bordure); stroke-width: 1; }
 .graphique .graduation { fill: var(--discret); font-size: 12px; font-family: var(--police); font-variant-numeric: tabular-nums; }
@@ -349,7 +352,9 @@ kbd { font-family: var(--police-chasse-fixe); font-size: var(--t-xs); font-weigh
 .ligne-panier .remise { flex-direction: row; align-items: center; }
 .ligne-panier .remise input { width: 6rem; }
 .ligne-panier .retirer { width: var(--cible); padding: 0; color: var(--danger); }
-.panier .vide { list-style: none; }
+.panier .vide { list-style: none; display: flex; align-items: center; justify-content: center; gap: var(--e-2); padding: var(--e-5) var(--e-3); color: var(--discret); }
+.panier .vide .icone { color: var(--bordure-forte); }
+.annuler-vente { align-self: center; color: var(--danger); }
 .billets { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--e-2); }
 .billets button { padding: var(--e-2); font-variant-numeric: tabular-nums; }
 .billets .valider { grid-column: span 3; }

@@ -638,4 +638,9 @@
   <data name="GuideDialogueExemple" xml:space="preserve"><value>Confirm this sample action? Nothing is sent to the server.</value></data>
   <data name="GuideConfirme" xml:space="preserve"><value>Confirmed.</value></data>
   <data name="GuideAnnule" xml:space="preserve"><value>Cancelled.</value></data>
+  <data name="Tendance30Jours" xml:space="preserve"><value>Sales over the last 30 days</value></data>
+  <data name="VentesTtc" xml:space="preserve"><value>Sales (incl. tax)</value></data>
+  <data name="Jour" xml:space="preserve"><value>Day</value></data>
+  <data name="TendanceResume" xml:space="preserve"><value>Over 30 days: {0} in sales, {1} in margin.</value></data>
+  <data name="Traitee" xml:space="preserve"><value>Handled</value></data>
 </root>

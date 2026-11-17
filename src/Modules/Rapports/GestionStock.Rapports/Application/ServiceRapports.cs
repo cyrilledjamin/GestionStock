@@ -250,6 +250,24 @@ internal sealed class ServiceRapports(NpgsqlDataSource sourceDeDonnees, IHorloge
             (int)sessions.Anomalies);
     }
 
+    /// <summary>Jours de la tendance de l'accueil (ventes et marge des derniers jours, aujourd'hui compris).</summary>
+    public const int JoursTendance = 30;
+
+    /// <summary>
+    /// Ventes et marge jour par jour sur les <see cref="JoursTendance"/> derniers jours (graphique de l'accueil), mêmes
+    /// calculs que le rapport des ventes. Chaque jour est présent, à zéro s'il n'y a eu aucune vente : le graphique ne
+    /// saute pas les dimanches. Servie à part du tableau de bord pour que ses chiffres s'affichent sans l'attendre.
+    /// </summary>
+    public async Task<IReadOnlyList<VentesDuJour>> TendanceAsync(CancellationToken annulation)
+    {
+        var fin = Aujourdhui;
+        var periode = new Periode(fin.AddDays(1 - JoursTendance), fin);
+        var parJour = (await VentesAsync(periode, annulation)).ParJour.ToDictionary(j => j.Jour);
+        return [.. Enumerable.Range(0, JoursTendance)
+            .Select(i => periode.Du.AddDays(i))
+            .Select(jour => parJour.GetValueOrDefault(jour) ?? new VentesDuJour(jour, 0, 0m, 0m, 0m, 0m))];
+    }
+
     public async Task<RapportStock> StockAsync(CancellationToken annulation)
     {
         var articles = await LireAsync((connexion, transaction) => ListeStockAsync(connexion, transaction, annulation), annulation);

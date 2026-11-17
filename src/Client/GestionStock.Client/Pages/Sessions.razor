@@ -1,4 +1,5 @@
 @page "/sessions"
+@using System.Globalization
 @inject Api Api
 @inject Confirmation Confirmation
 @inject Session Session
@@ -8,7 +9,7 @@
 <h1>@L["SessionsCaisse"]</h1>
 
 <div class="barre">
-    <select @bind="_statut" @bind:after="Charger">
+    <select @bind="_statut" @bind:after="Charger" aria-label="@L["Statut"]">
         <option value="">@L["TousStatuts"]</option>
         <option value="Ouverte">@L["StatutSession.Ouverte"]</option>
         <option value="Comptee">@L["StatutSession.Comptee"]</option>
@@ -19,6 +20,19 @@
 <Message Texte="@_erreur" />
 <Message Texte="@_succes" Erreur="false" />
 
+@if (_charge && _sessions.Count > 0)
+{
+    @* Pilotage de la caisse : ce qui reste à faire sur les sessions affichées. *@
+    var aValider = _sessions.Where(s => s.Statut == "Comptee").ToList();
+    <div class="indicateurs resume">
+        <Indicateur Libelle="@L["CaissesOuvertes"]" Valeur="@_sessions.Count(s => s.Statut == "Ouverte").ToString(CultureInfo.CurrentCulture)" />
+        <Indicateur Libelle="@L["SessionsAValider"]" Valeur="@aValider.Count.ToString(CultureInfo.CurrentCulture)"
+                    Detail="@(aValider.Count > 0 ? L["EcartsCumules", Format.Montant(aValider.Sum(s => s.Ecart ?? 0))].Value : null)"
+                    Ton="@(aValider.Count > 0 ? Ton.Attention : Ton.Neutre)" />
+        <Indicateur Libelle="@L["Ventes"]" Valeur="@Format.Montant(_sessions.Sum(s => s.Totaux.Ventes - s.Totaux.Avoirs))" />
+    </div>
+}
+
 @if (_aCloturer is { } aCloturer)
 {
     @* Session restée ouverte qui bloque un poste : le Gérant la compte et la clôture à la place de son titulaire (décision 36). *@
@@ -27,20 +41,18 @@
         <p class="discret">@L["CloturerAPlaceAide", Format.Date(aCloturer.OuvertureUtc)]</p>
         <ComptageEspeces @bind-Total="_especesComptees" />
         <div class="actions">
-            <button type="submit" class="principal">@L["CloturerAvec", Format.Montant(_especesComptees)]</button>
-            <button type="button" @onclick="() => _aCloturer = null">@L["Annuler"]</button>
+            <Bouton Type="submit" Variante="VarianteBouton.Principal" Occupe="_envoi">@L["CloturerAvec", Format.Montant(_especesComptees)]</Bouton>
+            <Bouton OnClick="() => _aCloturer = null">@L["Annuler"]</Bouton>
         </div>
     </form>
 }
 
-<table class="cartes">
-    <thead>
-        <tr>
+<Tableau Colonnes="9" Charge="_charge" EstVide="_sessions.Count == 0" TexteVide="@L["AucuneSession"]" Legende="@L["SessionsCaisse"]">
+    <Entete>
             <th>@L["Poste"]</th><th>@L["Caissier"]</th><th>@L["Ouverture"]</th><th class="nombre">@L["Ventes"]</th>
             <th class="nombre">@L["EspecesTheoriques"]</th><th class="nombre">@L["EspecesComptees"]</th><th class="nombre">@L["Ecart"]</th><th>@L["Statut"]</th><th></th>
-        </tr>
-    </thead>
-    <tbody>
+    </Entete>
+    <Corps>
         @foreach (var session in _sessions)
         {
             <tr class="@(session.Ecart < 0 ? "negatif" : "")">
@@ -52,35 +64,27 @@
                 <td data-label="@L["EspecesComptees"]" class="nombre">@(session.EspecesComptees is { } comptees ? Format.Montant(comptees) : "")</td>
                 <td data-label="@L["Ecart"]" class="nombre">@(session.Ecart is { } ecart ? Format.Montant(ecart) : "")</td>
                 <td data-label="@L["Statut"]">
-                    @L[$"StatutSession.{session.Statut}"]
+                    <Pastille Ton="@TonStatut(session.Statut)">@L[$"StatutSession.{session.Statut}"]</Pastille>
                     @if (session.ClotureePar is { } par && par != session.Caissier)
                     {
-                        <small class="pastille brouillon">@L["CompteePar", session.NomClotureePar ?? par]</small>
+                        <small class="discret">@L["CompteePar", session.NomClotureePar ?? par]</small>
                     }
                     @if (session.ValideePar is not null) { <small class="discret">(@(session.NomValideePar ?? session.ValideePar))</small> }
                 </td>
                 <td>
                     @if (session.Statut == "Comptee" && Session.A(Permissions.SessionsValider))
                     {
-                        <button class="lien" @onclick="() => Valider(session.Id)">@L["ValiderEcart"]</button>
+                        <Bouton Variante="VarianteBouton.Valider" NomIcone="valider" OnClick="() => Valider(session.Id)">@L["ValiderEcart"]</Bouton>
                     }
                     else if (session.Statut == "Ouverte" && Session.A(Permissions.SessionsCloturer))
                     {
-                        <button class="lien" @onclick="() => Preparer(session)">@L["CloturerAPlace"]</button>
+                        <Bouton Variante="VarianteBouton.Discret" OnClick="() => Preparer(session)">@L["CloturerAPlace"]</Bouton>
                     }
                 </td>
             </tr>
         }
-        @if (!_charge)
-        {
-            <tr><td colspan="9"><Chargement /></td></tr>
-        }
-        else if (_sessions.Count == 0)
-        {
-            <tr><td colspan="9" class="vide">@L["AucuneSession"]</td></tr>
-        }
-    </tbody>
-</table>
+    </Corps>
+</Tableau>
 
 @code {
     // Premier chargement terminé : jusque-là, la liste montre l'attente et non « Aucun… ».
@@ -92,6 +96,14 @@
     private string? _succes;
     private SessionCaisse? _aCloturer;
     private decimal _especesComptees;
+    private bool _envoi;
+
+    private static Ton TonStatut(string statut) => statut switch
+    {
+        "Ouverte" => Ton.Info,
+        "Comptee" => Ton.Attention,
+        _ => Ton.Succes,
+    };
 
     protected override Task OnInitializedAsync() => Charger();
 
@@ -114,8 +126,23 @@
 
     private async Task CloturerAPlace()
     {
+        if (_envoi)
+        {
+            return;
+        }
+
         var session = _aCloturer!;
-        var resultat = await Api.PostAsync<SessionCaisse>($"api/caisse/sessions/{session.Id}/cloture", new { EspecesComptees = _especesComptees });
+        _envoi = true;
+        Resultat<SessionCaisse> resultat;
+        try
+        {
+            resultat = await Api.PostAsync<SessionCaisse>($"api/caisse/sessions/{session.Id}/cloture", new { EspecesComptees = _especesComptees });
+        }
+        finally
+        {
+            _envoi = false;
+        }
+
         _erreur = resultat.Erreur;
         if (resultat.Valeur is { } cloturee)
         {

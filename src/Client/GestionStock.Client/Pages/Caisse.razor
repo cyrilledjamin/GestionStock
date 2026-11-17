@@ -23,7 +23,7 @@ else if (_session is null)
     <Message Texte="@_succes" Erreur="false" />
     <form class="fiche etroite" @onsubmit="Ouvrir">
         <h2>@L["OuvrirSession"]</h2>
-        <label>@L["Poste"]
+        <label class="champ">@L["Poste"]
             <select @bind="_poste">
                 @foreach (var poste in _postes)
                 {
@@ -35,11 +35,11 @@ else if (_session is null)
         {
             @* Poste bloqué par une session restée ouverte : qui la tient, depuis quand, et à qui s'adresser (décision 36). *@
             <div class="message avertissement" role="status">
-                <Icone Nom="erreur" />
+                <Icone Nom="attention" />
                 <span>@L["PosteOccupePar", occupation.NomCaissier ?? occupation.Caissier, Format.Date(occupation.OuvertureUtc)]</span>
             </div>
         }
-        <label>@L["FondCaisse"]
+        <label class="champ">@L["FondCaisse"]
             <input type="number" min="0" step="1" @bind="_fond" />
         </label>
         <div class="billets">
@@ -49,7 +49,7 @@ else if (_session is null)
             }
             <button type="button" @onclick="() => _fond = 0">@L["Zero"]</button>
         </div>
-        <div class="actions"><button type="submit" class="principal" disabled="@(Occupation(_poste) is not null)">@L["OuvrirSession"]</button></div>
+        <div class="actions"><Bouton Type="submit" Variante="VarianteBouton.Principal" NomIcone="caisse" Occupe="_ouverture" Desactive="@(Occupation(_poste) is not null)">@L["OuvrirSession"]</Bouton></div>
     </form>
 }
 else if (_dernierTicket is not null)
@@ -71,9 +71,9 @@ else
         <div class="entete-caisse">
             <h1>@L["Caisse"] <small class="discret">@_session.NumeroCaisse</small></h1>
             <div class="actions">
-                <a class="bouton" href="caisse/tickets">@L["TicketsDuJour"]</a>
-                <button @onclick="() => _panneau = Panneau.Remboursement">@L["RemboursementCredit"]</button>
-                <button @onclick="() => _panneau = Panneau.Cloture">@L["Cloturer"]</button>
+                <a class="bouton" href="caisse/tickets"><Icone Nom="sessions" />@L["TicketsDuJour"]</a>
+                <Bouton NomIcone="clients" OnClick="() => _panneau = Panneau.Remboursement">@L["RemboursementCredit"]</Bouton>
+                <Bouton NomIcone="valider" OnClick="() => _panneau = Panneau.Cloture">@L["Cloturer"]</Bouton>
             </div>
         </div>
 
@@ -87,8 +87,8 @@ else
                 <p class="discret">@L["ClotureAide"]</p>
                 <ComptageEspeces @bind-Total="_especesComptees" />
                 <div class="actions">
-                    <button type="submit" class="principal">@L["CloturerAvec", Format.Montant(_especesComptees)]</button>
-                    <button type="button" @onclick="() => _panneau = Panneau.Aucun">@L["Annuler"]</button>
+                    <Bouton Type="submit" Variante="VarianteBouton.Principal" Occupe="_clotureEnCours">@L["CloturerAvec", Format.Montant(_especesComptees)]</Bouton>
+                    <Bouton OnClick="() => _panneau = Panneau.Aucun">@L["Annuler"]</Bouton>
                 </div>
             </form>
         }
@@ -102,8 +102,8 @@ else
                     <p>@L["SoldeDu"] : <strong>@Format.Montant(_clientRemboursement.SoldeDu)</strong></p>
                 }
                 <div class="grille">
-                    <label>@L["Montant"] <input type="number" min="1" step="1" @bind="_montantRemboursement" required /></label>
-                    <label>@L["Mode"]
+                    <label class="champ">@L["Montant"] <input type="number" min="1" step="1" @bind="_montantRemboursement" required /></label>
+                    <label class="champ">@L["Mode"]
                         <select @bind="_modeRemboursement">
                             <option value="@ModesPaiement.Especes">@L["Mode.Especes"]</option>
                             <option value="@ModesPaiement.MobileMoney">@L["Mode.MobileMoney"]</option>
@@ -111,12 +111,12 @@ else
                     </label>
                     @if (_modeRemboursement == ModesPaiement.MobileMoney)
                     {
-                        <label>@L["Reference"] <input @bind="_referenceRemboursement" required /></label>
+                        <label class="champ">@L["Reference"] <input @bind="_referenceRemboursement" required /></label>
                     }
                 </div>
                 <div class="actions">
-                    <button type="submit" class="principal" disabled="@(_clientRemboursement is null || _remboursementEnCours)">@L["Encaisser"]</button>
-                    <button type="button" @onclick="() => _panneau = Panneau.Aucun">@L["Annuler"]</button>
+                    <Bouton Type="submit" Variante="VarianteBouton.Principal" Occupe="_remboursementEnCours" Desactive="@(_clientRemboursement is null)">@L["Encaisser"]</Bouton>
+                    <Bouton OnClick="() => _panneau = Panneau.Aucun">@L["Annuler"]</Bouton>
                 </div>
             </form>
         }
@@ -124,7 +124,7 @@ else
         <div class="caisse">
             <section class="saisie-vente">
                 <div class="champ-scan">
-                    <Icone Nom="articles" />
+                    <Icone Nom="rechercher" />
                     <input id="scan" type="search" placeholder="@L["ScanOuRecherche"]" aria-label="@L["ScanOuRecherche"]" @bind="_saisie" @bind:event="oninput" @bind:after="SurSaisie" @onkeydown="SurTouche" autocomplete="off" enterkeyhint="search" />
                     <kbd>F2</kbd>
                 </div>
@@ -180,13 +180,13 @@ else
                                 {
                                     <button type="button" class="lien" @onclick="() => _remiseOuverte = ligne">@L["Remise"]</button>
                                 }
-                                <button type="button" class="retirer" title="@L["Retirer"]" aria-label="@L["Retirer"]" @onclick="() => PuisScanner(() => Retirer(ligne))">✕</button>
+                                <button type="button" class="retirer" title="@L["Retirer"]" aria-label="@L["Retirer"]" @onclick="() => PuisScanner(() => Retirer(ligne))"><Icone Nom="supprimer" /></button>
                             </div>
                         </li>
                     }
                     @if (_vente.EstVide)
                     {
-                        <li class="vide">@L["PanierVide"]</li>
+                        <li class="vide"><Icone Nom="caisse" />@L["PanierVide"]</li>
                     }
                 </ul>
             </section>
@@ -219,10 +219,10 @@ else
                     <div class="paiement">
                         <span>@L[$"Mode.{paiement.Mode}"]</span>
                         <input type="number" min="0" step="1" aria-label="@L[$"Mode.{paiement.Mode}"]" @bind="paiement.Montant" />
-                        <button class="lien" title="@L["Retirer"]" aria-label="@L["Retirer"]" @onclick="() => _vente.RetirerPaiement(paiement)">✕</button>
+                        <button type="button" class="bouton-discret icone-seule" title="@L["Retirer"]" aria-label="@L["Retirer"]" @onclick="() => _vente.RetirerPaiement(paiement)"><Icone Nom="fermer" /></button>
                         @if (paiement.Mode is ModesPaiement.MobileMoney or ModesPaiement.Carte)
                         {
-                            <input class="reference" placeholder="@L["Reference"]" @bind="paiement.Reference" />
+                            <input class="reference" placeholder="@L["Reference"]" aria-label="@L["Reference"]" @bind="paiement.Reference" />
                         }
                     </div>
                 }
@@ -244,13 +244,13 @@ else
                 {
                     <div class="validation">
                         <strong>@L["ValidationResponsable"]</strong>
-                        <input placeholder="@L["Matricule"]" @bind="_validationIdentifiant" autocomplete="off" />
+                        <input placeholder="@L["Matricule"]" aria-label="@L["Matricule"]" @bind="_validationIdentifiant" autocomplete="off" />
                         <ChampMotDePasse @bind-Valeur="_validationMotDePasse" Placeholder="@L["MotDePasse"]" Autocomplete="off" />
                     </div>
                 }
 
                 <button class="principal encaisser" disabled="@(!PeutEncaisser)" @onclick="Encaisser">@L["Encaisser"] <kbd>F8</kbd></button>
-                <button type="button" class="lien" disabled="@_vente.EstVide" @onclick="AnnulerVente">@L["AnnulerVente"]</button>
+                <button type="button" class="bouton-discret annuler-vente" disabled="@_vente.EstVide" @onclick="AnnulerVente"><Icone Nom="supprimer" />@L["AnnulerVente"]</button>
                 <p class="discret">@L["TotauxSession", _session.Totaux.NombreVentes, Format.Montant(_session.Totaux.Ventes)]</p>
             </aside>
         </div>
@@ -267,7 +267,7 @@ else
             }
             else
             {
-                <button type="button" class="valider" disabled="@_vente.EstVide" @onclick="AllerAuPaiement">@L["Payer"] ↓</button>
+                <button type="button" class="valider" disabled="@_vente.EstVide" @onclick="AllerAuPaiement">@L["Payer"] <Icone Nom="aller" /></button>
             }
         </div>
     </div>
@@ -311,6 +311,8 @@ else
     private ClientCredit? _clientRemboursement;
     private decimal _montantRemboursement;
     private bool _remboursementEnCours;
+    private bool _ouverture;
+    private bool _clotureEnCours;
 
     // Clé du remboursement en cours de saisie : gardée jusqu'à son enregistrement, un nouvel envoi (double clic,
     // réponse perdue) est reconnu par le serveur au lieu d'être compté deux fois.
@@ -534,7 +536,30 @@ else
         _prixRapides = prix.Where(p => p.Prix is not null).ToDictionary(p => p.ConditionnementId, p => p.Prix!.PrixTtc);
     }
 
-    private async Task Ouvrir()
+    /// <summary>Un seul envoi à la fois : un double appui n'ouvre pas deux fois (bouton occupé pendant l'appel).</summary>
+    private Task Ouvrir() => UneFois(() => _ouverture, v => _ouverture = v, OuvrirAsync);
+
+    private Task Cloturer() => UneFois(() => _clotureEnCours, v => _clotureEnCours = v, CloturerAsync);
+
+    private static async Task UneFois(Func<bool> enCours, Action<bool> marquer, Func<Task> action)
+    {
+        if (enCours())
+        {
+            return;
+        }
+
+        marquer(true);
+        try
+        {
+            await action();
+        }
+        finally
+        {
+            marquer(false);
+        }
+    }
+
+    private async Task OuvrirAsync()
     {
         var resultat = await Api.PostAsync<SessionCaisse>("api/caisse/sessions", new { NumeroCaisse = _poste, FondCaisse = _fond });
         _erreur = resultat.Erreur;
@@ -876,7 +901,7 @@ else
         _focaliserScan = true;
     }
 
-    private async Task Cloturer()
+    private async Task CloturerAsync()
     {
         await HorsLigne.SynchroniserAsync();
         if (!Connexion.EnLigne || HorsLigne.EnAttente.Count > 0)

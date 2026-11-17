@@ -66,6 +66,19 @@ public sealed class ParcoursGerant(Navigateur navigateur) : ParcoursBase(navigat
 
         await SeConnecterAsync(gerant);
 
+        // Accueil (étape 61) : ventes et marge des 30 derniers jours, un jour par barre ; graduations lisibles (12 px) même
+        // sur un téléphone, le graphique étant dessiné à la largeur de l'écran.
+        var tendance = Page.GetByRole(AriaRole.Img, new() { Name = T["Tendance30Jours"], Exact = true });
+        await Expect(tendance).ToBeVisibleAsync();
+        await Expect(tendance.Locator(".barre-graphique")).ToHaveCountAsync(30);
+        await CapturerAsync("accueil-gerant");
+        await Page.SetViewportSizeAsync(390, 844);
+        await Expect(tendance).ToHaveAttributeAsync("viewBox", new System.Text.RegularExpressions.Regex(@"^0 0 (2[89]\d|3[0-8]\d) "));
+        var graduation = await tendance.Locator(".graduation").First.BoundingBoxAsync();
+        Assert.True(graduation is { Height: >= 11 }, $"Graduation de {graduation?.Height} px sur un téléphone");
+        await CapturerAsync("accueil-gerant-telephone");
+        await Page.SetViewportSizeAsync(Ecran.Width, Ecran.Height);
+
         // Session restée ouverte (décision 36) : le Gérant compte et clôture à la place du titulaire.
         await AllerAsync("SessionsCaisse");
         // Le caissier et l'auteur du comptage sont désignés par leur nom (et leur matricule).

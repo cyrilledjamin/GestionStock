@@ -18,11 +18,9 @@
 <Message Texte="@_erreur" />
 <Message Texte="@_succes" Erreur="false" />
 
-<table class="cartes">
-    <thead>
-        <tr><th>@L["Anomalie"]</th><th>@L["Date"]</th><th>@L["Poste"]</th><th>@L["Caissier"]</th><th>@L["Document"]</th><th>@L["Detail"]</th><th>@L["Traitement"]</th></tr>
-    </thead>
-    <tbody>
+<Tableau Colonnes="7" Charge="_charge" EstVide="_anomalies.Count == 0" TexteVide="@L["AucuneAnomalie"]" Legende="@L["Anomalies"]">
+    <Entete><th>@L["Anomalie"]</th><th>@L["Date"]</th><th>@L["Poste"]</th><th>@L["Caissier"]</th><th>@L["Document"]</th><th>@L["Detail"]</th><th>@L["Traitement"]</th></Entete>
+    <Corps>
         @foreach (var anomalie in _anomalies)
         {
             <tr class="@(anomalie.Traitee ? "inactif" : "")">
@@ -38,32 +36,25 @@
                 <td data-label="@L["Traitement"]">
                     @if (anomalie.Traitee)
                     {
+                        <Pastille Ton="Ton.Succes">@L["Traitee"]</Pastille>
                         <span>@anomalie.Commentaire</span><br /><small class="discret">@(anomalie.NomTraiteePar ?? anomalie.TraiteePar) · @(anomalie.TraitementUtc is { } le ? Format.Date(le) : "")</small>
                     }
                     else if (Session.A(Permissions.AnomaliesTraiter))
                     {
                         <form class="traitement" @onsubmit="() => Traiter(anomalie)">
                             <input placeholder="@L["CommentaireTraitement"]" aria-label="@L["CommentaireTraitement"]" maxlength="500" @bind="_commentaires[anomalie.Id]" required />
-                            <button type="submit" class="valider">@L["Traiter"]</button>
+                            <Bouton Type="submit" Variante="VarianteBouton.Valider" NomIcone="valider" Occupe="_envoi == anomalie.Id">@L["Traiter"]</Bouton>
                         </form>
                     }
                     else
                     {
-                        <span class="pastille brouillon">@L["ATraiter"]</span>
+                        <Pastille Ton="Ton.Attention">@L["ATraiter"]</Pastille>
                     }
                 </td>
             </tr>
         }
-        @if (!_charge)
-        {
-            <tr><td colspan="7"><Chargement /></td></tr>
-        }
-        else if (_anomalies.Count == 0)
-        {
-            <tr><td colspan="7" class="vide">@L["AucuneAnomalie"]</td></tr>
-        }
-    </tbody>
-</table>
+    </Corps>
+</Tableau>
 
 @code {
     // Premier chargement terminé : jusque-là, la liste montre l'attente et non « Aucun… ».
@@ -74,6 +65,7 @@
     private string _filtre = "false";
     private string? _erreur;
     private string? _succes;
+    private Guid? _envoi;
 
     protected override Task OnInitializedAsync() => Charger();
 
@@ -93,7 +85,22 @@
     /// <summary>Traitement par le Gérant (7.8) : un commentaire dit ce qui a été fait ; l'anomalie reste dans l'historique.</summary>
     private async Task Traiter(AnomalieCaisse anomalie)
     {
-        var resultat = await Api.PostAsync<AnomalieCaisse>($"api/caisse/anomalies/{anomalie.Id}/traitement", new { Commentaire = _commentaires[anomalie.Id] });
+        if (_envoi is not null)
+        {
+            return;
+        }
+
+        _envoi = anomalie.Id;
+        Resultat<AnomalieCaisse> resultat;
+        try
+        {
+            resultat = await Api.PostAsync<AnomalieCaisse>($"api/caisse/anomalies/{anomalie.Id}/traitement", new { Commentaire = _commentaires[anomalie.Id] });
+        }
+        finally
+        {
+            _envoi = null;
+        }
+
         _erreur = resultat.Erreur;
         _succes = resultat.Reussi ? L["AnomalieTraitee"].Value : null;
         if (resultat.Reussi)

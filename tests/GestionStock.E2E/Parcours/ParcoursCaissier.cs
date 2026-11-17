@@ -109,7 +109,7 @@ public sealed class ParcoursCaissier(Navigateur navigateur) : ParcoursCaisseBase
         await Lien("TicketsDuJour").ClickAsync();
         await Expect(Page.GetByRole(AriaRole.Link, new() { Name = numero, Exact = true })).ToBeVisibleAsync();
 
-        await Lien("Caisse").ClickAsync();
+        await Lien("RetourCaisse").ClickAsync();
         await Bouton("Cloturer").ClickAsync();
         await Champ("SaisirTotal").CheckAsync();
         await Champ("EspecesComptees").FillAsync("800");

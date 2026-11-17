@@ -40,10 +40,6 @@ public sealed class ParcoursGuideStyle(Navigateur navigateur) : ParcoursBase(nav
         await Expect(DialogueConfirmation).ToHaveCountAsync(0);
         await VoirAsync("GuideConfirme");
 
-        var dossier = Environment.GetEnvironmentVariable("E2E_TRACES");
-        if (dossier is { Length: > 0 })
-        {
-            await Page.ScreenshotAsync(new() { Path = Path.Combine(dossier, $"guide-style-{Langue}.png"), FullPage = true });
-        }
+        await CapturerAsync("guide-style");
     }
 }

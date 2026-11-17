@@ -139,4 +139,13 @@ public abstract class ParcoursBase(Navigateur navigateur) : IAsyncLifetime
     protected ILocator Recherche(string cle) => Page.GetByRole(AriaRole.Searchbox, new() { Name = T[cle], Exact = true });
 
     protected Task VoirTexteAsync(string texte) => Expect(Page.GetByText(texte, new() { Exact = false }).First).ToBeVisibleAsync();
+
+    /// <summary>Capture de la page entière gardée avec les traces (E2E_TRACES), pour la revue visuelle ; rien sans ce dossier.</summary>
+    protected async Task CapturerAsync(string nom)
+    {
+        if (Environment.GetEnvironmentVariable("E2E_TRACES") is { Length: > 0 } dossier)
+        {
+            await Page.ScreenshotAsync(new() { Path = Path.Combine(dossier, $"{nom}-{Langue}.png"), FullPage = true });
+        }
+    }
 }

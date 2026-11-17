@@ -85,5 +85,26 @@ window.gestionStock = {
                 document.removeEventListener("keydown", ecouter);
             }
         };
+    },
+
+    // Largeur en pixels d'un élément, relayée à la méthode .NET « Redimensionner » à l'ouverture puis à chaque
+    // changement (rotation du téléphone, menu replié) : un graphique dessine ainsi à l'échelle 1, texte à 12 px partout.
+    observerLargeur: function (element, composant) {
+        let derniere = 0;
+        const signaler = function () {
+            const largeur = Math.round(element.getBoundingClientRect().width);
+            if (largeur > 0 && Math.abs(largeur - derniere) >= 8) {
+                derniere = largeur;
+                composant.invokeMethodAsync("Redimensionner", largeur);
+            }
+        };
+        const observateur = new ResizeObserver(signaler);
+        observateur.observe(element);
+        signaler();
+        return {
+            arreter: function () {
+                observateur.disconnect();
+            }
+        };
     }
 };

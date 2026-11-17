@@ -264,6 +264,7 @@ Si le port 5432 est déjà pris (PostgreSQL installé sur le poste), choisir un 
 | `POST /api/reprise/import` | `Reprise.Importer` | Même contrôle, puis import tout ou rien et inventaire d'ouverture ; rapport |
 | `GET /api/rapports/ventes?du=&au=` | `Rapports.Consulter` | Ventes et marge : totaux, par jour, par article, par caissier (avoirs déduits, coût au CUMP) |
 | `GET /api/rapports/tableau-de-bord` | `Rapports.Consulter` | Accueil : ventes du jour (Douala), sessions ouvertes et à valider (toutes dates) avec leurs écarts, anomalies hors ligne à traiter, stocks négatifs et valeur du stock, créances et retards, dettes fournisseurs |
+| `GET /api/rapports/tendance` | `Rapports.Consulter` | Ventes TTC, chiffre d'affaires HT, coût et marge de chacun des 30 derniers jours (Douala), aujourd'hui compris, à zéro les jours sans vente ; graphique de l'accueil, servi à part pour que le tableau de bord ne l'attende pas |
 | `GET /api/rapports/stock` | `Rapports.Consulter` | Quantité, CUMP et valeur par article ; total ; stocks négatifs |
 | `GET /api/rapports/creances-dettes` | `Rapports.Consulter` | Clients (dû, en retard RG43, plus ancienne échéance) et fournisseurs (dû, payé, reste) |
 | `GET /api/rapports/caisse?du=&au=` | `Rapports.Consulter` | Sessions et écarts, remises, avoirs, crédits validés par un responsable, stocks négatifs, frais non incorporés, anomalies hors ligne et leur traitement |
@@ -294,7 +295,7 @@ Ouvrir http://localhost:8080 (docker-compose) puis se connecter. Le menu dépend
 | Écran | Contenu |
 | --- | --- |
 | Connexion | Matricule et mot de passe (bouton « Afficher » pour vérifier la saisie en clair) ; choix de la langue (français / anglais) ; à la connexion, la langue mémorisée sur le compte s'applique ; un mot de passe provisoire mène directement à « Mon compte » |
-| Accueil | Tableau de bord selon les permissions : **Ma caisse** (Caissier : session ouverte, ventes, chemin vers la caisse) ; **Aujourd'hui** et **À surveiller** (Gérant, Comptable : ventes et marge du jour, caisses ouvertes, clôtures à valider et écarts, stocks négatifs, créances et retards, dettes fournisseurs) ; **Exploitation** (Administrateur, Gérant, Comptable : écarts du contrôle des soldes, dernière sauvegarde, en rouge si en retard) ; **À faire** (réceptions en brouillon, inventaires en cours, démarques à valider) ; chaque chiffre mène à son écran, en orange ou en rouge s'il demande une action ; puis raccourcis |
+| Accueil | Tableau de bord selon les permissions : **Ma caisse** (Caissier : session ouverte, ventes, chemin vers la caisse) ; **Aujourd'hui** et **À surveiller** (Gérant, Comptable : ventes et marge du jour, caisses ouvertes, graphique des ventes et de la marge des 30 derniers jours (aujourd'hui mis en avant, total de la période), clôtures à valider et écarts, stocks négatifs, créances et retards, dettes fournisseurs) ; **Exploitation** (Administrateur, Gérant, Comptable : écarts du contrôle des soldes, dernière sauvegarde, en rouge si en retard) ; **À faire** (réceptions en brouillon, inventaires en cours, démarques à valider) ; chaque chiffre mène à son écran, en orange ou en rouge s'il demande une action ; puis raccourcis |
 | Contrôle des soldes | Dernier passage (planifié ou manuel, statut, soldes contrôlés), écarts ouverts ; liste des écarts par statut (solde, désignation, valeur du journal et valeur enregistrée, résolution) ; Administrateur : « Lancer le contrôle maintenant » et « Reconstruire » (confirmation) |
 | Sauvegardes | Dernière sauvegarde locale et dernière copie hors site (en rouge au-delà de 2 h / 26 h) ; derniers passages (résultat, fichier, taille, message d'erreur) ; rappel de la restauration |
 | Guide de style | Administrateur : couleurs, typographie, boutons, pastilles, indicateurs, champs, messages, tableaux, graphiques, icônes et dialogue de confirmation, avec des données d'exemple (aucun appel au serveur) |
@@ -351,7 +352,16 @@ occupé), `Pastille` (statut coloré selon son sens : « Refusée » en rouge), 
 `DialogueConfirmation` : toutes les actions irréversibles passent par ce dialogue traduit (Échap ou Annuler répondent
 « non », le focus arrive sur Annuler), à la place de la fenêtre du navigateur. Jeu d'icônes SVG complété (ajouter,
 modifier, supprimer, imprimer, fermer, rechercher…). Page **Guide de style** (`/guide-style`, Administrateur) : tous les
-jetons et composants sur un seul écran. Les écrans adoptent ces composants aux étapes 61 à 63.
+jetons et composants sur un seul écran. Les écrans adoptent ces composants aux étapes 61 à 63. Un graphique se dessine à
+la largeur réelle de sa zone (mesurée et suivie au redimensionnement) : graduations de 12 px sur un PC comme sur un
+téléphone, libellés d'abscisse espacés d'au moins 64 px.
+
+**Refonte de la caisse et du pilotage** (étape 61) : accueil en indicateurs colorés selon leur sens (orange : à faire,
+rouge : anomalie) avec la tendance sur 30 jours ; tickets du jour, sessions et anomalies en tableaux du système de
+design (attente puis liste, cartes sur téléphone), avec en tête un résumé (tickets, avoirs et ventes nettes ; caisses
+ouvertes, clôtures à valider et écarts cumulés) et des statuts en pastilles (ouverte en bleu, comptée en orange, validée
+en vert) ; caisse avec icônes, boutons de retrait nommés pour les lecteurs d'écran, ouverture, clôture et remboursement
+protégés contre le double appui (bouton occupé pendant l'appel) ; reçu avec impression et PDF en boutons à icône.
 
 **Identité et finitions** : nom de la boutique (et logo s'il est configuré) dans le menu, à la connexion et sur le
 reçu ; quantités sans zéros inutiles (« 20 kg », « 2,5 kg ») ; unités courantes traduites en anglais (boîte → box,
@@ -905,7 +915,7 @@ sur une machine Linux de GitHub qui dispose de Docker :
 | 58 | Performances de la caisse et du client : versions (304), listes limitées, connexion lente | Fait |
 | 59 | Direction visuelle (maquettes de deux directions, choix : « sobre et dense ») | Fait |
 | 60 | Système de design : jetons, police embarquée, composants, dialogue de confirmation, guide de style | Fait |
-| 61 | Refonte : caisse et pilotage | À faire |
+| 61 | Refonte : caisse et pilotage | Fait |
 | 62 | Refonte : stock et achats | À faire |
 | 63 | Refonte : le reste, accessibilité | À faire |
 | 64 | Vérification, CI, README, démonstration de la tranche 9 | À faire |
