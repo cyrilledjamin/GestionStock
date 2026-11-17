@@ -935,6 +935,10 @@ Infrastructure : onduleurs pour le serveur, les PC, les imprimantes et le résea
 | --- | --- | --- |
 | 36 | Session restée ouverte | Seul le titulaire clôture sa session ; une session restée ouverte qui bloque un poste peut être comptée et clôturée par le Gérant à sa place. L'auteur et l'heure de la clôture sont enregistrés (ENF03) ; l'écart reste à valider comme pour toute clôture (RG36). L'Administrateur ne le peut pas (aucune opération de vente) : il peut réinitialiser le mot de passe du titulaire |
 | 37 | Articles rapides de la caisse | Le Gérant choisit les conditionnements proposés en tuiles à la caisse (articles sans code-barres, vente au poids) ; un conditionnement désactivé en sort |
+| 38 | Hors ligne : périmètre V1 | La caisse d'abord : vente, avoir et remboursement de crédit hors ligne (7.8). Réception, rangement et comptage hors ligne dans une tranche ultérieure |
+| 39 | Hors ligne : validations | Remise et dépassement de plafond exigent un responsable vérifié par le serveur : refusés hors ligne. Une vente à crédit hors ligne reste possible dans la limite du dernier solde connu, crédit déjà en attente compris ; un dépassement découvert à la synchronisation devient une anomalie (7.8) |
+| 40 | Hors ligne : ouverture de session | L'ouverture d'une session exige le serveur ; une coupure en cours de session n'empêche pas de vendre |
+| 41 | Hors ligne : redémarrage du poste | Pas de connexion hors ligne : un rechargement de la page garde la session de l'onglet, mais un onglet fermé ou un PC redémarré exige le serveur pour se reconnecter. Les opérations en attente restent sur le poste et partent quand leur caissier se reconnecte |
 
 ### 8.3 Rôles et droits (V1)
 
