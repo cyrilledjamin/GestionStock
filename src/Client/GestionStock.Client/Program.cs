@@ -17,6 +17,7 @@ builder.Services.AddScoped<Session>();
 builder.Services.AddScoped<Api>();
 builder.Services.AddScoped<Confirmation>();
 builder.Services.AddScoped<EtatMenu>();
+builder.Services.AddScoped<PanierCaisse>();
 builder.Services.AddScoped<Boutique>();
 builder.Services.AddScoped<EtatConnexion>();
 builder.Services.AddScoped<StockageLocal>();

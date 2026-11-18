@@ -402,6 +402,13 @@ négatifs, sans stock) ; fiche article avec code et statut en badges, chiffres d
 sessions filtrées par pastilles ; rapports avec le même histogramme. Les champs gardent un cadre plus foncé que la
 maquette (contraste 3:1 exigé par les tests du client).
 
+**Vente en cours gardée** (étape 66) : le panier, les paiements saisis, le client choisi et la clé d'idempotence de
+la vente en cours ne vivent plus dans la page de caisse mais dans le service `PanierCaisse`. Quitter la caisse pour un
+autre écran (même par erreur) puis y revenir retrouve la vente ; elle est aussi gardée sur le poste (stockage local)
+et survit à un rechargement de la page. Elle appartient à sa session : un autre caissier ou une nouvelle ouverture
+commence une vente vide. Elle est effacée à l'encaissement (le reçu reste affiché), à l'annulation et à la clôture ;
+une vente reprise garde sa clé d'idempotence, elle ne peut donc pas être enregistrée deux fois.
+
 **Identité et finitions** : nom de la boutique (et logo s'il est configuré) dans le menu, à la connexion et sur le
 reçu ; quantités sans zéros inutiles (« 20 kg », « 2,5 kg ») ; unités courantes traduites en anglais (boîte → box,
 pièce → piece, sac → bag…, liste fixe côté client ; une unité absente de la liste reste telle quelle) ; caissier
@@ -962,6 +969,7 @@ sur une machine Linux de GitHub qui dispose de Docker :
 | 63 | Refonte : le reste, accessibilité | Fait |
 | 64 | Vérification, CI, README, démonstration de la tranche 9 | Fait |
 | 65 | Maquette Figma de la direction A et alignement des écrans | Fait |
+| 66 | Vente en cours gardée en changeant d'écran ou en rechargeant la page | Fait |
 
 ## Démonstration
 
