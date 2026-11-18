@@ -6,6 +6,7 @@
 @inject Api Api
 @inject EtatConnexion Connexion
 @inject CaisseHorsLigne HorsLigne
+@inject EtatMenu EtatMenu
 
 @if (!Session.EstConnecte)
 {
@@ -14,80 +15,80 @@
 else
 {
     <a class="evitement" href="@($"{Navigation.ToBaseRelativePath(Navigation.Uri).Split('#')[0]}#contenu")">@L["AllerAuContenu"]</a>
-    <div class="cadre @(_menuOuvert ? "menu-ouvert" : "")" @onkeydown="SurTouche">
+    <div class="cadre @(EtatMenu.Ouvert ? "menu-ouvert" : "")" @onkeydown="SurTouche">
         @* Écran étroit : barre du haut avec le bouton du menu en tiroir. *@
         <header class="barre-haut">
             <span class="marque"><MarqueBoutique AvecLogiciel="false" /></span>
-            <button id="ouvrir-menu" class="ouvrir-menu" aria-expanded="@(_menuOuvert ? "true" : "false")" aria-controls="menu" @onclick="BasculerMenu">
+            <button class="ouvrir-menu" aria-expanded="@(EtatMenu.Ouvert ? "true" : "false")" aria-controls="menu" @onclick="EtatMenu.Basculer">
                 <Icone Nom="menu" />@L["Menu"]
             </button>
         </header>
-        <div class="voile" @onclick="FermerMenu"></div>
+        <div class="voile" @onclick="EtatMenu.Fermer"></div>
         <nav class="menu" id="menu" aria-label="@L["Menu"]" tabindex="-1">
             <div class="marque"><MarqueBoutique /></div>
-            <NavLink href="" Match="NavLinkMatch.All"><Icone Nom="accueil" />@L["Accueil"]</NavLink>
+            <NavLink href="" Match="NavLinkMatch.All">@L["Accueil"]</NavLink>
             @if (Session.A(Permissions.CaisseVendre))
             {
-                <NavLink href="caisse"><Icone Nom="caisse" />@L["Caisse"]</NavLink>
+                <NavLink href="caisse">@L["Caisse"]</NavLink>
             }
             @if (Session.A(Permissions.SessionsConsulter))
             {
-                <NavLink href="sessions"><Icone Nom="sessions" />@L["SessionsCaisse"]</NavLink>
-                <NavLink href="anomalies"><Icone Nom="attention" />@L["Anomalies"]</NavLink>
+                <NavLink href="sessions">@L["SessionsCaisse"]</NavLink>
+                <NavLink href="anomalies">@L["Anomalies"]</NavLink>
             }
             @if (Session.A(Permissions.CreditConsulter))
             {
-                <NavLink href="clients"><Icone Nom="clients" />@L["Clients"]</NavLink>
+                <NavLink href="clients">@L["Clients"]</NavLink>
             }
             @if (Session.A(Permissions.StockConsulter))
             {
-                <NavLink href="stock"><Icone Nom="stock" />@L["Stock"]</NavLink>
+                <NavLink href="stock">@L["Stock"]</NavLink>
             }
             @if (Session.A(Permissions.AchatsConsulter))
             {
-                <NavLink href="receptions"><Icone Nom="receptions" />@L["Receptions"]</NavLink>
-                <NavLink href="fournisseurs"><Icone Nom="fournisseurs" />@L["Fournisseurs"]</NavLink>
-                <NavLink href="dettes"><Icone Nom="dettes" />@L["DettesFournisseurs"]</NavLink>
+                <NavLink href="receptions">@L["Receptions"]</NavLink>
+                <NavLink href="fournisseurs">@L["Fournisseurs"]</NavLink>
+                <NavLink href="dettes">@L["DettesFournisseurs"]</NavLink>
             }
             @if (Session.A(Permissions.ReferentielConsulter))
             {
-                <NavLink href="articles"><Icone Nom="articles" />@L["Articles"]</NavLink>
+                <NavLink href="articles">@L["Articles"]</NavLink>
             }
             @if (Session.A(Permissions.InventaireConsulter))
             {
-                <NavLink href="inventaires"><Icone Nom="inventaires" />@L["Inventaires"]</NavLink>
-                <NavLink href="demarques"><Icone Nom="demarque" />@L["Demarque"]</NavLink>
+                <NavLink href="inventaires">@L["Inventaires"]</NavLink>
+                <NavLink href="demarques">@L["Demarque"]</NavLink>
             }
             @if (Session.A(Permissions.RapportsConsulter))
             {
-                <NavLink href="rapports"><Icone Nom="rapports" />@L["Rapports"]</NavLink>
+                <NavLink href="rapports">@L["Rapports"]</NavLink>
             }
             @if (Session.A(Permissions.ExportsProduire))
             {
-                <NavLink href="exports"><Icone Nom="exports" />@L["Exports"]</NavLink>
+                <NavLink href="exports">@L["Exports"]</NavLink>
             }
             @if (Session.A(Permissions.RepriseImporter))
             {
-                <NavLink href="reprise"><Icone Nom="reprise" />@L["Reprise"]</NavLink>
+                <NavLink href="reprise">@L["Reprise"]</NavLink>
             }
             @if (Session.A(Permissions.ExploitationConsulter))
             {
-                <NavLink href="controles"><Icone Nom="controles" />@L["Controles"]</NavLink>
-                <NavLink href="sauvegardes"><Icone Nom="sauvegardes" />@L["Sauvegardes"]</NavLink>
+                <NavLink href="controles">@L["Controles"]</NavLink>
+                <NavLink href="sauvegardes">@L["Sauvegardes"]</NavLink>
             }
             @if (Session.A(Permissions.UtilisateursGerer))
             {
-                <NavLink href="utilisateurs"><Icone Nom="utilisateurs" />@L["Utilisateurs"]</NavLink>
+                <NavLink href="utilisateurs">@L["Utilisateurs"]</NavLink>
             }
             <div class="pied-menu">
                 <div class="utilisateur">@Session.Profil!.NomComplet<br /><small>@Session.Profil.Identifiant · @string.Join(", ", Session.Profil.Roles.Select(r => L[$"Role.{r}"].Value))</small></div>
-                <NavLink href="mon-compte"><Icone Nom="compte" />@L["MonCompte"]</NavLink>
+                <NavLink href="mon-compte">@L["MonCompte"]</NavLink>
                 @if (Session.A(Permissions.UtilisateursGerer))
                 {
-                    <NavLink href="guide-style"><Icone Nom="palette" />@L["GuideStyle"]</NavLink>
+                    <NavLink href="guide-style">@L["GuideStyle"]</NavLink>
                 }
-                <button class="lien" @onclick="ChangerLangue"><Icone Nom="langue" />@L["AutreLangue"]</button>
-                <button class="lien" @onclick="Deconnecter"><Icone Nom="deconnexion" />@L["Deconnexion"]</button>
+                <button class="lien" @onclick="ChangerLangue">@L["AutreLangue"]</button>
+                <button class="lien" @onclick="Deconnecter">@L["Deconnexion"]</button>
             </div>
         </nav>
         <main class="contenu" id="contenu" tabindex="-1">
@@ -126,51 +127,42 @@ else
         Session.Changement += Rafraichir;
         Connexion.Changement += Rafraichir;
         HorsLigne.Changement += Rafraichir;
+        EtatMenu.Changement += Rafraichir;
         Navigation.LocationChanged += SurNavigation;
         ExigerConnexion();
     }
 
-    /// <summary>Menu en tiroir, ouvert sur écran étroit seulement (la feuille de style l'ignore ailleurs).</summary>
-    private bool _menuOuvert;
-
-    // Focus à déplacer après le prochain rendu : vers le menu à son ouverture, vers son bouton à sa fermeture par Échap.
-    private string? _focaliser;
-
-    private void BasculerMenu()
-    {
-        _menuOuvert = !_menuOuvert;
-        _focaliser = _menuOuvert ? "menu" : null;
-    }
-
-    private void FermerMenu() => _menuOuvert = false;
+    // Échap : rendre le focus au bouton « Menu » visible (celui du cadre, ou celui de la barre de la caisse).
+    private bool _rendreFocus;
 
     /// <summary>Échap referme le tiroir et rend le focus au bouton « Menu » (le clavier ne reste pas dans un menu caché).</summary>
     private void SurTouche(KeyboardEventArgs touche)
     {
-        if (touche.Key == "Escape" && _menuOuvert)
+        if (touche.Key == "Escape" && EtatMenu.Ouvert)
         {
-            _menuOuvert = false;
-            _focaliser = "ouvrir-menu";
+            EtatMenu.Fermer();
+            _rendreFocus = true;
         }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (_focaliser is { } id)
+        if (EtatMenu.FocusAPorter)
         {
-            _focaliser = null;
-            await Js.InvokeVoidAsync("gestionStock.focaliser", id);
+            EtatMenu.FocusAPorter = false;
+            await Js.InvokeVoidAsync("gestionStock.focaliser", "menu");
+        }
+        else if (_rendreFocus)
+        {
+            _rendreFocus = false;
+            await Js.InvokeVoidAsync("gestionStock.focaliserVisible", ".ouvrir-menu");
         }
     }
 
     private void SurNavigation(object? sender, LocationChangedEventArgs e)
     {
         // Un choix dans le tiroir le referme.
-        if (_menuOuvert)
-        {
-            _menuOuvert = false;
-            InvokeAsync(StateHasChanged);
-        }
+        EtatMenu.Fermer();
 
         ExigerConnexion();
     }
@@ -211,6 +203,7 @@ else
         Session.Changement -= Rafraichir;
         Connexion.Changement -= Rafraichir;
         HorsLigne.Changement -= Rafraichir;
+        EtatMenu.Changement -= Rafraichir;
         Navigation.LocationChanged -= SurNavigation;
     }
 }

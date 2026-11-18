@@ -54,7 +54,7 @@ public abstract class ParcoursCapturesBase(Navigateur navigateur) : ParcoursBase
         Assert.Empty(debordements);
 
         // Tiroir du téléphone : Échap le referme et rend le focus au bouton « Menu ».
-        var bouton = Page.Locator("button.ouvrir-menu");
+        var bouton = Page.Locator("button.ouvrir-menu:visible");
         await bouton.ClickAsync();
         await Expect(Menu()).ToBeVisibleAsync();
         await Page.Keyboard.PressAsync("Escape");

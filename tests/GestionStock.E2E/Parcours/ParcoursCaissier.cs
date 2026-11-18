@@ -28,6 +28,7 @@ public sealed class ParcoursCaissier(Navigateur navigateur) : ParcoursCaisseBase
         await Expect(Panier()).ToContainTextAsync(article.Libelle);
         await Page.GetByRole(AriaRole.Button, new() { Name = T["Plus"], Exact = true }).ClickAsync();
         await Expect(Page.Locator(".total-grand")).ToContainTextAsync(new System.Text.RegularExpressions.Regex("1.000"));
+        await CapturerAsync("caisse-vente");
         await Bouton("CompteJuste").ClickAsync();
         await EncaisserAsync();
         var premierTicket = await NumeroTicketAsync();

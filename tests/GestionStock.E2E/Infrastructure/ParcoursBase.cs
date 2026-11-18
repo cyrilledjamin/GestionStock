@@ -92,7 +92,7 @@ public abstract class ParcoursBase(Navigateur navigateur) : IAsyncLifetime
     /// <summary>Ouvre un écran par le menu (ouvre d'abord le tiroir sur un écran étroit).</summary>
     protected async Task AllerAsync(string cle)
     {
-        var ouvrir = Page.Locator("button.ouvrir-menu");
+        var ouvrir = Page.Locator("button.ouvrir-menu:visible");
         if (await ouvrir.IsVisibleAsync())
         {
             await ouvrir.ClickAsync();

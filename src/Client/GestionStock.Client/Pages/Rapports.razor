@@ -4,7 +4,10 @@
 
 <PageTitle>@L["Rapports"] · GestionStock</PageTitle>
 
-<h1>@L["Rapports"]</h1>
+<EntetePage>
+    <Titre>@L["Rapports"]</Titre>
+    <SousTitre>@L["RapportsAide"]</SousTitre>
+</EntetePage>
 
 @* Onglets annoncés comme tels (tablist / tab / tabpanel) ; flèches gauche et droite, Début et Fin pour passer de l'un à l'autre. *@
 <div class="onglets" role="tablist" aria-label="@L["Rapports"]" @onkeydown="ClavierOnglets">
@@ -23,11 +26,11 @@
             <Champ Libelle="@L["Du"]"><input type="date" @bind="_du" /></Champ>
             <Champ Libelle="@L["Au"]"><input type="date" @bind="_au" /></Champ>
             <Bouton Variante="VarianteBouton.Principal" Occupe="_chargement" OnClick="Charger">@L["Afficher"]</Bouton>
-            <span class="raccourcis-periode">
-                <Bouton Variante="VarianteBouton.Discret" OnClick="() => Periode(0)">@L["Aujourdhui"]</Bouton>
-                <Bouton Variante="VarianteBouton.Discret" OnClick="() => Periode(6)">@L["Periode7Jours"]</Bouton>
-                <Bouton Variante="VarianteBouton.Discret" OnClick="() => Periode(29)">@L["Periode30Jours"]</Bouton>
-                <Bouton Variante="VarianteBouton.Discret" OnClick="CeMois">@L["CeMois"]</Bouton>
+            <span class="raccourcis-periode puces">
+                <button type="button" class="puce" aria-pressed="@Presse(Aujourdhui, Aujourdhui)" @onclick="() => Periode(0)">@L["Aujourdhui"]</button>
+                <button type="button" class="puce" aria-pressed="@Presse(Aujourdhui.AddDays(-6), Aujourdhui)" @onclick="() => Periode(6)">@L["Periode7Jours"]</button>
+                <button type="button" class="puce" aria-pressed="@Presse(Aujourdhui.AddDays(-29), Aujourdhui)" @onclick="() => Periode(29)">@L["Periode30Jours"]</button>
+                <button type="button" class="puce" aria-pressed="@Presse(new DateOnly(Aujourdhui.Year, Aujourdhui.Month, 1), Aujourdhui)" @onclick="CeMois">@L["CeMois"]</button>
             </span>
         </div>
     }
@@ -52,8 +55,10 @@
 
         @if (_joursGraphique.Count >= 2)
         {
-            <Graphique Titre="@L["VentesParJourGraphique"]" Points="_joursGraphique" LibelleSerie="@L["VentesTtc"]" LibelleSecondaire="@L["Marge"]"
-                       LibelleAbscisse="@L["Jour"]" MettreEnAvantDernier="false" />
+            <section class="carte section">
+                <div class="carte-entete"><h2>@L["VentesParJourGraphique"]</h2><span>@L["LegendeTendance"]</span></div>
+                <Histogramme Titre="@L["VentesParJourGraphique"]" Points="_joursGraphique" LibelleSerie="@L["VentesTtc"]" LibelleSecondaire="@L["Marge"]" LibelleAbscisse="@L["Jour"]" />
+            </section>
         }
 
         <h2>@L["ParJour"]</h2>
@@ -314,6 +319,9 @@
         (_du, _au) = (Aujourdhui.AddDays(-joursAvant), Aujourdhui);
         return Charger();
     }
+
+    /// <summary>Raccourci de période en cours (pastille enfoncée) : la période affichée est exactement la sienne.</summary>
+    private string Presse(DateOnly du, DateOnly au) => _du == du && _au == au ? "true" : "false";
 
     private Task CeMois()
     {

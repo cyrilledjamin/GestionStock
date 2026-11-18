@@ -7,7 +7,7 @@
     <Message Texte="@_erreur" />
     @if (Client is null)
     {
-        <input type="search" placeholder="@(Libelle ?? L["ChercherClient"])" aria-label="@(Libelle ?? L["ChercherClient"])" @bind="_recherche" @bind:event="oninput" @bind:after="Rechercher" />
+        <input type="search" placeholder="@(Aide ?? Libelle ?? L["ChercherClient"])" aria-label="@(Libelle ?? L["ChercherClient"])" @bind="_recherche" @bind:event="oninput" @bind:after="Rechercher" />
         @if (_resultats.Count > 0)
         {
             <ul class="resultats">
@@ -38,6 +38,9 @@
     [Parameter] public EventCallback<ClientCredit?> ClientChanged { get; set; }
 
     [Parameter] public string? Libelle { get; set; }
+
+    /// <summary>Texte d'aide du champ quand un libellé visible le nomme déjà (caisse : « Nom ou téléphone »).</summary>
+    [Parameter] public string? Aide { get; set; }
 
     private string _recherche = "";
     private List<ClientCredit> _resultats = [];

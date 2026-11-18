@@ -1,0 +1,66 @@
+@* Histogramme de la maquette A : une barre par jour, la valeur (ventes TTC) en clair et la part secondaire (marge) en
+   accent dans la même barre. Pas d'axe gradué : trois dates sous les barres, le détail de chaque jour en infobulle et dans
+   un tableau lu par les lecteurs d'écran. *@
+<div class="histogramme">
+    <svg class="barres" role="img" aria-label="@Titre" viewBox="0 0 @N(Points.Count * Pas) 100" preserveAspectRatio="none">
+        @for (var i = 0; i < Points.Count; i++)
+        {
+            var point = Points[i];
+            var hauteur = Pourcent(point.Valeur, _max);
+            var part = point.Valeur > 0 && point.Secondaire is { } s ? hauteur * Pourcent(Math.Clamp(s, 0, point.Valeur), point.Valeur) / 100 : 0;
+            <g>
+                <title>@point.Libelle : @FormatValeur(point.Valeur)@(point.Secondaire is { } m ? $" · {LibelleSecondaire} {FormatValeur(m)}" : "")</title>
+                <rect class="barre-jour" x="@N(i * Pas + Ecart / 2)" y="@N(100 - hauteur)" width="@N(Pas - Ecart)" height="@N(hauteur)" />
+                <rect class="barre-part" x="@N(i * Pas + Ecart / 2)" y="@N(100 - part)" width="@N(Pas - Ecart)" height="@N(part)" />
+            </g>
+        }
+    </svg>
+    @if (Points.Count > 0)
+    {
+        <div class="dates" aria-hidden="true">
+            <span>@Points[0].Libelle</span>
+            @if (Points.Count > 2)
+            {
+                <span>@Points[Points.Count / 2].Libelle</span>
+            }
+            <span>@Points[^1].Libelle</span>
+        </div>
+    }
+    <table class="lecteur-seul">
+        <caption>@Titre</caption>
+        <thead><tr><th scope="col">@LibelleAbscisse</th><th scope="col">@LibelleSerie</th><th scope="col">@LibelleSecondaire</th></tr></thead>
+        <tbody>
+            @foreach (var point in Points)
+            {
+                <tr><th scope="row">@point.Libelle</th><td>@FormatValeur(point.Valeur)</td><td>@(point.Secondaire is { } s ? FormatValeur(s) : "")</td></tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public string Titre { get; set; } = "";
+
+    [Parameter, EditorRequired] public IReadOnlyList<PointGraphique> Points { get; set; } = [];
+
+    [Parameter] public string LibelleSerie { get; set; } = "";
+
+    [Parameter] public string LibelleSecondaire { get; set; } = "";
+
+    [Parameter] public string LibelleAbscisse { get; set; } = "";
+
+    [Parameter] public Func<decimal, string> FormatValeur { get; set; } = Format.Montant;
+
+    private decimal _max;
+
+    protected override void OnParametersSet() => _max = Points.Count == 0 ? 0 : Points.Max(p => p.Valeur);
+
+    private static decimal Pourcent(decimal valeur, decimal reference) => reference <= 0 ? 0 : Math.Clamp(valeur / reference * 100, 0, 100);
+
+    // Largeur d'une barre et de son espace (unités du viewBox, étiré à la largeur de la carte).
+    private const decimal Pas = 10;
+    private const decimal Ecart = 2.4m;
+
+    /// <summary>Coordonnée SVG : point décimal quelle que soit la langue de l'interface.</summary>
+    private static string N(decimal valeur) => valeur.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
+}

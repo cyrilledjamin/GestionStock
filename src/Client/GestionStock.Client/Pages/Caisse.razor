@@ -8,6 +8,7 @@
 @inject Session Session
 @inject Boutique Boutique
 @inject Confirmation Confirmation
+@inject EtatMenu EtatMenu
 @implements IAsyncDisposable
 
 <PageTitle>@L["Caisse"] · GestionStock</PageTitle>
@@ -68,14 +69,20 @@ else
 {
     @* .vente : le cadre passe en « plein comptoir » (menu en tiroir) tant que la vente est affichée. *@
     <div class="vente">
-        <div class="entete-caisse">
-            <h1>@L["Caisse"] <small class="discret">@_session.NumeroCaisse</small></h1>
-            <div class="actions">
-                <a class="bouton" href="caisse/tickets"><Icone Nom="sessions" />@L["TicketsDuJour"]</a>
-                <Bouton NomIcone="clients" OnClick="() => _panneau = Panneau.Remboursement">@L["RemboursementCredit"]</Bouton>
-                <Bouton NomIcone="valider" OnClick="() => _panneau = Panneau.Cloture">@L["Cloturer"]</Bouton>
+        <header class="entete-caisse">
+            <div class="titre-caisse">
+                <button type="button" class="ouvrir-menu icone-seule" aria-controls="menu" aria-expanded="@(EtatMenu.Ouvert ? "true" : "false")"
+                        aria-label="@L["Menu"]" title="@L["Menu"]" @onclick="EtatMenu.Basculer"><Icone Nom="menu" /></button>
+                <h1>@L["Caisse"]</h1>
+                <span class="badge-poste">@_session.NumeroCaisse</span>
+                <span class="discret">@L["TotauxSession", _session.Totaux.NombreVentes, Format.Montant(_session.Totaux.Ventes)]</span>
             </div>
-        </div>
+            <div class="actions">
+                <a class="bouton" href="caisse/tickets">@L["TicketsDuJour"]</a>
+                <Bouton OnClick="() => _panneau = Panneau.Remboursement">@L["RemboursementCredit"]</Bouton>
+                <Bouton OnClick="() => _panneau = Panneau.Cloture">@L["Cloturer"]</Bouton>
+            </div>
+        </header>
 
         <Message Texte="@_erreur" />
         <Message Texte="@_succes" Erreur="false" />
@@ -124,14 +131,14 @@ else
         <div class="caisse">
             <section class="saisie-vente">
                 <div class="champ-scan">
-                    <Icone Nom="rechercher" />
+                    <Icone Nom="codebarres" />
                     <input id="scan" type="search" placeholder="@L["ScanOuRecherche"]" aria-label="@L["ScanOuRecherche"]" @bind="_saisie" @bind:event="oninput" @bind:after="SurSaisie" @onkeydown="SurTouche" autocomplete="off" enterkeyhint="search" />
                     <kbd>F2</kbd>
                 </div>
 
                 @if (_resultats.Count > 0)
                 {
-                    <h3>@L["Resultats"]</h3>
+                    <h2 class="titre-section">@L["Resultats"]</h2>
                     <div class="grille-articles">
                         @foreach (var vendable in _resultats)
                         {
@@ -144,7 +151,7 @@ else
                 }
                 else if (_rapides.Count > 0)
                 {
-                    <h3>@L["ArticlesRapides"]</h3>
+                    <h2 class="titre-section">@L["ArticlesRapides"]</h2>
                     <div class="grille-articles">
                         @foreach (var vendable in _rapides)
                         {
@@ -156,7 +163,8 @@ else
                     </div>
                 }
 
-                <h3>@L["Panier"]</h3>
+                <div class="carte-panier">
+                <div class="entete-panier"><h2>@L["Panier"]</h2><span>@L["NombreLignes", _vente.Lignes.Count]</span></div>
                 <ul class="panier">
                     @foreach (var ligne in _vente.Lignes)
                     {
@@ -180,7 +188,7 @@ else
                                 {
                                     <button type="button" class="lien" @onclick="() => _remiseOuverte = ligne">@L["Remise"]</button>
                                 }
-                                <button type="button" class="retirer" title="@L["Retirer"]" aria-label="@L["Retirer"]" @onclick="() => PuisScanner(() => Retirer(ligne))"><Icone Nom="supprimer" /></button>
+                                <button type="button" class="retirer" title="@L["Retirer"]" aria-label="@L["Retirer"]" @onclick="() => PuisScanner(() => Retirer(ligne))"><Icone Nom="fermer" /></button>
                             </div>
                         </li>
                     }
@@ -189,14 +197,15 @@ else
                         <li class="vide"><Icone Nom="caisse" />@L["PanierVide"]</li>
                     }
                 </ul>
+                </div>
             </section>
 
             <aside class="encaissement" id="encaissement">
-                <div class="total-grand" aria-live="polite">@Format.Montant(_vente.Total)</div>
+                <div class="total-a-payer"><span>@L["TotalAPayer"]</span><strong class="total-grand" aria-live="polite">@Format.Montant(_vente.Total)</strong></div>
 
-                <ChoixClient @bind-Client="_client" Libelle="@L["ClientCredit"]" />
+                <div class="champ-client"><span class="libelle-champ">@L["ClientCredit"]</span><ChoixClient @bind-Client="_client" Libelle="@L["ClientCredit"]" Aide="@L["NomOuTelephone"]" /></div>
 
-                <h3>@L["Paiements"]</h3>
+                <span class="libelle-champ">@L["Paiements"]</span>
                 <div class="modes">
                     @foreach (var mode in ModesPaiement.Tous)
                     {
@@ -205,7 +214,7 @@ else
                     }
                 </div>
 
-                <h3>@L["EspecesRecues"]</h3>
+                <span class="libelle-champ">@L["EspecesRecues"]</span>
                 <div class="billets">
                     @foreach (var billet in VenteEnCours.Billets)
                     {
@@ -250,8 +259,7 @@ else
                 }
 
                 <button class="principal encaisser" disabled="@(!PeutEncaisser)" @onclick="Encaisser">@L["Encaisser"] <kbd>F8</kbd></button>
-                <button type="button" class="bouton-discret annuler-vente" disabled="@_vente.EstVide" @onclick="AnnulerVente"><Icone Nom="supprimer" />@L["AnnulerVente"]</button>
-                <p class="discret">@L["TotauxSession", _session.Totaux.NombreVentes, Format.Montant(_session.Totaux.Ventes)]</p>
+                <button type="button" class="bouton-discret annuler-vente" disabled="@_vente.EstVide" @onclick="AnnulerVente">@L["AnnulerVente"]</button>
             </aside>
         </div>
 

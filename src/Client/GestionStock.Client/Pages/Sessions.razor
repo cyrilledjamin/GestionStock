@@ -6,16 +6,18 @@
 
 <PageTitle>@L["SessionsCaisse"] · GestionStock</PageTitle>
 
-<h1>@L["SessionsCaisse"]</h1>
-
-<div class="barre">
-    <select @bind="_statut" @bind:after="Charger" aria-label="@L["Statut"]">
-        <option value="">@L["TousStatuts"]</option>
-        <option value="Ouverte">@L["StatutSession.Ouverte"]</option>
-        <option value="Comptee">@L["StatutSession.Comptee"]</option>
-        <option value="Validee">@L["StatutSession.Validee"]</option>
-    </select>
-</div>
+<EntetePage>
+    <Titre>@L["SessionsCaisse"]</Titre>
+    <SousTitre>@L["SessionsAide"]</SousTitre>
+    <Actions>
+        <div class="puces" role="group" aria-label="@L["Statut"]">
+            @foreach (var (statut, cle) in Filtres)
+            {
+                <button type="button" class="puce" aria-pressed="@(_statut == statut ? "true" : "false")" @onclick="() => Filtrer(statut)">@L[cle]</button>
+            }
+        </div>
+    </Actions>
+</EntetePage>
 
 <Message Texte="@_erreur" />
 <Message Texte="@_succes" Erreur="false" />
@@ -92,6 +94,15 @@
 
     private List<SessionCaisse> _sessions = [];
     private string _statut = "";
+
+    private static readonly (string Statut, string Cle)[] Filtres =
+        [("", "TousStatuts"), ("Ouverte", "StatutSession.Ouverte"), ("Comptee", "StatutSession.Comptee"), ("Validee", "StatutSession.Validee")];
+
+    private Task Filtrer(string statut)
+    {
+        _statut = statut;
+        return Charger();
+    }
     private string? _erreur;
     private string? _succes;
     private SessionCaisse? _aCloturer;

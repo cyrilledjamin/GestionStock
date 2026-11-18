@@ -2,13 +2,31 @@
 @using System.Globalization
 @inject Session Session
 @inject Api Api
+@inject Boutique Boutique
 
 <PageTitle>@L["Accueil"] · GestionStock</PageTitle>
 
 @if (Session.Profil is { } profil)
 {
-    <h1>@L["Bonjour", string.IsNullOrWhiteSpace(profil.Prenom) ? profil.Identifiant : profil.Prenom]</h1>
-    <p class="discret">@L["AccueilIntro"]</p>
+    @* Maquette Figma « direction A » : en-tête, chiffres du jour, tendance en barres empilées, listes à surveiller. *@
+    <EntetePage>
+        <Titre>@L["Bonjour", string.IsNullOrWhiteSpace(profil.Prenom) ? profil.Identifiant : profil.Prenom]</Titre>
+        <SousTitre>@JourDouala.ToString("D", CultureInfo.CurrentCulture) · @Boutique.Nom</SousTitre>
+        <Actions>
+            @if (Session.A(Permissions.RapportsConsulter))
+            {
+                <a class="bouton" href="rapports">@L["Rapports"]</a>
+            }
+            @if (Session.A(Permissions.ReceptionsSaisir))
+            {
+                <a class="bouton principal" href="receptions/nouvelle">@L["NouvelleReception"]</a>
+            }
+            else if (Session.A(Permissions.CaisseVendre))
+            {
+                <a class="bouton principal" href="caisse">@(_maSession is null ? L["OuvrirLaCaisse"] : L["ReprendreLaVente"])</a>
+            }
+        </Actions>
+    </EntetePage>
 
     @if (!_charge)
     {
@@ -16,25 +34,21 @@
     }
     else
     {
-        @if (Session.A(Permissions.CaisseVendre))
+        @if (Session.A(Permissions.CaisseVendre) && _tableau is null)
         {
             @* Caissier : sa caisse d'abord, avec le chemin pour y aller. *@
-            <section class="bloc-accueil">
-                <h2>@L["MaCaisse"]</h2>
+            <section class="section">
+                <h2 class="titre-section">@L["MaCaisse"]</h2>
                 <div class="indicateurs">
                     @if (_maSession is { } session)
                     {
                         <Indicateur Libelle="@L["SessionOuverteSur", session.NumeroCaisse, Format.Date(session.OuvertureUtc)]"
                                     Valeur="@Format.Montant(session.Totaux.Ventes - session.Totaux.Avoirs)"
-                                    Detail="@L["NombreVentes", session.Totaux.NombreVentes]" Lien="caisse">
-                            <em class="aller">@L["ReprendreLaVente"] <Icone Nom="aller" /></em>
-                        </Indicateur>
+                                    Detail="@L["NombreVentes", session.Totaux.NombreVentes]" Lien="caisse" />
                     }
                     else
                     {
-                        <Indicateur Libelle="@L["AucuneSessionOuverte"]" Valeur="—" Lien="caisse">
-                            <em class="aller">@L["OuvrirLaCaisse"] <Icone Nom="aller" /></em>
-                        </Indicateur>
+                        <Indicateur Libelle="@L["AucuneSessionOuverte"]" Valeur="—" Detail="@L["OuvrirLaCaisse"]" Lien="caisse" />
                     }
                 </div>
             </section>
@@ -42,146 +56,182 @@
 
         @if (_tableau is { } t)
         {
-            <section class="bloc-accueil">
-                <h2>@L["Aujourdhui"] <small class="discret">@t.Jour.ToString("D", CultureInfo.CurrentCulture)</small></h2>
+            <section class="section">
+                <h2 class="titre-section">@L["Aujourdhui"]</h2>
                 <div class="indicateurs">
-                    <Indicateur Libelle="@L["VentesDuJour"]" Valeur="@Format.Montant(t.VentesDuJour.ChiffreAffairesTtc)"
-                                Detail="@L["NombreTickets", t.VentesDuJour.NombreVentes, t.VentesDuJour.NombreAvoirs]" Lien="rapports" />
+                    <Indicateur Libelle="@L["VentesDuJour"]" Valeur="@Format.Montant(t.VentesDuJour.ChiffreAffairesTtc)" Lien="rapports"
+                                Detail="@L["NombreTickets", t.VentesDuJour.NombreVentes, t.VentesDuJour.NombreAvoirs]" />
                     <Indicateur Libelle="@L["Marge"]" Valeur="@Format.Montant(t.VentesDuJour.Marge)" Lien="rapports"
-                                Detail="@TauxMarge(t.VentesDuJour.TauxMarge)" Ton="@(t.VentesDuJour.Marge < 0 ? Ton.Danger : Ton.Neutre)" />
+                                Detail="@(t.VentesDuJour.TauxMarge is { } taux ? L["PourcentDuChiffreHt", taux.ToString("0.#", CultureInfo.CurrentCulture)].Value : null)"
+                                Ton="@(t.VentesDuJour.Marge < 0 ? Ton.Danger : Ton.Neutre)" />
                     <Indicateur Libelle="@L["CaissesOuvertes"]" Valeur="@Nombre(t.SessionsOuvertes)" Lien="sessions" />
+                    <Indicateur Libelle="@L["SessionsAValider"]" Valeur="@Nombre(t.SessionsAValider)" Lien="sessions"
+                                Detail="@L["EcartsCumules", Format.Montant(t.EcartsAValider)]"
+                                Ton="@(t.SessionsAValider > 0 ? Ton.Attention : Ton.Neutre)" />
                 </div>
+            </section>
 
-                @* Tendance : chargée après les chiffres du jour, qui ne l'attendent pas. *@
+            @* Tendance : chargée après les chiffres du jour, qui ne l'attendent pas. *@
+            <section class="carte section">
+                <div class="carte-entete">
+                    <h2>@L["Tendance30Jours"]</h2>
+                    <span>@L["LegendeTendance"]</span>
+                </div>
                 @if (_tendance is { Count: > 0 } tendance)
                 {
-                    <Graphique Titre="@L["Tendance30Jours"]" Points="tendance" LibelleSerie="@L["VentesTtc"]" LibelleSecondaire="@L["Marge"]"
-                               LibelleAbscisse="@L["Jour"]" />
-                    <p class="discret resume-graphique">@L["TendanceResume", Format.Montant(_tendanceVentes), Format.Montant(_tendanceMarge)]</p>
+                    <Histogramme Titre="@L["Tendance30Jours"]" Points="tendance" LibelleSerie="@L["VentesTtc"]" LibelleSecondaire="@L["Marge"]" LibelleAbscisse="@L["Jour"]" />
+                    <p class="note">@L["TendanceResume", Format.Montant(_tendanceVentes), Format.Montant(_tendanceMarge)]</p>
                 }
                 else if (_tendanceEnCours)
                 {
                     <Chargement />
                 }
             </section>
-
-            <section class="bloc-accueil">
-                <h2>@L["ASurveiller"]</h2>
-                <div class="indicateurs">
-                    <Indicateur Libelle="@L["SessionsAValider"]" Valeur="@Nombre(t.SessionsAValider)" Lien="sessions"
-                                Detail="@(t.SessionsAValider > 0 ? L["EcartsCumules", Format.Montant(t.EcartsAValider)].Value : null)"
-                                Ton="@(t.SessionsAValider > 0 ? Ton.Attention : Ton.Neutre)" />
-                    <Indicateur Libelle="@L["AnomaliesATraiter"]" Valeur="@Nombre(t.AnomaliesATraiter)" Lien="anomalies"
-                                Detail="@L["AnomaliesHorsLigne"]" Ton="@(t.AnomaliesATraiter > 0 ? Ton.Attention : Ton.Neutre)" />
-                    <Indicateur Libelle="@L["StocksNegatifs"]" Valeur="@Nombre(t.StocksNegatifs)" Lien="stock"
-                                Detail="@L["ValeurDuStock", Format.Montant(t.ValeurStock)]" Ton="@(t.StocksNegatifs > 0 ? Ton.Danger : Ton.Neutre)" />
-                    <Indicateur Libelle="@L["CreancesClients"]" Valeur="@Format.Montant(t.TotalCreances)" Lien="clients"
-                                Detail="@(t.TotalEnRetard > 0 ? L["DontEnRetard", Format.Montant(t.TotalEnRetard)].Value : null)"
-                                Ton="@(t.TotalEnRetard > 0 ? Ton.Attention : Ton.Neutre)" />
-                    <Indicateur Libelle="@L["DettesFournisseurs"]" Valeur="@Format.Montant(t.TotalDettes)" Lien="dettes" />
-                </div>
-            </section>
         }
 
-        @if (_exploitation is { } e)
+        @if (_tableau is not null || _exploitation is not null || AFaire)
         {
-            @* Administrateur, Gérant, Comptable : cohérence des soldes (ENF04) et sauvegardes (décision 32). *@
-            var sauvegardesEnRetard = e.SauvegardeLocaleEnRetard || e.SauvegardeHorsSiteEnRetard;
-            <section class="bloc-accueil">
-                <h2>@L["Exploitation"]</h2>
-                <div class="indicateurs">
-                    <Indicateur Libelle="@L["ControleDesSoldes"]" Valeur="@L["NombreEcarts", e.EcartsOuverts]" Lien="controles"
-                                Detail="@(e.DernierControle is { } c ? L["DernierControleLe", Format.Date(c.DebutUtc)].Value : L["AucunControle"].Value)"
-                                Ton="@(e.EcartsOuverts > 0 ? Ton.Danger : e.ControleEnRetard ? Ton.Attention : Ton.Neutre)" />
-                    <Indicateur Libelle="@L["Sauvegardes"]" Lien="sauvegardes"
-                                Valeur="@(e.DerniereSauvegardeLocale is { } s ? Format.Date(s.FinUtc) : L["Jamais"].Value)"
-                                Detail="@(sauvegardesEnRetard ? L["SauvegardesEnRetard"].Value : L["SauvegardesAJour"].Value)"
-                                Ton="@(sauvegardesEnRetard ? Ton.Danger : Ton.Neutre)" />
-                </div>
-            </section>
-        }
+            <div class="duo">
+                @if (_tableau is { } s)
+                {
+                    <section class="carte">
+                        <h2>@L["ASurveiller"]</h2>
+                        <div class="liste-suivi">
+                            <a href="stock"><span>@L["StocksNegatifs"]</span><strong class="@(s.StocksNegatifs > 0 ? "danger-texte" : null)">@L["NombreArticles", s.StocksNegatifs]</strong></a>
+                            <a href="clients"><span>@L["CreancesClients"]@(s.TotalEnRetard > 0 ? $" ({L["DontEnRetard", Format.Montant(s.TotalEnRetard)]})" : "")</span><strong class="@(s.TotalEnRetard > 0 ? "attention-texte" : null)">@Format.Montant(s.TotalCreances)</strong></a>
+                            <a href="dettes"><span>@L["DettesFournisseurs"]</span><strong>@Format.Montant(s.TotalDettes)</strong></a>
+                            <a href="anomalies"><span>@L["Anomalies"]</span><strong class="@(s.AnomaliesATraiter > 0 ? "attention-texte" : null)">@Nombre(s.AnomaliesATraiter)</strong></a>
+                        </div>
+                    </section>
+                }
 
-        @if (_receptionsBrouillon is not null || _inventairesEnCours is not null || _demarquesDeclarees is not null)
-        {
-            <section class="bloc-accueil">
-                <h2>@L["AFaire"]</h2>
-                <div class="indicateurs">
-                    @if (_receptionsBrouillon is { } receptions)
-                    {
-                        <Indicateur Libelle="@L["ReceptionsEnBrouillon"]" Valeur="@Nombre(receptions)" Lien="receptions"
-                                    Ton="@(receptions > 0 ? Ton.Attention : Ton.Neutre)" />
-                    }
-                    @if (_inventairesEnCours is { } inventaires)
-                    {
-                        <Indicateur Libelle="@L["InventairesEnCours"]" Valeur="@Nombre(inventaires)" Lien="inventaires"
-                                    Ton="@(inventaires > 0 ? Ton.Attention : Ton.Neutre)" />
-                    }
-                    @if (_demarquesDeclarees is { } demarques)
-                    {
-                        <Indicateur Libelle="@(Session.A(Permissions.DemarqueValider) ? L["DemarquesAValider"] : L["DemarquesEnAttente"])"
-                                    Valeur="@Nombre(demarques)" Lien="demarques" Ton="@(demarques > 0 ? Ton.Attention : Ton.Neutre)" />
-                    }
-                </div>
-            </section>
+                @if (_exploitation is { } e)
+                {
+                    @* Administrateur, Gérant, Comptable : cohérence des soldes (ENF04) et sauvegardes (décision 32). *@
+                    <section class="carte">
+                        <h2>@L["Exploitation"]</h2>
+                        <div class="etats">
+                            <a class="etat" href="controles">
+                                <span class="point @(e.EcartsOuverts > 0 ? "danger-point" : e.ControleEnRetard ? "attention-point" : null)" aria-hidden="true"></span>
+                                <span>@L["ControleDesSoldes"]</span>
+                                <Pastille Ton="@(e.EcartsOuverts > 0 ? Ton.Danger : e.ControleEnRetard ? Ton.Attention : Ton.Succes)">@L["NombreEcarts", e.EcartsOuverts]</Pastille>
+                            </a>
+                            <a class="etat" href="sauvegardes">
+                                <span class="point @(e.SauvegardeLocaleEnRetard ? "danger-point" : null)" aria-hidden="true"></span>
+                                <span>@L["SauvegardeLocale"]</span>
+                                @if (e.SauvegardeLocaleEnRetard)
+                                {
+                                    <Pastille Ton="Ton.Danger">@L["EnRetard"]</Pastille>
+                                }
+                                else
+                                {
+                                    <small>@(e.DerniereSauvegardeLocale is { } l ? Format.Date(l.FinUtc) : L["Jamais"].Value)</small>
+                                }
+                            </a>
+                            <a class="etat" href="sauvegardes">
+                                <span class="point @(e.SauvegardeHorsSiteEnRetard ? "danger-point" : null)" aria-hidden="true"></span>
+                                <span>@L["SauvegardeHorsSite"]</span>
+                                @if (e.SauvegardeHorsSiteEnRetard)
+                                {
+                                    <Pastille Ton="Ton.Danger">@L["EnRetard"]</Pastille>
+                                }
+                                else
+                                {
+                                    <small>@(e.DerniereSauvegardeHorsSite is { } h ? Format.Date(h.FinUtc) : L["Jamais"].Value)</small>
+                                }
+                            </a>
+                        </div>
+                        @if (e.SauvegardeHorsSiteEnRetard)
+                        {
+                            <p class="note">@L["CopieHorsSiteEnRetardAide"]</p>
+                        }
+                    </section>
+                }
+
+                @if (AFaire)
+                {
+                    <section class="carte">
+                        <h2>@L["AFaire"]</h2>
+                        <div class="liste-suivi">
+                            @if (_receptionsBrouillon is { } receptions)
+                            {
+                                <a href="receptions"><span>@L["ReceptionsEnBrouillon"]</span><strong class="@(receptions > 0 ? "attention-texte" : null)">@Nombre(receptions)</strong></a>
+                            }
+                            @if (_inventairesEnCours is { } inventaires)
+                            {
+                                <a href="inventaires"><span>@L["InventairesEnCours"]</span><strong class="@(inventaires > 0 ? "attention-texte" : null)">@Nombre(inventaires)</strong></a>
+                            }
+                            @if (_demarquesDeclarees is { } demarques)
+                            {
+                                <a href="demarques"><span>@(Session.A(Permissions.DemarqueValider) ? L["DemarquesAValider"] : L["DemarquesEnAttente"])</span><strong class="@(demarques > 0 ? "attention-texte" : null)">@Nombre(demarques)</strong></a>
+                            }
+                        </div>
+                    </section>
+                }
+            </div>
         }
     }
 
-    <h2>@L["Raccourcis"]</h2>
-    <div class="tuiles">
-        @if (Session.A(Permissions.CaisseVendre))
-        {
-            <a class="tuile" href="caisse"><Icone Nom="caisse" /><strong>@L["Caisse"]</strong><span>@L["CaisseAide"]</span></a>
-        }
-        @if (Session.A(Permissions.SessionsConsulter))
-        {
-            <a class="tuile" href="sessions"><Icone Nom="sessions" /><strong>@L["SessionsCaisse"]</strong><span>@L["SessionsAide"]</span></a>
-        }
-        @if (Session.A(Permissions.CreditConsulter))
-        {
-            <a class="tuile" href="clients"><Icone Nom="clients" /><strong>@L["Clients"]</strong><span>@L["ClientsAide"]</span></a>
-        }
-        @if (Session.A(Permissions.ReceptionsSaisir))
-        {
-            <a class="tuile" href="receptions/nouvelle"><Icone Nom="receptions" /><strong>@L["NouvelleReception"]</strong><span>@L["NouvelleReceptionAide"]</span></a>
-        }
-        @if (Session.A(Permissions.StockConsulter))
-        {
-            <a class="tuile" href="stock"><Icone Nom="stock" /><strong>@L["Stock"]</strong><span>@L["StockAide"]</span></a>
-        }
-        @if (Session.A(Permissions.ArticlesGerer))
-        {
-            <a class="tuile" href="articles"><Icone Nom="articles" /><strong>@L["Articles"]</strong><span>@L["ArticlesAide"]</span></a>
-        }
-        @if (Session.A(Permissions.InventaireConsulter))
-        {
-            <a class="tuile" href="inventaires"><Icone Nom="inventaires" /><strong>@L["Inventaires"]</strong><span>@L["InventairesAide"]</span></a>
-            <a class="tuile" href="demarques"><Icone Nom="demarque" /><strong>@L["Demarque"]</strong><span>@L["DemarqueAide"]</span></a>
-        }
-        @if (Session.A(Permissions.RapportsConsulter))
-        {
-            <a class="tuile" href="rapports"><Icone Nom="rapports" /><strong>@L["Rapports"]</strong><span>@L["RapportsAide"]</span></a>
-        }
-        @if (Session.A(Permissions.ExportsProduire))
-        {
-            <a class="tuile" href="exports"><Icone Nom="exports" /><strong>@L["Exports"]</strong><span>@L["ExportsAide"]</span></a>
-        }
-        @if (Session.A(Permissions.PaiementsFournisseursSaisir))
-        {
-            <a class="tuile" href="dettes"><Icone Nom="dettes" /><strong>@L["DettesFournisseurs"]</strong><span>@L["DettesAide"]</span></a>
-        }
-        @if (Session.A(Permissions.RepriseImporter))
-        {
-            <a class="tuile" href="reprise"><Icone Nom="reprise" /><strong>@L["Reprise"]</strong><span>@L["RepriseAide"]</span></a>
-        }
-        @if (Session.A(Permissions.ExploitationConsulter))
-        {
-            <a class="tuile" href="sauvegardes"><Icone Nom="sauvegardes" /><strong>@L["Sauvegardes"]</strong><span>@L["SauvegardesTuile"]</span></a>
-        }
-        @if (Session.A(Permissions.UtilisateursGerer))
-        {
-            <a class="tuile" href="utilisateurs"><Icone Nom="utilisateurs" /><strong>@L["Utilisateurs"]</strong><span>@L["UtilisateursAide"]</span></a>
-        }
-    </div>
+    @if (!Session.A(Permissions.RapportsConsulter))
+    {
+        @* Sans tableau de bord (Caissier, Magasinier) : les raccourcis vers les écrans du rôle. *@
+        <h2 class="titre-section">@L["Raccourcis"]</h2>
+        <div class="tuiles">
+            @if (Session.A(Permissions.CaisseVendre))
+            {
+                <a class="tuile" href="caisse"><Icone Nom="caisse" /><strong>@L["Caisse"]</strong><span>@L["CaisseAide"]</span></a>
+            }
+            @if (Session.A(Permissions.SessionsConsulter))
+            {
+                <a class="tuile" href="sessions"><Icone Nom="sessions" /><strong>@L["SessionsCaisse"]</strong><span>@L["SessionsAide"]</span></a>
+            }
+            @if (Session.A(Permissions.CreditConsulter))
+            {
+                <a class="tuile" href="clients"><Icone Nom="clients" /><strong>@L["Clients"]</strong><span>@L["ClientsAide"]</span></a>
+            }
+            @if (Session.A(Permissions.ReceptionsSaisir))
+            {
+                <a class="tuile" href="receptions/nouvelle"><Icone Nom="receptions" /><strong>@L["NouvelleReception"]</strong><span>@L["NouvelleReceptionAide"]</span></a>
+            }
+            @if (Session.A(Permissions.StockConsulter))
+            {
+                <a class="tuile" href="stock"><Icone Nom="stock" /><strong>@L["Stock"]</strong><span>@L["StockAide"]</span></a>
+            }
+            @if (Session.A(Permissions.ArticlesGerer))
+            {
+                <a class="tuile" href="articles"><Icone Nom="articles" /><strong>@L["Articles"]</strong><span>@L["ArticlesAide"]</span></a>
+            }
+            @if (Session.A(Permissions.InventaireConsulter))
+            {
+                <a class="tuile" href="inventaires"><Icone Nom="inventaires" /><strong>@L["Inventaires"]</strong><span>@L["InventairesAide"]</span></a>
+                <a class="tuile" href="demarques"><Icone Nom="demarque" /><strong>@L["Demarque"]</strong><span>@L["DemarqueAide"]</span></a>
+            }
+            @if (Session.A(Permissions.RapportsConsulter))
+            {
+                <a class="tuile" href="rapports"><Icone Nom="rapports" /><strong>@L["Rapports"]</strong><span>@L["RapportsAide"]</span></a>
+            }
+            @if (Session.A(Permissions.ExportsProduire))
+            {
+                <a class="tuile" href="exports"><Icone Nom="exports" /><strong>@L["Exports"]</strong><span>@L["ExportsAide"]</span></a>
+            }
+            @if (Session.A(Permissions.PaiementsFournisseursSaisir))
+            {
+                <a class="tuile" href="dettes"><Icone Nom="dettes" /><strong>@L["DettesFournisseurs"]</strong><span>@L["DettesAide"]</span></a>
+            }
+            @if (Session.A(Permissions.RepriseImporter))
+            {
+                <a class="tuile" href="reprise"><Icone Nom="reprise" /><strong>@L["Reprise"]</strong><span>@L["RepriseAide"]</span></a>
+            }
+            @if (Session.A(Permissions.ExploitationConsulter))
+            {
+                <a class="tuile" href="sauvegardes"><Icone Nom="sauvegardes" /><strong>@L["Sauvegardes"]</strong><span>@L["SauvegardesTuile"]</span></a>
+            }
+            @if (Session.A(Permissions.UtilisateursGerer))
+            {
+                <a class="tuile" href="utilisateurs"><Icone Nom="utilisateurs" /><strong>@L["Utilisateurs"]</strong><span>@L["UtilisateursAide"]</span></a>
+            }
+        </div>
+    }
 }
 
 @code {
@@ -257,9 +307,12 @@
         _tendanceMarge = jours.Sum(j => j.Marge);
     }
 
-    private static string Nombre(int valeur) => valeur.ToString(CultureInfo.CurrentCulture);
+    /// <summary>Jour de Douala (UTC+1, sans heure d'été) affiché sous le bonjour.</summary>
+    private static DateOnly JourDouala => DateOnly.FromDateTime(DateTime.UtcNow.AddHours(1));
 
-    private static string? TauxMarge(decimal? taux) => taux is { } t ? $"{t.ToString("0.#", CultureInfo.CurrentCulture)} %" : null;
+    private bool AFaire => _receptionsBrouillon is not null || _inventairesEnCours is not null || _demarquesDeclarees is not null;
+
+    private static string Nombre(int valeur) => valeur.ToString(CultureInfo.CurrentCulture);
 
     private static async Task Lire(Func<Task> lecture)
     {

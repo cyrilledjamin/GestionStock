@@ -387,6 +387,21 @@ seule un nom. Trois tests de conventions le vérifient sur les sources (champs n
 symbole nu, onglets et tiroir au clavier) ; ils ont relevé et fait corriger quatre oubliés (recherche de client, champ
 de mot de passe hors libellé, quantité d'un avoir, « ✕ » du choix d'article).
 
+**Maquette Figma et alignement** (étape 65) : la direction A est décrite dans Figma
+([GestionStock — Système de design (direction A)](https://www.figma.com/design/QzwUh3VegjrrYj7HOSJsqC)) : variables
+reprises de `app.css` (couleurs, espacements, rayons, avec leur nom CSS), styles de texte Inter, composants (bouton,
+pastille, indicateur, lien de menu, ligne de liste, ligne d'état, champ, tuile d'article), écrans accueil, caisse,
+stock, fiche article, sessions et rapports. L'application suit ces écrans : cartes plates sans ombre, en-tête de page
+(titre et sous-titre à gauche, actions ou chiffre clé à droite, composant `EntetePage`), titres de section en petites
+capitales, tableaux dans une carte avec leur titre ; menu avec le pavé d'initiales et sans icônes ; accueil avec les
+quatre chiffres du jour, l'histogramme empilé des 30 derniers jours (marge dans la barre, composant `Histogramme`) et
+les cartes « À surveiller », « Exploitation » et « À faire » (raccourcis réservés aux rôles sans tableau de bord) ;
+caisse avec sa barre blanche (bouton du menu, poste, session, actions), champ de scan large, panier en carte, total à
+payer en 40 px et rendu dans un encadré vert ; stock avec la valeur en en-tête et des filtres en pastilles (tous,
+négatifs, sans stock) ; fiche article avec code et statut en badges, chiffres du stock et derniers mouvements ;
+sessions filtrées par pastilles ; rapports avec le même histogramme. Les champs gardent un cadre plus foncé que la
+maquette (contraste 3:1 exigé par les tests du client).
+
 **Identité et finitions** : nom de la boutique (et logo s'il est configuré) dans le menu, à la connexion et sur le
 reçu ; quantités sans zéros inutiles (« 20 kg », « 2,5 kg ») ; unités courantes traduites en anglais (boîte → box,
 pièce → piece, sac → bag…, liste fixe côté client ; une unité absente de la liste reste telle quelle) ; caissier
@@ -946,6 +961,7 @@ sur une machine Linux de GitHub qui dispose de Docker :
 | 62 | Refonte : stock et achats | Fait |
 | 63 | Refonte : le reste, accessibilité | Fait |
 | 64 | Vérification, CI, README, démonstration de la tranche 9 | Fait |
+| 65 | Maquette Figma de la direction A et alignement des écrans | Fait |
 
 ## Démonstration
 
