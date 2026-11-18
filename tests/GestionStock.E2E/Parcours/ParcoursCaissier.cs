@@ -75,6 +75,7 @@ public sealed class ParcoursCaissier(Navigateur navigateur) : ParcoursCaisseBase
         await Bouton("CompteJuste").ClickAsync();
         await EncaisserAsync();
         var premierTicket = await NumeroTicketAsync();
+        await CapturerAsync("recu");
         await Bouton("NouvelleVente").ClickAsync();
 
         // Vente à crédit (RG38 à RG40) : client choisi, mode Crédit pour le reste.
