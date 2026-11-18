@@ -1,0 +1,40 @@
+# Proxy HTTPS de la boutique (étape 67, docs/exploitation.md section 6).
+# Le navigateur n'installe le mode hors ligne (service worker) que sur https:// ou localhost : les postes de caisse du
+# réseau ouvrent donc https://<adresse IP du serveur>. Les certificats viennent de l'autorité interne de Caddy (aucun
+# achat, aucun accès à Internet) ; sa racine est installée une fois sur chaque poste (http://<serveur>/certificat-racine.crt).
+# Données de Caddy (clé de l'autorité) : volume des fichiers, sous proxy/, donc dans les sauvegardes.
+{
+	local_certs
+	skip_install_trust
+	# Redirections HTTP vers HTTPS faites par le bloc http:// ci-dessous, qui sert aussi la racine en HTTP.
+	auto_https disable_redirects
+	# Un navigateur qui ouvre https://192.168.1.10 n'annonce pas de nom (pas de SNI pour une adresse IP) : le certificat
+	# de l'adresse IP du serveur est présenté par défaut.
+	default_sni {$SERVEUR_IP:localhost}
+	pki {
+		ca local {
+			name "{$AUTORITE_NOM:GestionStock}"
+		}
+	}
+}
+
+# HTTP : la racine à installer sur les postes (avant qu'ils fassent confiance), le reste vers HTTPS.
+http:// {
+	handle /certificat-racine.crt {
+		root * /donnees/fichiers/proxy/caddy/pki/authorities/local
+		rewrite * /root.crt
+		header Content-Type application/x-x509-ca-cert
+		header Content-Disposition "attachment; filename=\"gestionstock-racine.crt\""
+		file_server
+	}
+	handle {
+		redir https://{host}{uri} 308
+	}
+}
+
+# HTTPS : le poste serveur (localhost), l'adresse IP fixe du serveur et ses noms éventuels (deploy/.env).
+localhost {$SERVEUR_IP} {$SERVEUR_NOMS} {
+	tls internal
+	encode zstd gzip
+	reverse_proxy api:8080
+}

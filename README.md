@@ -75,6 +75,7 @@ tests/
 deploy/
   docker-compose.yml                 PostgreSQL 17 (db), API (api) et sauvegardes (sauvegarde)
   sauvegarde/                        image et scripts de sauvegarde : sauvegarder.sh, restaurer.sh, boucle.sh
+  proxy/                             proxy HTTPS de la boutique (Caddyfile, autorité de certification locale)
   volume/                            jeu de données volumineux (generer.sql) et mesures de performance (mesurer.py)
   Dockerfile                         image Linux de l'API
   .env.example                       variables à copier dans deploy/.env
@@ -125,11 +126,20 @@ dotnet build
 dotnet test
 ```
 
-Base et API en conteneurs, comme en boutique (application sur http://localhost:8080) :
+Base, API, proxy HTTPS et sauvegardes en conteneurs, comme en boutique (application sur http://localhost:8080 et
+https://localhost depuis le PC serveur ; https://<SERVEUR_IP> depuis les postes du réseau, voir plus bas) :
 
 ```bash
 docker compose -f deploy/docker-compose.yml up -d --build
 ```
+
+**HTTPS en boutique** (étape 67) : un navigateur n'installe le mode hors ligne que sur `https://` ou `localhost`.
+Le service `proxy` (Caddy, [deploy/proxy/Caddyfile](deploy/proxy/Caddyfile)) sert l'application en HTTPS sur le port
+443 avec sa propre autorité de certification (aucun achat, sans Internet) ; le port 80 redirige vers HTTPS et sert la
+racine à installer une fois sur chaque poste (`http://<SERVEUR_IP>/certificat-racine.crt`). Dans `deploy/.env` :
+`SERVEUR_IP` (adresse fixe du serveur), `SERVEUR_NOMS` (noms facultatifs), `HTTPS_PORT` / `HTTP_PORT` ; le port 8080
+de l'API n'écoute plus que sur la machine (`API_ECOUTE=127.0.0.1`). Installation de la racine sous Windows et
+Android, essai hors ligne, sauvegarde de l'autorité : [docs/exploitation.md](docs/exploitation.md), section 6.
 
 Sans SDK .NET 10 sur le poste, build et tests peuvent tourner dans le conteneur du SDK, sur une copie du dépôt
 (le socket Docker permet aux tests d'intégration de lancer leur PostgreSQL) :
@@ -169,7 +179,9 @@ la base de docker-compose avec le mot de passe de développement de [deploy/.env
 En boutique, le mot de passe est défini uniquement dans `deploy/.env`, qui n'est jamais versionné.
 
 Chaque module a son schéma PostgreSQL et sa propre table d'historique des migrations
-(`stock.__ef_migrations_history`). La base n'écoute que sur `127.0.0.1` ; l'API écoute sur le port 8080.
+(`stock.__ef_migrations_history`). La base n'écoute que sur `127.0.0.1` ; l'API écoute sur le port 8080 de la machine,
+les postes du réseau passent par le proxy HTTPS (ports 443 et 80). L'API ne croit les en-têtes `X-Forwarded-For` et
+`X-Forwarded-Proto` que venant d'un réseau privé (10/8, 172.16/12, 192.168/16).
 Si le port 5432 est déjà pris (PostgreSQL installé sur le poste), choisir un autre `POSTGRES_PORT` dans
 `deploy/.env` et, pour `dotnet run`, le reporter dans `ConnectionStrings__GestionStock`.
 
@@ -972,6 +984,7 @@ sur une machine Linux de GitHub qui dispose de Docker :
 | 64 | Vérification, CI, README, démonstration de la tranche 9 | Fait |
 | 65 | Maquette Figma de la direction A et alignement des écrans | Fait |
 | 66 | Vente en cours gardée en changeant d'écran ou en rechargeant la page | Fait |
+| 67 | Tranche 10 (mise en service) : HTTPS en boutique, proxy et autorité de certification locale | Fait |
 
 ## Démonstration
 

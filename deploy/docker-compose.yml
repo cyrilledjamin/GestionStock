@@ -44,8 +44,27 @@ services:
       Identite__AdministrateurInitial__Identifiant: ${ADMIN_IDENTIFIANT:-admin}
       Identite__AdministrateurInitial__MotDePasse: ${ADMIN_MOT_DE_PASSE:?Définir ADMIN_MOT_DE_PASSE dans deploy/.env}
     ports:
-      - "${API_PORT:-8080}:8080"
+      # Poste serveur seulement (démo, tests) : le réseau de la boutique passe par le proxy HTTPS.
+      - "${API_ECOUTE:-127.0.0.1}:${API_PORT:-8080}:8080"
     volumes:
+      - donnees-fichiers:/donnees/fichiers
+
+  # HTTPS sur le réseau de la boutique (autorité de certification locale, deploy/proxy/Caddyfile).
+  proxy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - api
+    environment:
+      SERVEUR_IP: ${SERVEUR_IP:-127.0.0.1}
+      SERVEUR_NOMS: ${SERVEUR_NOMS:-}
+      AUTORITE_NOM: "GestionStock - ${ENTREPRISE_NOM:-GestionStock}"
+      XDG_DATA_HOME: /donnees/fichiers/proxy
+    ports:
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
+    volumes:
+      - ./proxy/Caddyfile:/etc/caddy/Caddyfile:ro
       - donnees-fichiers:/donnees/fichiers
 
   # Sauvegardes (décision 32) : locale chaque heure sur le disque externe, copie chiffrée quotidienne hors de la boutique.

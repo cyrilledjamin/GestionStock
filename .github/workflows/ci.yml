@@ -211,6 +211,23 @@ jobs:
           bash .github/scripts/verifier-sauvegarde.sh http://localhost:8080 "$ADMIN_IDENTIFIANT" "$ADMIN_MOT_DE_PASSE" \
             "$RUNNER_TEMP/cle-age.txt" essai:/sauvegardes/hors-site
 
+      # Étape 67 : les postes du réseau passent par le proxy HTTPS (autorité locale) ; l'API n'écoute que sur la machine.
+      - name: HTTPS en boutique (proxy, autorité locale)
+        run: |
+          for essai in $(seq 1 15); do
+            curl -fsS -o racine.crt http://localhost/certificat-racine.crt && break
+            sleep 2
+          done
+          openssl x509 -in racine.crt -noout -subject | grep -q 'GestionStock'
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost/caisse)" = "308"
+          curl -fsS --cacert racine.crt https://localhost/health/pret
+          curl -fsS --cacert racine.crt https://127.0.0.1/service-worker.js | grep -q 'service-worker-assets.js'
+          # Sans nom annoncé (adresse IP), le certificat de l'adresse du serveur est présenté.
+          echo | openssl s_client -connect 127.0.0.1:443 2>/dev/null | openssl x509 -noout -ext subjectAltName | grep -q 'IP Address:127.0.0.1'
+          $COMPOSE port api 8080 | grep -q '^127.0.0.1:'
+          # La clé de l'autorité est dans le volume des fichiers, donc dans les sauvegardes.
+          $COMPOSE exec -T sauvegarde test -f /donnees/fichiers/proxy/caddy/pki/authorities/local/root.key
+
       - name: Le client Blazor est servi
         run: |
           curl -fsS http://localhost:8080/ | grep -q '_framework/blazor.webassembly.js'
