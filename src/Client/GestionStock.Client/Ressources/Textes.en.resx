@@ -667,4 +667,5 @@
   <data name="JournalDuStock" xml:space="preserve"><value>Stock log</value></data>
   <data name="DerniersMouvements" xml:space="preserve"><value>Latest movements</value></data>
   <data name="ValeurDuStockTitre" xml:space="preserve"><value>Stock value</value></data>
+  <data name="ConfirmerDeconnexionVente" xml:space="preserve"><value>A sale is in progress: signing out will empty the cart. Sign out anyway?</value></data>
 </root>

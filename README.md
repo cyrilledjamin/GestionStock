@@ -406,7 +406,9 @@ maquette (contraste 3:1 exigé par les tests du client).
 la vente en cours ne vivent plus dans la page de caisse mais dans le service `PanierCaisse`. Quitter la caisse pour un
 autre écran (même par erreur) puis y revenir retrouve la vente ; elle est aussi gardée sur le poste (stockage local)
 et survit à un rechargement de la page. Elle appartient à sa session : un autre caissier ou une nouvelle ouverture
-commence une vente vide. Elle est effacée à l'encaissement (le reçu reste affiché), à l'annulation et à la clôture ;
+commence une vente vide. Elle est effacée à l'encaissement (le reçu reste affiché), à l'annulation, à la clôture et à
+la déconnexion volontaire (confirmation demandée si le panier n'est pas vide ; une session expirée la garde, le
+caissier la retrouve en se reconnectant) ;
 une vente reprise garde sa clé d'idempotence, elle ne peut donc pas être enregistrée deux fois.
 
 **Identité et finitions** : nom de la boutique (et logo s'il est configuré) dans le menu, à la connexion et sur le
