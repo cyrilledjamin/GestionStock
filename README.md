@@ -79,7 +79,8 @@ deploy/
   volume/                            jeu de données volumineux (generer.sql) et mesures de performance (mesurer.py)
   Dockerfile                         image Linux de l'API
   .env.example                       variables à copier dans deploy/.env
-docs/                                dossier d'analyse, plans des tranches, exploitation.md (sauvegardes, restauration)
+docs/                                dossier d'analyse, plans des tranches, exploitation.md (sauvegardes, restauration),
+  validation/                        dossier de validation fonctionnelle pour l'auditeur comptable (Word et PDF)
 ```
 
 Règles de dépendance, vérifiées par `tests/GestionStock.ArchitectureTests` :
@@ -851,6 +852,13 @@ E2E_URL=http://localhost:8080 E2E_ADMIN=admin E2E_MOT_DE_PASSE=<ADMIN_MOT_DE_PAS
 `E2E_TRACES=<dossier>` garde la trace d'un parcours en échec (`playwright show-trace <fichier>.zip`) et les captures
 de la revue visuelle (`ecran-<écran>-<pc|tablette|telephone>-<langue>.png`, accueil, rapports, stock…). Correspondance
 entre cas d'utilisation, règles et tests : [docs/recette.md](docs/recette.md).
+
+**Validation par un auditeur comptable** : [docs/validation/](docs/validation/) contient le dossier remis à un auditeur
+qui connaît les pratiques camerounaises (Word imprimable et PDF, 18 pages) : présentation et rôles, règles appliquées
+avec une grille Conforme / À corriger / À discuter (stock et CUMP, réceptions et frais d'approche, caisse, TVA, crédit,
+dettes fournisseurs, inventaire et démarque, contrôles et sauvegardes), reçu et exports réels, exemples chiffrés tirés
+des tests, 27 choix provisoires posés en questions fermées et 6 questions de conformité (mentions du reçu, SYSCOHADA,
+conservation, données personnelles, facturation électronique DGI, TVA).
 
 ### Performances (jeu volumineux)
 
