@@ -67,5 +67,14 @@ public sealed class ParcoursComptable(Navigateur navigateur) : ParcoursBase(navi
         await AllerAsync("Exports");
         var telechargement = await Page.RunAndWaitForDownloadAsync(() => Bouton("Telecharger").ClickAsync());
         Assert.False(string.IsNullOrEmpty(telechargement.SuggestedFilename));
+
+        // Exemples gardés avec les traces (E2E_TRACES) : journal des ventes en Excel et en CSV, pour la documentation.
+        if (Environment.GetEnvironmentVariable("E2E_TRACES") is { Length: > 0 } dossier)
+        {
+            await telechargement.SaveAsAsync(Path.Combine(dossier, telechargement.SuggestedFilename));
+            await Champ("Format").SelectOptionAsync("csv");
+            var csv = await Page.RunAndWaitForDownloadAsync(() => Bouton("Telecharger").ClickAsync());
+            await csv.SaveAsAsync(Path.Combine(dossier, csv.SuggestedFilename));
+        }
     }
 }

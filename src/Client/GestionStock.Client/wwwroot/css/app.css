@@ -425,6 +425,8 @@ fieldset.roles { margin: var(--e-2) 0; display: flex; flex-wrap: wrap; gap: var(
 .recu hr { border: none; border-top: 1px dashed var(--pointille-recu); margin: 2mm 0; }
 .recu .centre { text-align: center; }
 .recu .gras { font-weight: 700; }
+/* Lignes du reçu : taille du reçu (12 px), sans le style des montants de la caisse qui partagent la classe. */
+.recu .ligne-recu { font-size: inherit; gap: 2mm; }
 
 @media print {
     body * { visibility: hidden; }
@@ -599,9 +601,9 @@ fieldset.roles { margin: var(--e-2) 0; display: flex; flex-wrap: wrap; gap: var(
 .modes { margin-top: calc(-1 * var(--e-2)); }
 .modes button { min-height: 44px; }
 .modes button.choisi { border-width: 2px; }
-.ligne-recu { align-items: baseline; padding: var(--e-3) 14px; border-radius: var(--rayon); background: var(--surface-douce); }
-.ligne-recu strong { font-size: 22px; font-variant-numeric: tabular-nums; }
-.ligne-recu.a-rendre { background: var(--accent-clair); color: var(--accent-fonce); font-size: var(--t-l); }
+.encaissement .ligne-recu { align-items: baseline; padding: var(--e-3) 14px; border-radius: var(--rayon); background: var(--surface-douce); }
+.encaissement .ligne-recu strong { font-size: 22px; font-variant-numeric: tabular-nums; }
+.encaissement .ligne-recu.a-rendre { background: var(--accent-clair); color: var(--accent-fonce); font-size: var(--t-l); }
 .encaisser { border-radius: var(--rayon-grand); font-weight: 700; }
 @media (max-width: 760px) {
     .vente > :not(.entete-caisse):not(.barre-total) { margin-left: var(--e-3); margin-right: var(--e-3); }
