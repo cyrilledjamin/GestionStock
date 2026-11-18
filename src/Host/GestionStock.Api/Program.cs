@@ -13,6 +13,7 @@ using GestionStock.Reprise;
 using GestionStock.Stock;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.HttpOverrides;
 
 // Point d'entrée de l'hôte : il ne fait qu'assembler les modules.
 var builder = WebApplication.CreateBuilder(args);
@@ -53,6 +54,15 @@ if (app.Configuration.GetValue<bool>(ExtensionsMigrations.CleAppliquerAuDemarrag
     await app.Services.AppliquerMigrationsAsync();
 }
 
+// Proxy HTTPS de la boutique (deploy/proxy) : adresse réelle du poste et schéma https. Les en-têtes ne sont crus que
+// venant du réseau local (conteneurs docker, réseau privé), jamais d'une adresse publique qui les forgerait.
+var entetesTransmis = new ForwardedHeadersOptions { ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto };
+foreach (var reseau in new[] { "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16" })
+{
+    entetesTransmis.KnownIPNetworks.Add(System.Net.IPNetwork.Parse(reseau));
+}
+
+app.UseForwardedHeaders(entetesTransmis);
 app.UseResponseCompression();
 app.UseExceptionHandler();
 app.UseStatusCodePages();
