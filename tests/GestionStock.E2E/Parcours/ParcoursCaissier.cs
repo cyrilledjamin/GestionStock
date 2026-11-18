@@ -40,6 +40,16 @@ public sealed class ParcoursCaissier(Navigateur navigateur) : ParcoursCaisseBase
         await AllerAsync("Accueil");
         await AllerAsync("Caisse");
         await Expect(Panier().Locator("li.ligne-panier")).ToHaveCountAsync(0);
+
+        // Déconnexion volontaire pendant une vente : confirmation demandée, panier vidé (le caissier suivant ne le voit pas).
+        await ScannerAsync(article.Code);
+        await Page.Locator("button.ouvrir-menu:visible").ClickAsync();
+        await SeDeconnecterAsync();
+        Assert.Contains(T["ConfirmerDeconnexionVente"], Confirmations);
+        await SeConnecterAsync(caissier);
+        await AllerAsync("Caisse");
+        await Expect(Page.Locator("#scan")).ToBeVisibleAsync();
+        await Expect(Panier().Locator("li.ligne-panier")).ToHaveCountAsync(0);
         await CloturerAsync(1_600);
     }
 

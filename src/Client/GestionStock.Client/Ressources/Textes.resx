@@ -667,4 +667,5 @@
   <data name="JournalDuStock" xml:space="preserve"><value>Journal du stock</value></data>
   <data name="DerniersMouvements" xml:space="preserve"><value>Derniers mouvements</value></data>
   <data name="ValeurDuStockTitre" xml:space="preserve"><value>Valeur du stock</value></data>
+  <data name="ConfirmerDeconnexionVente" xml:space="preserve"><value>Une vente est en cours : en vous déconnectant, le panier sera vidé. Se déconnecter quand même ?</value></data>
 </root>

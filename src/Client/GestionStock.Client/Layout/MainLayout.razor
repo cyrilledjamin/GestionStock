@@ -7,6 +7,8 @@
 @inject EtatConnexion Connexion
 @inject CaisseHorsLigne HorsLigne
 @inject EtatMenu EtatMenu
+@inject PanierCaisse Panier
+@inject Confirmation Confirmation
 
 @if (!Session.EstConnecte)
 {
@@ -192,8 +194,19 @@ else
         Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
     }
 
+    /// <summary>
+    /// Déconnexion volontaire : la vente en cours est abandonnée (après confirmation si le panier n'est pas vide), en
+    /// mémoire comme sur le poste. Une déconnexion subie (session expirée) la garde : le caissier la retrouve en se
+    /// reconnectant.
+    /// </summary>
     private async Task Deconnecter()
     {
+        if (!Panier.Vente.EstVide && !await Confirmation.DemanderAsync(L["ConfirmerDeconnexionVente"].Value, L["Deconnexion"].Value, danger: true))
+        {
+            return;
+        }
+
+        await Panier.TerminerAsync(sessionFermee: true);
         await Session.DeconnecterAsync();
         Navigation.NavigateTo("connexion");
     }
