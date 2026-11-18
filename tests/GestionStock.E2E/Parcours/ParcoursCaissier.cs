@@ -11,6 +11,39 @@ namespace GestionStock.E2E.Parcours;
 public sealed class ParcoursCaissier(Navigateur navigateur) : ParcoursCaisseBase(navigateur)
 {
     [Parcours]
+    public async Task Garde_la_vente_en_cours_quand_on_quitte_la_caisse_ou_recharge_la_page()
+    {
+        var article = await Donnees.ArticleEnStockAsync($"BISCUIT{Suffixe}", $"Biscuit {Suffixe}", prixTtc: 300, quantite: 20, coutUnitaire: 180);
+        var caissier = await Donnees.CompteAsync("Caissier", $"Distrait{Suffixe}", ["Caissier"]);
+        await SeConnecterAsync(caissier);
+        await AllerAsync("Caisse");
+        await OuvrirSessionAsync(1_000);
+
+        // Deux biscuits au panier, puis un autre écran par erreur, et retour : le panier est intact.
+        await ScannerAsync(article.Code);
+        await Page.GetByRole(AriaRole.Button, new() { Name = T["Plus"], Exact = true }).ClickAsync();
+        await Expect(Page.Locator(".total-grand")).ToContainTextAsync("600");
+        await AllerAsync("Accueil");
+        await AllerAsync("Caisse");
+        await Expect(Panier()).ToContainTextAsync(article.Libelle);
+        await Expect(Page.Locator(".total-grand")).ToContainTextAsync("600");
+
+        // Page rechargée (F5, plantage du navigateur) : la vente est gardée sur le poste.
+        await Page.ReloadAsync();
+        await Expect(Panier()).ToContainTextAsync(article.Libelle);
+        await Expect(Page.Locator(".total-grand")).ToContainTextAsync("600");
+
+        // Vente encaissée : en revenant à la caisse, le panier est vide (rien n'est vendu deux fois).
+        await Bouton("CompteJuste").ClickAsync();
+        await EncaisserAsync();
+        await NumeroTicketAsync();
+        await AllerAsync("Accueil");
+        await AllerAsync("Caisse");
+        await Expect(Panier().Locator("li.ligne-panier")).ToHaveCountAsync(0);
+        await CloturerAsync(1_600);
+    }
+
+    [Parcours]
     public async Task Vend_au_comptoir_et_a_credit_fait_un_avoir_encaisse_un_remboursement_et_cloture()
     {
         var article = await Donnees.ArticleEnStockAsync($"SAVON{Suffixe}", $"Savon {Suffixe}", prixTtc: 500, quantite: 50, coutUnitaire: 300);

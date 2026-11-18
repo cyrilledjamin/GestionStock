@@ -114,6 +114,21 @@ public sealed class VenteEnCours
         }
     }
 
+    /// <summary>Lignes et paiements tels que saisis, pour les garder sur le poste (changement d'écran, rechargement).</summary>
+    public VenteGardee Garder() => new(
+        [.. _lignes.Select(l => new LigneGardee(l.Vendable, l.Quantite, l.Prix, l.Remise))],
+        [.. _paiements.Select(p => new PaiementGarde(p.Mode, p.Montant, p.Reference))]);
+
+    /// <summary>Vente reprise telle qu'elle avait été gardée (mêmes lignes, quantités, prix, remises et paiements).</summary>
+    public static VenteEnCours Reprendre(VenteGardee gardee)
+    {
+        ArgumentNullException.ThrowIfNull(gardee);
+        var vente = new VenteEnCours();
+        vente._lignes.AddRange(gardee.Lignes.Select(l => new LignePanier { Vendable = l.Vendable, Quantite = l.Quantite, Prix = l.Prix, Remise = l.Remise }));
+        vente._paiements.AddRange(gardee.Paiements.Select(p => new PaiementSaisi { Mode = p.Mode, Montant = p.Montant, Reference = p.Reference }));
+        return vente;
+    }
+
     public void Vider()
     {
         _lignes.Clear();
@@ -157,3 +172,10 @@ public sealed class PaiementSaisi
 
     public string? Reference { get; set; }
 }
+
+/// <summary>Vente en cours telle qu'elle est gardée sur le poste (lignes et paiements saisis), sans calcul.</summary>
+public sealed record VenteGardee(List<LigneGardee> Lignes, List<PaiementGarde> Paiements);
+
+public sealed record LigneGardee(ArticleVendable Vendable, decimal Quantite, decimal Prix, decimal Remise);
+
+public sealed record PaiementGarde(string Mode, decimal Montant, string? Reference);

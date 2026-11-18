@@ -9,6 +9,7 @@
 @inject Boutique Boutique
 @inject Confirmation Confirmation
 @inject EtatMenu EtatMenu
+@inject PanierCaisse Panier
 @implements IAsyncDisposable
 
 <PageTitle>@L["Caisse"] · GestionStock</PageTitle>
@@ -164,9 +165,9 @@ else
                 }
 
                 <div class="carte-panier">
-                <div class="entete-panier"><h2>@L["Panier"]</h2><span>@L["NombreLignes", _vente.Lignes.Count]</span></div>
+                <div class="entete-panier"><h2>@L["Panier"]</h2><span>@L["NombreLignes", Vente.Lignes.Count]</span></div>
                 <ul class="panier">
-                    @foreach (var ligne in _vente.Lignes)
+                    @foreach (var ligne in Vente.Lignes)
                     {
                         <li class="ligne-panier @(ligne == _ligneChoisie ? "choisie" : "")" @onclick="() => Choisir(ligne)">
                             <div class="designation">
@@ -192,7 +193,7 @@ else
                             </div>
                         </li>
                     }
-                    @if (_vente.EstVide)
+                    @if (Vente.EstVide)
                     {
                         <li class="vide"><Icone Nom="caisse" />@L["PanierVide"]</li>
                     }
@@ -201,16 +202,16 @@ else
             </section>
 
             <aside class="encaissement" id="encaissement">
-                <div class="total-a-payer"><span>@L["TotalAPayer"]</span><strong class="total-grand" aria-live="polite">@Format.Montant(_vente.Total)</strong></div>
+                <div class="total-a-payer"><span>@L["TotalAPayer"]</span><strong class="total-grand" aria-live="polite">@Format.Montant(Vente.Total)</strong></div>
 
-                <div class="champ-client"><span class="libelle-champ">@L["ClientCredit"]</span><ChoixClient @bind-Client="_client" Libelle="@L["ClientCredit"]" Aide="@L["NomOuTelephone"]" /></div>
+                <div class="champ-client"><span class="libelle-champ">@L["ClientCredit"]</span><ChoixClient @bind-Client="ClientVente" Libelle="@L["ClientCredit"]" Aide="@L["NomOuTelephone"]" /></div>
 
                 <span class="libelle-champ">@L["Paiements"]</span>
                 <div class="modes">
                     @foreach (var mode in ModesPaiement.Tous)
                     {
-                        <button type="button" class="@(_vente.Paiements.Any(p => p.Mode == mode) ? "choisi" : "")" @onclick="() => _vente.AjouterPaiement(mode)"
-                                disabled="@(_vente.EstVide || (mode == ModesPaiement.Credit && _client is null))">@L[$"Mode.{mode}"]</button>
+                        <button type="button" class="@(Vente.Paiements.Any(p => p.Mode == mode) ? "choisi" : "")" @onclick="() => Vente.AjouterPaiement(mode)"
+                                disabled="@(Vente.EstVide || (mode == ModesPaiement.Credit && ClientVente is null))">@L[$"Mode.{mode}"]</button>
                     }
                 </div>
 
@@ -218,25 +219,25 @@ else
                 <div class="billets">
                     @foreach (var billet in VenteEnCours.Billets)
                     {
-                        <button type="button" disabled="@_vente.EstVide" @onclick="() => PuisScanner(() => _vente.AjouterEspeces(billet))">@Format.Montant(billet)</button>
+                        <button type="button" disabled="@Vente.EstVide" @onclick="() => PuisScanner(() => Vente.AjouterEspeces(billet))">@Format.Montant(billet)</button>
                     }
-                    <button type="button" class="valider" disabled="@_vente.EstVide" @onclick="() => PuisScanner(_vente.CompteJuste)">@L["CompteJuste"] <kbd>F4</kbd></button>
+                    <button type="button" class="valider" disabled="@Vente.EstVide" @onclick="() => PuisScanner(Vente.CompteJuste)">@L["CompteJuste"] <kbd>F4</kbd></button>
                 </div>
 
-                @foreach (var paiement in _vente.Paiements)
+                @foreach (var paiement in Vente.Paiements)
                 {
                     <div class="paiement">
                         <span>@L[$"Mode.{paiement.Mode}"]</span>
                         <input type="number" min="0" step="1" aria-label="@L[$"Mode.{paiement.Mode}"]" @bind="paiement.Montant" />
-                        <button type="button" class="bouton-discret icone-seule" title="@L["Retirer"]" aria-label="@L["Retirer"]" @onclick="() => _vente.RetirerPaiement(paiement)"><Icone Nom="fermer" /></button>
+                        <button type="button" class="bouton-discret icone-seule" title="@L["Retirer"]" aria-label="@L["Retirer"]" @onclick="() => Vente.RetirerPaiement(paiement)"><Icone Nom="fermer" /></button>
                         @if (paiement.Mode is ModesPaiement.MobileMoney or ModesPaiement.Carte)
                         {
                             <input class="reference" placeholder="@L["Reference"]" aria-label="@L["Reference"]" @bind="paiement.Reference" />
                         }
                     </div>
                 }
-                <div class="ligne-recu @(_vente.Reste < 0 ? "a-rendre" : "")" aria-live="polite">
-                    <span>@(_vente.Reste >= 0 ? L["ResteAPayer"] : L["Rendu"])</span><strong>@Format.Montant(Math.Abs(_vente.Reste))</strong>
+                <div class="ligne-recu @(Vente.Reste < 0 ? "a-rendre" : "")" aria-live="polite">
+                    <span>@(Vente.Reste >= 0 ? L["ResteAPayer"] : L["Rendu"])</span><strong>@Format.Montant(Math.Abs(Vente.Reste))</strong>
                 </div>
 
                 @if (_paveVisible)
@@ -249,7 +250,7 @@ else
                 }
                 <button type="button" class="lien" aria-expanded="@(_paveVisible ? "true" : "false")" @onclick="() => _paveVisible = !_paveVisible">@L["PaveNumerique"]</button>
 
-                @if (_validationNecessaire || _vente.Lignes.Any(l => l.Remise > 0))
+                @if (_validationNecessaire || Vente.Lignes.Any(l => l.Remise > 0))
                 {
                     <div class="validation">
                         <strong>@L["ValidationResponsable"]</strong>
@@ -259,15 +260,15 @@ else
                 }
 
                 <button class="principal encaisser" disabled="@(!PeutEncaisser)" @onclick="Encaisser">@L["Encaisser"] <kbd>F8</kbd></button>
-                <button type="button" class="bouton-discret annuler-vente" disabled="@_vente.EstVide" @onclick="AnnulerVente">@L["AnnulerVente"]</button>
+                <button type="button" class="bouton-discret annuler-vente" disabled="@Vente.EstVide" @onclick="AnnulerVente">@L["AnnulerVente"]</button>
             </aside>
         </div>
 
         @* Tablette et téléphone : total et reste toujours visibles en bas de l'écran pendant le scan. *@
-        <div class="barre-total" aria-hidden="@(_vente.EstVide ? "true" : "false")">
+        <div class="barre-total" aria-hidden="@(Vente.EstVide ? "true" : "false")">
             <div class="montants">
-                <strong>@Format.Montant(_vente.Total)</strong>
-                <small>@(_vente.Reste >= 0 ? L["ResteAPayer"] : L["Rendu"]) : @Format.Montant(Math.Abs(_vente.Reste))</small>
+                <strong>@Format.Montant(Vente.Total)</strong>
+                <small>@(Vente.Reste >= 0 ? L["ResteAPayer"] : L["Rendu"]) : @Format.Montant(Math.Abs(Vente.Reste))</small>
             </div>
             @if (PeutEncaisser)
             {
@@ -275,7 +276,7 @@ else
             }
             else
             {
-                <button type="button" class="valider" disabled="@_vente.EstVide" @onclick="AllerAuPaiement">@L["Payer"] <Icone Nom="aller" /></button>
+                <button type="button" class="valider" disabled="@Vente.EstVide" @onclick="AllerAuPaiement">@L["Payer"] <Icone Nom="aller" /></button>
             }
         </div>
     </div>
@@ -295,13 +296,20 @@ else
     private string? _succes;
     private Panneau _panneau;
 
-    private VenteEnCours _vente = new();
+    // Vente en cours : gardée par PanierCaisse, hors de la page (un changement d'écran ne la perd pas) et sur le poste.
+    private VenteEnCours Vente => Panier.Vente;
+
+    private ClientCredit? ClientVente
+    {
+        get => Panier.Client;
+        set => Panier.Client = value;
+    }
+
+    private Guid IdIdempotence => Panier.IdIdempotence;
     private string _saisie = "";
     private List<ArticleVendable> _resultats = [];
     private List<ArticleVendable> _rapides = [];
     private Dictionary<Guid, decimal> _prixRapides = [];
-    private ClientCredit? _client;
-    private Guid _idIdempotence = Guid.NewGuid();
     private bool _validationNecessaire;
     private string _validationIdentifiant = "";
     private string _validationMotDePasse = "";
@@ -332,7 +340,7 @@ else
     private bool _focaliserNouvelleVente;
     private readonly CancellationTokenSource _arret = new();
 
-    private bool PeutEncaisser => !_enCours && !_vente.EstVide && _vente.Reste <= 0;
+    private bool PeutEncaisser => !_enCours && !Vente.EstVide && Vente.Reste <= 0;
 
     private OccupationPoste? Occupation(string poste) => _occupations.FirstOrDefault(o => o.NumeroCaisse == poste);
 
@@ -353,6 +361,10 @@ else
         await Cache.ChargerAsync();
         var postes = Api.GetAsync<List<string>>("api/caisse/postes");
         await Task.WhenAll(postes, ChargerSessionEtOccupations(), ChargerRapides());
+        if (_session is { } session)
+        {
+            await Panier.ReprendreAsync(session.Id);
+        }
         _postes = postes.Result.Valeur ?? [];
         _poste = _postes.FirstOrDefault() ?? "";
         _charge = true;
@@ -432,6 +444,11 @@ else
             StateHasChanged();
         }
 
+        if (_session is not null && _dernierTicket is null)
+        {
+            await Panier.GarderAsync();
+        }
+
         if (_focaliserScan && _session is not null && _dernierTicket is null && _panneau == Panneau.Aucun)
         {
             _focaliserScan = false;
@@ -471,8 +488,8 @@ else
             case "F2":
                 _focaliserScan = true;
                 break;
-            case "F4" when !_vente.EstVide:
-                _vente.CompteJuste();
+            case "F4" when !Vente.EstVide:
+                Vente.CompteJuste();
                 break;
             case "F8" when PeutEncaisser:
                 await Encaisser();
@@ -577,6 +594,7 @@ else
         {
             // Gardée aussitôt sur le poste : une coupure juste après l'ouverture n'empêche pas de vendre (7.8).
             await HorsLigne.GarderSessionAsync(ouverte);
+            await Panier.ReprendreAsync(ouverte.Id);
         }
 
         if (resultat.Code == "Caisse.PosteOccupe")
@@ -680,7 +698,7 @@ else
         _resultats = [];
         _saisie = "";
         _focaliserScan = true;
-        if (_vente.Ligne(vendable.ConditionnementId) is { } existante)
+        if (Vente.Ligne(vendable.ConditionnementId) is { } existante)
         {
             VenteEnCours.Incrementer(existante);
             _ligneChoisie = existante;
@@ -693,7 +711,7 @@ else
         if (Cache.EstFrais && Cache.Catalogue!.Prix(vendable.ConditionnementId, Format.JourDouala(DateTime.UtcNow)) is { } prixLocal)
         {
             _erreur = null;
-            _ligneChoisie = _vente.Ajouter(vendable, prixLocal);
+            _ligneChoisie = Vente.Ajouter(vendable, prixLocal);
             return;
         }
 
@@ -714,7 +732,7 @@ else
         }
 
         _erreur = null;
-        _ligneChoisie = _vente.Ajouter(vendable, prixDuJour);
+        _ligneChoisie = Vente.Ajouter(vendable, prixDuJour);
     }
 
     private void Choisir(LignePanier ligne)
@@ -725,7 +743,7 @@ else
 
     private void Retirer(LignePanier ligne)
     {
-        _vente.Retirer(ligne);
+        Vente.Retirer(ligne);
         if (_ligneChoisie == ligne)
         {
             _ligneChoisie = null;
@@ -757,13 +775,13 @@ else
             return;
         }
 
-        if (_vente.Paiements.FirstOrDefault(p => p.Mode == ModesPaiement.Especes) is { } especes)
+        if (Vente.Paiements.FirstOrDefault(p => p.Mode == ModesPaiement.Especes) is { } especes)
         {
             especes.Montant = valeur;
         }
         else
         {
-            _vente.AjouterEspeces(valeur);
+            Vente.AjouterEspeces(valeur);
         }
     }
 
@@ -788,10 +806,10 @@ else
         _enCours = true;
         var demande = new
         {
-            IdIdempotence = _idIdempotence,
-            ClientId = _client?.Id,
-            Lignes = _vente.Lignes.Select(l => new { l.Vendable.ConditionnementId, l.Quantite, l.Remise, l.Vendable.CodeScanne }).ToList(),
-            Paiements = _vente.Paiements.Where(p => p.Montant > 0).Select(p => new { p.Mode, p.Montant, p.Reference }).ToList(),
+            IdIdempotence = IdIdempotence,
+            ClientId = ClientVente?.Id,
+            Lignes = Vente.Lignes.Select(l => new { l.Vendable.ConditionnementId, l.Quantite, l.Remise, l.Vendable.CodeScanne }).ToList(),
+            Paiements = Vente.Paiements.Where(p => p.Montant > 0).Select(p => new { p.Mode, p.Montant, p.Reference }).ToList(),
             Validation = string.IsNullOrWhiteSpace(_validationIdentifiant) ? null : new { Identifiant = _validationIdentifiant, MotDePasse = _validationMotDePasse },
         };
         var resultat = await Api.PostAsync<TicketCaisse>("api/caisse/tickets", demande);
@@ -809,6 +827,7 @@ else
         {
             _dernierTicket = ticket;
             _focaliserNouvelleVente = true;
+            await Panier.TerminerAsync();
             await HorsLigne.NoterNumeroAsync(_session!.NumeroCaisse, TicketLocal.Rang(ticket.Numero));
             await HorsLigne.GarderTicketAsync(_session.Id, ticket);
             await ActualiserSession();
@@ -830,41 +849,42 @@ else
 
         var maintenant = DateTime.UtcNow;
         var numero = TicketLocal.Numero(session.NumeroCaisse, await HorsLigne.ProchainNumeroAsync(session.NumeroCaisse));
-        var ticket = TicketLocal.Vente(_vente, _idIdempotence, numero, maintenant, Session.Profil!.Identifiant,
-            $"{Session.Profil.NomComplet} ({Session.Profil.Identifiant})", _client?.Id, await TauxTvaAsync());
+        var ticket = TicketLocal.Vente(Vente, IdIdempotence, numero, maintenant, Session.Profil!.Identifiant,
+            $"{Session.Profil.NomComplet} ({Session.Profil.Identifiant})", ClientVente?.Id, await TauxTvaAsync());
         var corps = new
         {
-            IdIdempotence = _idIdempotence,
-            ClientId = _client?.Id,
-            Lignes = _vente.Lignes.Select(l => new { l.Vendable.ConditionnementId, l.Quantite, l.Remise, l.Vendable.CodeScanne, PrixUnitaire = l.Prix }).ToList(),
-            Paiements = _vente.Paiements.Where(p => p.Montant > 0).Select(p => new { p.Mode, p.Montant, p.Reference }).ToList(),
+            IdIdempotence = IdIdempotence,
+            ClientId = ClientVente?.Id,
+            Lignes = Vente.Lignes.Select(l => new { l.Vendable.ConditionnementId, l.Quantite, l.Remise, l.Vendable.CodeScanne, PrixUnitaire = l.Prix }).ToList(),
+            Paiements = Vente.Paiements.Where(p => p.Montant > 0).Select(p => new { p.Mode, p.Montant, p.Reference }).ToList(),
             HorsLigne = new { SessionId = session.Id, Numero = TicketLocal.Rang(numero), DateUtc = maintenant },
         };
         await HorsLigne.AjouterAsync(new OperationEnAttente(
-            CaisseHorsLigne.NouvelleCle(), OperationEnAttente.Vente, _idIdempotence, Session.Profil.Identifiant, session.Id, "api/caisse/tickets",
-            System.Text.Json.JsonSerializer.SerializeToElement(corps, System.Text.Json.JsonSerializerOptions.Web), _client?.Id,
-            _vente.Paiements.Where(p => p.Mode == ModesPaiement.Credit).Sum(p => p.Montant), $"{numero} · {Format.Montant(ticket.TotalTtc)}", maintenant));
+            CaisseHorsLigne.NouvelleCle(), OperationEnAttente.Vente, IdIdempotence, Session.Profil.Identifiant, session.Id, "api/caisse/tickets",
+            System.Text.Json.JsonSerializer.SerializeToElement(corps, System.Text.Json.JsonSerializerOptions.Web), ClientVente?.Id,
+            Vente.Paiements.Where(p => p.Mode == ModesPaiement.Credit).Sum(p => p.Montant), $"{numero} · {Format.Montant(ticket.TotalTtc)}", maintenant));
         await HorsLigne.GarderTicketAsync(session.Id, ticket);
         _session = session with { Totaux = session.Totaux with { NombreVentes = session.Totaux.NombreVentes + 1, Ventes = session.Totaux.Ventes + ticket.TotalTtc } };
         _dernierTicket = ticket;
         _focaliserNouvelleVente = true;
+        await Panier.TerminerAsync();
     }
 
     /// <summary>Contrôles du serveur faits sur le poste : une vente mise en file ne doit pas être refusée au retour du réseau.</summary>
     private string? ControleHorsLigne()
     {
-        if (_vente.Lignes.Any(l => l.Remise > 0) || !string.IsNullOrWhiteSpace(_validationIdentifiant))
+        if (Vente.Lignes.Any(l => l.Remise > 0) || !string.IsNullOrWhiteSpace(_validationIdentifiant))
         {
             return L["RemiseHorsLigne"];
         }
 
-        var paye = _vente.Paiements.Where(p => p.Montant > 0).ToList();
-        if (paye.Sum(p => p.Montant) < _vente.Total)
+        var paye = Vente.Paiements.Where(p => p.Montant > 0).ToList();
+        if (paye.Sum(p => p.Montant) < Vente.Total)
         {
-            return L["ResteAPayer"] + " : " + Format.Montant(_vente.Reste);
+            return L["ResteAPayer"] + " : " + Format.Montant(Vente.Reste);
         }
 
-        if (paye.Sum(p => p.Montant) - _vente.Total > paye.Where(p => p.Mode == ModesPaiement.Especes).Sum(p => p.Montant))
+        if (paye.Sum(p => p.Montant) - Vente.Total > paye.Where(p => p.Mode == ModesPaiement.Especes).Sum(p => p.Montant))
         {
             return L["RenduSansEspeces"];
         }
@@ -877,7 +897,7 @@ else
         var credit = paye.Where(p => p.Mode == ModesPaiement.Credit).Sum(p => p.Montant);
         if (credit > 0)
         {
-            var client = _client is null ? null : Cache.Clients.FirstOrDefault(c => c.Id == _client.Id) ?? _client;
+            var client = ClientVente is null ? null : Cache.Clients.FirstOrDefault(c => c.Id == ClientVente.Id) ?? ClientVente;
             if (client is null || credit > PlafondHorsLigne.Disponible(client, HorsLigne.EnAttente))
             {
                 return L["PlafondHorsLigne"];
@@ -897,12 +917,10 @@ else
     private void NouvelleVente()
     {
         _dernierTicket = null;
-        _vente = new VenteEnCours();
+        Panier.Nouvelle();
         _ligneChoisie = null;
         _remiseOuverte = null;
         _cible = CiblePave.Especes;
-        _client = null;
-        _idIdempotence = Guid.NewGuid();
         _validationNecessaire = false;
         _validationIdentifiant = "";
         _erreur = null;
@@ -925,6 +943,7 @@ else
         {
             _panneau = Panneau.Aucun;
             _session = null;
+            await Panier.TerminerAsync(sessionFermee: true);
             _erreur = null;
             _especesComptees = 0;
             _succes = L["SessionCloturee", Format.Montant(session.Totaux.EspecesTheoriques), Format.Montant(session.Ecart ?? 0)];

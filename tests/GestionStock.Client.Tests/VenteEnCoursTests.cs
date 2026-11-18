@@ -10,6 +10,30 @@ public sealed class VenteEnCoursTests
     private static readonly ArticleVendable Riz = Vendable("RIZ-PARF", "kg", precision: 3, contenu: 1m);
 
     [Fact]
+    public void Une_vente_gardee_puis_reprise_retrouve_ses_lignes_remises_et_paiements()
+    {
+        var vente = new VenteEnCours();
+        vente.Ajouter(Lait, 450m);
+        vente.Ajouter(Lait, 450m);
+        var riz = vente.Ajouter(Riz, 525m);
+        riz.Quantite = 1.5m;
+        riz.Remise = 38m;
+        vente.AjouterPaiement(ModesPaiement.MobileMoney);
+        vente.Paiements[0].Reference = "MP123";
+        vente.AjouterEspeces(5_000m);
+
+        // Aller-retour JSON, comme sur le poste.
+        var json = System.Text.Json.JsonSerializer.Serialize(vente.Garder(), System.Text.Json.JsonSerializerOptions.Web);
+        var reprise = VenteEnCours.Reprendre(System.Text.Json.JsonSerializer.Deserialize<VenteGardee>(json, System.Text.Json.JsonSerializerOptions.Web)!);
+
+        Assert.Equal(vente.Total, reprise.Total);
+        Assert.Equal(vente.Reste, reprise.Reste);
+        Assert.Equal(2m, reprise.Ligne(Lait.ConditionnementId)!.Quantite);
+        Assert.Equal((1.5m, 525m, 38m), (reprise.Ligne(Riz.ConditionnementId)!.Quantite, reprise.Ligne(Riz.ConditionnementId)!.Prix, reprise.Ligne(Riz.ConditionnementId)!.Remise));
+        Assert.Equal(["MobileMoney:1650:MP123", "Especes:5000:"], reprise.Paiements.Select(p => $"{p.Mode}:{p.Montant:0}:{p.Reference}"));
+    }
+
+    [Fact]
     public void Un_article_deja_au_panier_augmente_d_une_unite_au_lieu_d_ajouter_une_ligne()
     {
         var vente = new VenteEnCours();
