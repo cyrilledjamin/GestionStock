@@ -58,7 +58,7 @@
         @foreach (var session in _sessions)
         {
             <tr class="@(session.Ecart < 0 ? "negatif" : "")">
-                <td data-label="@L["Poste"]">@session.NumeroCaisse</td>
+                <td data-label="@L["Poste"]" class="court">@session.NumeroCaisse</td>
                 <td data-label="@L["Caissier"]">@session.AfficheCaissier</td>
                 <td data-label="@L["Ouverture"]" class="court">@Format.Date(session.OuvertureUtc)</td>
                 <td data-label="@L["Ventes"]" class="nombre">@Format.Montant(session.Totaux.Ventes - session.Totaux.Avoirs)</td>
@@ -73,7 +73,7 @@
                     }
                     @if (session.ValideePar is not null) { <small class="discret">(@(session.NomValideePar ?? session.ValideePar))</small> }
                 </td>
-                <td>
+                <td class="actions-ligne">
                     @if (session.Statut == "Comptee" && Session.A(Permissions.SessionsValider))
                     {
                         <Bouton Variante="VarianteBouton.Valider" NomIcone="valider" OnClick="() => Valider(session.Id)">@L["ValiderEcart"]</Bouton>
