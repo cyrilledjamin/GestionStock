@@ -215,7 +215,7 @@ dl.grille dd { margin: var(--e-1) 0 0; }
 .etroite { max-width: 440px; display: flex; flex-direction: column; gap: var(--e-4); }
 
 /* Tableaux : compacts, en-têtes en petites capitales, nombres alignés à droite */
-.tableau { margin: var(--e-4) 0; background: var(--surface); border: 1px solid var(--bordure); border-radius: var(--rayon-grand); overflow: hidden; }
+.tableau { margin: var(--e-4) 0; background: var(--surface); border: 1px solid var(--bordure); border-radius: var(--rayon-grand); overflow-x: auto; }
 .tableau > table { margin: 0; border: none; border-radius: 0; }
 .tableau-titre { margin: 0; padding: 14px var(--e-4); font-size: 15px; font-weight: 600; border-bottom: 1px solid var(--bordure); }
 .tableau tbody tr:last-child td { border-bottom: none; }
@@ -227,6 +227,8 @@ tbody tr:hover td { background: var(--surface-douce); }
 tfoot th, tfoot td { border-top: 1px solid var(--bordure); border-bottom: none; font-weight: 600; }
 caption { text-align: left; }
 .nombre { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+/* Les intitulés de colonnes numériques peuvent passer sur deux lignes : seules les valeurs restent sur une ligne. */
+thead th.nombre { white-space: normal; }
 .court { white-space: nowrap; }
 .vide { text-align: center; color: var(--discret); padding: var(--e-6) var(--e-4); }
 tr.inactif td { color: var(--discret); }
