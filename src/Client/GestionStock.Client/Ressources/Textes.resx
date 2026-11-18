@@ -653,4 +653,18 @@
   <data name="CeMois" xml:space="preserve"><value>Ce mois-ci</value></data>
   <data name="VentesParJourGraphique" xml:space="preserve"><value>Ventes et marge par jour</value></data>
   <data name="FichierReprise" xml:space="preserve"><value>Classeur Excel (.xlsx)</value></data>
+  <data name="PourcentDuChiffreHt" xml:space="preserve"><value>{0} % du chiffre HT</value></data>
+  <data name="LegendeTendance" xml:space="preserve"><value>Chiffre d'affaires TTC par jour · marge en vert foncé</value></data>
+  <data name="NombreArticles" xml:space="preserve"><value>{0} article(s)</value></data>
+  <data name="CopieHorsSiteEnRetardAide" xml:space="preserve"><value>Aucune copie hors de la boutique récente : vérifier la connexion Internet et le stockage en ligne.</value></data>
+  <data name="TotalAPayer" xml:space="preserve"><value>Total à payer</value></data>
+  <data name="NombreLignes" xml:space="preserve"><value>{0} ligne(s)</value></data>
+  <data name="NomOuTelephone" xml:space="preserve"><value>Nom ou téléphone</value></data>
+  <data name="Filtre" xml:space="preserve"><value>Filtre</value></data>
+  <data name="Tous" xml:space="preserve"><value>Tous</value></data>
+  <data name="NegatifsN" xml:space="preserve"><value>Négatifs ({0})</value></data>
+  <data name="SansStock" xml:space="preserve"><value>Sans stock</value></data>
+  <data name="JournalDuStock" xml:space="preserve"><value>Journal du stock</value></data>
+  <data name="DerniersMouvements" xml:space="preserve"><value>Derniers mouvements</value></data>
+  <data name="ValeurDuStockTitre" xml:space="preserve"><value>Valeur du stock</value></data>
 </root>

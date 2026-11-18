@@ -16,6 +16,7 @@ builder.Services.AddScoped(_ => new HttpClient { BaseAddress = new Uri(builder.H
 builder.Services.AddScoped<Session>();
 builder.Services.AddScoped<Api>();
 builder.Services.AddScoped<Confirmation>();
+builder.Services.AddScoped<EtatMenu>();
 builder.Services.AddScoped<Boutique>();
 builder.Services.AddScoped<EtatConnexion>();
 builder.Services.AddScoped<StockageLocal>();

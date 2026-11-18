@@ -15,11 +15,29 @@
 }
 else if (_article is not null)
 {
-    <h1><code>@_article.Code</code> @Format.Libelle(_article)</h1>
-    <p class="discret">@L["UniteStock"] : @Format.Unite(_article.UniteStock) · @L["Precision"] : @_article.PrecisionQuantite</p>
+    @* Maquette A : code et statut en badges, libellé en titre, chiffres du stock, conditionnements et derniers mouvements. *@
+    <EntetePage>
+        <Titre><span class="badges-titre"><code class="code-badge">@_article.Code</code><Pastille Ton="@(_article.Actif ? Ton.Succes : Ton.Neutre)">@(_article.Actif ? L["Actif"] : L["Inactif"])</Pastille></span>@Format.Libelle(_article)</Titre>
+        <SousTitre>@L["UniteStock"] : @Format.Unite(_article.UniteStock) · @L["Precision"] : @_article.PrecisionQuantite</SousTitre>
+        <Actions>
+            @if (Session.A(Permissions.StockConsulter))
+            {
+                <a class="bouton" href="stock/@_article.Id">@L["JournalDuStock"]</a>
+            }
+        </Actions>
+    </EntetePage>
 
-    <h2>@L["ConditionnementsEtPrix"]</h2>
-    <Tableau Colonnes="6" EstVide="_conditionnements.Count == 0" TexteVide="@L["AucunConditionnement"]" Legende="@L["ConditionnementsEtPrix"]">
+    @if (_solde is { } solde)
+    {
+        <div class="indicateurs section">
+            <Indicateur Libelle="@L["Physique"]" Valeur="@($"{Format.Quantite(solde.QuantitePhysique, _article.PrecisionQuantite)} {Format.Unite(_article.UniteStock)}")"
+                        Ton="@(solde.QuantitePhysique < 0 ? Ton.Danger : Ton.Neutre)" />
+            <Indicateur Libelle="@L["Cump"]" Valeur="@Format.Montant(solde.Cump)" />
+            <Indicateur Libelle="@L["ValeurStock"]" Valeur="@Format.Montant(solde.QuantitePhysique * solde.Cump)" />
+        </div>
+    }
+
+    <Tableau Titre="@L["ConditionnementsEtPrix"]" Colonnes="6" EstVide="_conditionnements.Count == 0" TexteVide="@L["AucunConditionnement"]" Legende="@L["ConditionnementsEtPrix"]">
         <Entete><th>@L["Conditionnement"]</th><th class="nombre">@L["Contenu"]</th><th>@L["Codes"]</th><th class="nombre">@L["PrixActuel"]</th><th>@L["PrixProgramme"]</th><th></th></Entete>
         <Corps>
             @foreach (var conditionnement in _conditionnements)
@@ -84,6 +102,25 @@ else if (_article is not null)
         </Corps>
     </Tableau>
 
+    @if (Session.A(Permissions.StockConsulter))
+    {
+        <Tableau Titre="@L["DerniersMouvements"]" Colonnes="5" EstVide="_mouvements.Count == 0" TexteVide="@L["AucunMouvement"]" Legende="@L["DerniersMouvements"]">
+            <Entete><th>@L["Date"]</th><th>@L["Mouvement"]</th><th>@L["Document"]</th><th class="nombre">@L["Quantite"]</th><th>@L["Utilisateur"]</th></Entete>
+            <Corps>
+                @foreach (var mouvement in _mouvements)
+                {
+                    <tr>
+                        <td data-label="@L["Date"]" class="court">@Format.Date(mouvement.DateUtc)</td>
+                        <td data-label="@L["Mouvement"]">@L[$"Mouvement.{mouvement.Type}"]</td>
+                        <td data-label="@L["Document"]">@(mouvement.TypeDocument == "Reception" ? L["Reception"].Value : mouvement.TypeDocument)</td>
+                        <td data-label="@L["Quantite"]" class="nombre @(mouvement.Variation < 0 ? "sortie" : "entree")">@(mouvement.Variation > 0 ? "+" : "")@Format.Quantite(mouvement.Variation, _article.PrecisionQuantite)</td>
+                        <td data-label="@L["Utilisateur"]">@mouvement.Utilisateur</td>
+                    </tr>
+                }
+            </Corps>
+        </Tableau>
+    }
+
     @if (Session.A(Permissions.ArticlesGerer))
     {
         <form class="fiche" @onsubmit="AjouterConditionnement">
@@ -122,8 +159,20 @@ else if (_article is not null)
 
     protected override Task OnParametersSetAsync() => Charger();
 
+    private SoldeStock? _solde;
+    private List<MouvementStock> _mouvements = [];
+
     private async Task Charger()
     {
+        if (Session.A(Permissions.StockConsulter))
+        {
+            // Chiffres du stock et derniers mouvements (maquette A) : lus à part, la fiche reste utilisable sans eux.
+            var soldes = await Api.GetAsync<List<SoldeStock>>($"api/stock/soldes?articles={Id}");
+            var mouvements = await Api.GetAsync<List<MouvementStock>>($"api/stock/articles/{Id}/mouvements");
+            _solde = soldes.Valeur?.FirstOrDefault(s => s.ArticleId == Id);
+            _mouvements = [.. (mouvements.Valeur ?? []).OrderByDescending(m => m.DateUtc).Take(5)];
+        }
+
         var article = await Api.GetAsync<Article>($"api/referentiel/articles/{Id}");
         _erreur = article.Erreur;
         _article = article.Valeur;

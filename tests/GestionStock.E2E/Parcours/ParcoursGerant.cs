@@ -66,16 +66,17 @@ public sealed class ParcoursGerant(Navigateur navigateur) : ParcoursBase(navigat
 
         await SeConnecterAsync(gerant);
 
-        // Accueil (étape 61) : ventes et marge des 30 derniers jours, un jour par barre ; graduations lisibles (12 px) même
-        // sur un téléphone, le graphique étant dessiné à la largeur de l'écran.
+        // Accueil (maquette A) : ventes des 30 derniers jours en barres empilées (marge dans la barre), une par jour, sur
+        // toute la largeur de la carte, sur un PC comme sur un téléphone.
         var tendance = Page.GetByRole(AriaRole.Img, new() { Name = T["Tendance30Jours"], Exact = true });
         await Expect(tendance).ToBeVisibleAsync();
-        await Expect(tendance.Locator(".barre-graphique")).ToHaveCountAsync(30);
+        await Expect(tendance.Locator(".barre-jour")).ToHaveCountAsync(30);
+        await Expect(tendance.Locator(".barre-part")).ToHaveCountAsync(30);
+        await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = T["ASurveiller"], Exact = true })).ToBeVisibleAsync();
         await CapturerAsync("accueil-gerant");
         await Page.SetViewportSizeAsync(390, 844);
-        await Expect(tendance).ToHaveAttributeAsync("viewBox", new System.Text.RegularExpressions.Regex(@"^0 0 (2[89]\d|3[0-8]\d) "));
-        var graduation = await tendance.Locator(".graduation").First.BoundingBoxAsync();
-        Assert.True(graduation is { Height: >= 11 }, $"Graduation de {graduation?.Height} px sur un téléphone");
+        var boite = await tendance.BoundingBoxAsync();
+        Assert.True(boite is { Width: >= 300 }, $"Histogramme de {boite?.Width} px sur un téléphone");
         await CapturerAsync("accueil-gerant-telephone");
         await Page.SetViewportSizeAsync(Ecran.Width, Ecran.Height);
 
@@ -114,7 +115,7 @@ public sealed class ParcoursGerant(Navigateur navigateur) : ParcoursBase(navigat
         // Ventes sur 30 jours : graphique jour par jour (30 barres).
         await Page.GetByRole(AriaRole.Tab, new() { Name = T["Rapport.Ventes"], Exact = true }).ClickAsync();
         await Bouton("Periode30Jours").ClickAsync();
-        await Expect(Page.GetByRole(AriaRole.Img, new() { Name = T["VentesParJourGraphique"], Exact = true }).Locator(".barre-graphique")).ToHaveCountAsync(30);
+        await Expect(Page.GetByRole(AriaRole.Img, new() { Name = T["VentesParJourGraphique"], Exact = true }).Locator(".barre-jour")).ToHaveCountAsync(30);
         await CapturerAsync("rapports-ventes");
 
         await AllerAsync("Anomalies");

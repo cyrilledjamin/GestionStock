@@ -36,6 +36,14 @@ window.gestionStock = {
     },
 
     // Fait défiler la page jusqu'à un élément (caisse sur tablette : du panier au paiement).
+    // Focus sur le premier élément visible qui répond au sélecteur (ex. le bouton « Menu » de la page affichée).
+    focaliserVisible: function (selecteur) {
+        const element = Array.from(document.querySelectorAll(selecteur)).find(function (e) { return e.offsetParent !== null; });
+        if (element) {
+            element.focus();
+        }
+    },
+
     defiler: function (id) {
         const element = document.getElementById(id);
         if (element) {

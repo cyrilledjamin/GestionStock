@@ -4,13 +4,25 @@
 
 <PageTitle>@L["Stock"] · GestionStock</PageTitle>
 
-<h1>@L["Stock"]</h1>
-<p class="discret">@L["StockIntro"]</p>
+<EntetePage>
+    <Titre>@L["Stock"]</Titre>
+    <SousTitre>@L["StockIntro"]</SousTitre>
+    <Actions>
+        @* Sans recherche : valeur de tout le stock (calculée par le serveur) ; avec recherche : celle des lignes affichées. *@
+        <div class="chiffre-entete"><span>@L["ValeurDuStockTitre"]</span><strong>@Format.Montant(ValeurAffichee)</strong></div>
+    </Actions>
+</EntetePage>
 
 <div class="barre" role="search">
     <div class="champ-recherche">
         <Icone Nom="rechercher" />
         <input type="search" placeholder="@L["Rechercher"]" aria-label="@L["Rechercher"]" @bind="_recherche" @bind:event="oninput" @bind:after="RechercherDiffere" />
+    </div>
+    @* Filtres des lignes affichées (maquette A) : tous, négatifs (RG22), sans stock. *@
+    <div class="puces" role="group" aria-label="@L["Filtre"]">
+        <button type="button" class="puce" aria-pressed="@(_filtre == Filtre.Tous ? "true" : "false")" @onclick="() => _filtre = Filtre.Tous">@L["Tous"]</button>
+        <button type="button" class="puce puce-danger" aria-pressed="@(_filtre == Filtre.Negatifs ? "true" : "false")" @onclick="() => _filtre = Filtre.Negatifs">@L["NegatifsN", _lignes.Count(l => l.Solde.QuantitePhysique < 0)]</button>
+        <button type="button" class="puce" aria-pressed="@(_filtre == Filtre.SansStock ? "true" : "false")" @onclick="() => _filtre = Filtre.SansStock">@L["SansStock"]</button>
     </div>
 </div>
 
@@ -35,10 +47,6 @@
             </tr>
         }
     </Corps>
-    <Pied>
-        @* Sans recherche : valeur de tout le stock (calculée par le serveur) ; avec recherche : celle des lignes affichées. *@
-        <tr><th colspan="5" class="nombre">@L["Total"]</th><td class="nombre">@Format.Montant(string.IsNullOrWhiteSpace(_recherche) && _valeur is { } valeur ? valeur.Valeur : Lignes.Sum(l => l.Solde.QuantitePhysique * l.Solde.Cump))</td></tr>
-    </Pied>
 </Tableau>
 @if (_tronquee)
 {
@@ -58,7 +66,20 @@
     private ValeurStock? _valeur;
     private bool _tronquee;
 
-    private IEnumerable<(Article Article, SoldeStock Solde)> Lignes => _lignes;
+    private enum Filtre { Tous, Negatifs, SansStock }
+
+    private Filtre _filtre;
+
+    private IEnumerable<(Article Article, SoldeStock Solde)> Lignes => _filtre switch
+    {
+        Filtre.Negatifs => _lignes.Where(l => l.Solde.QuantitePhysique < 0),
+        Filtre.SansStock => _lignes.Where(l => l.Solde.QuantitePhysique == 0),
+        _ => _lignes,
+    };
+
+    private decimal ValeurAffichee => string.IsNullOrWhiteSpace(_recherche) && _valeur is { } valeur
+        ? valeur.Valeur
+        : _lignes.Sum(l => l.Solde.QuantitePhysique * l.Solde.Cump);
 
     protected override async Task OnInitializedAsync()
     {

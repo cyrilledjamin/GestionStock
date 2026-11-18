@@ -8,7 +8,8 @@
     }
     else
     {
-        <Icone Nom="marque" />
+        @* Sans logo : les initiales du logiciel dans un carré de la couleur d'accent (maquette A). *@
+        <span class="logo-initiales" aria-hidden="true">@Initiales</span>
     }
     <span class="nom">
         @Boutique.Nom
@@ -20,6 +21,8 @@
 </span>
 
 @code {
+    private string Initiales => new([.. Boutique.Logiciel.Where(char.IsUpper).Take(2)]);
+
     /// <summary>Mentionne le nom du logiciel sous celui de la boutique (menu, connexion), pas dans la barre étroite.</summary>
     [Parameter] public bool AvecLogiciel { get; set; } = true;
 }

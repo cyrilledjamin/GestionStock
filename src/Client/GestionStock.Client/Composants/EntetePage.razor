@@ -1,0 +1,23 @@
+@* En-tête de page (maquette A) : titre et sous-titre à gauche ; actions ou chiffre clé à droite, sur la même ligne. *@
+<header class="entete-page">
+    <div class="titres">
+        <h1>@Titre</h1>
+        @if (SousTitre is not null)
+        {
+            <p>@SousTitre</p>
+        }
+    </div>
+    @if (Actions is not null)
+    {
+        <div class="actions">@Actions</div>
+    }
+</header>
+
+@code {
+    [Parameter, EditorRequired] public RenderFragment Titre { get; set; } = default!;
+
+    [Parameter] public RenderFragment? SousTitre { get; set; }
+
+    /// <summary>Boutons, filtres ou chiffre clé, alignés à droite.</summary>
+    [Parameter] public RenderFragment? Actions { get; set; }
+}

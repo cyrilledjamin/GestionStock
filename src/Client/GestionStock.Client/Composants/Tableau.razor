@@ -1,6 +1,10 @@
 @* Tableau du système de design : en-tête, lignes, pied ; chargement et liste vide sur une ligne pleine largeur (jamais
    « Aucun… » pendant le chargement). Sur téléphone, chaque ligne devient une carte (cellules avec data-label). *@
 <div class="tableau">
+    @if (!string.IsNullOrEmpty(Titre))
+    {
+        <h2 class="tableau-titre">@Titre</h2>
+    }
     <table class="@(Cartes ? "cartes" : null)" aria-busy="@(Charge ? null : "true")">
         @if (!string.IsNullOrEmpty(Legende))
         {
@@ -46,6 +50,9 @@
     [Parameter] public bool EstVide { get; set; }
 
     [Parameter] public string? TexteVide { get; set; }
+
+    /// <summary>Titre visible dans la carte du tableau (maquette A), au-dessus des en-têtes.</summary>
+    [Parameter] public string? Titre { get; set; }
 
     /// <summary>Titre lu par les lecteurs d'écran (caption masquée).</summary>
     [Parameter] public string? Legende { get; set; }
